@@ -2,7 +2,7 @@ package modelo;
 
 import enums.*;
 
-public abstract class Usuario {
+public class Usuario {
     protected String rut;
     protected String nombreCompleto;
     protected String email;

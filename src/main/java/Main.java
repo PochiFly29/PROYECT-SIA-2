@@ -39,12 +39,15 @@ public class Main {
         }
         System.out.print("\n");
 
+
         // Creamos las instancias de las clases principales
         VerificarInput input = new VerificarInput();
         GestorIntercambio gestor = new GestorIntercambio();
 
         // Iniciamos el menú principal como una instancia
         MenuPrincipal menuPrincipal = new MenuPrincipal(input, gestor);
+        // Pruebas SQL
+        menuPrincipal.probarSQL();
         menuPrincipal.iniciar();
     }
 }
