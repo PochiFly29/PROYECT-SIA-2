@@ -3,7 +3,6 @@ package menu;
 import enums.Rol;
 import gestores.GestorIntercambio;
 import gestores.ResultadoLogin;
-import modelo.Estudiante;
 import modelo.Usuario;
 import servicios.VerificarInput;
 
@@ -108,30 +107,37 @@ public class MenuPrincipal {
         return DriverManager.getConnection(url);
     }
 
-    public void probarSQL() throws SQLException {
-        crearTablas();
+    public void probarSQL() {
+        try (Connection conn = this.connect()) {
+            System.out.println("Conexión a la base de datos establecida.");
 
-        // Inserta un usuario de prueba si la tabla está vacía
-        if (getTodosLosUsuarios().isEmpty()) {
-            Usuario usuarioPrueba = new Usuario("12345678-9", "Juan Pérez", "juan@mail.cl", "pass123", Rol.ESTUDIANTE);
-            insertarUsuario(usuarioPrueba);
-            System.out.println("Usuario de prueba insertado.");
+            crearTablas(conn);
+
+            // Inserta un usuario de prueba si la tabla está vacía
+            if (getTodosLosUsuarios(conn).isEmpty()) {
+                Usuario usuarioPrueba = new Usuario("12345678-9", "Juan Pérez", "juan@mail.cl", "pass123", Rol.ESTUDIANTE);
+                insertarUsuario(conn, usuarioPrueba);
+                System.out.println("Usuario de prueba insertado.");
+            }
+
+            System.out.println("\n--- Lista de todos los usuarios ---");
+            List<Usuario> muestra = getTodosLosUsuarios(conn);
+            mostrarListaUsuarios(muestra);
+
+            // Ejemplo de eliminación
+            System.out.println("\n--- Eliminando a Joselito perez duplicado ---");
+            eliminarUsuario(conn, "1234");
+
+            System.out.println("\n--- Lista de usuarios después de la eliminación ---");
+            List<Usuario> muestraPostEliminacion = getTodosLosUsuarios(conn);
+            mostrarListaUsuarios(muestraPostEliminacion);
+
+        } catch (SQLException e) {
+            System.out.println("Error en la conexión a la base de datos: " + e.getMessage());
         }
-
-        System.out.println("\n--- Lista de todos los usuarios ---");
-        List<Usuario> muestra = getTodosLosUsuarios();
-        mostrarListaUsuarios(muestra);
-
-        // Ejemplo de eliminación
-        System.out.println("\n--- Eliminando a Juan Pérez ---");
-        eliminarUsuario("12345678-9");
-
-        System.out.println("\n--- Lista de usuarios después de la eliminación ---");
-        List<Usuario> muestraPostEliminacion = getTodosLosUsuarios();
-        mostrarListaUsuarios(muestraPostEliminacion);
     }
 
-    public void crearTablas() {
+    public void crearTablas(Connection conn) throws SQLException {
         String sqlUsuarios = "CREATE TABLE IF NOT EXISTS usuarios ("
                 + "rut TEXT PRIMARY KEY, "
                 + "nombre TEXT NOT NULL, "
@@ -146,51 +152,40 @@ public class MenuPrincipal {
                 + "requisitos_academicos TEXT, "
                 + "requisitos_economicos TEXT);";
 
-        try (Connection conn = this.connect();
-             Statement stmt = conn.createStatement()) {
+        try (Statement stmt = conn.createStatement()) {
             stmt.execute(sqlUsuarios);
             stmt.execute(sqlConvenios);
             System.out.println("Tablas creadas con éxito o ya existentes.");
-        } catch (SQLException e) {
-            System.out.println("Error al crear tablas: " + e.getMessage());
         }
     }
 
-    public void insertarUsuario(Usuario usuario) {
+    public void insertarUsuario(Connection conn, Usuario usuario) throws SQLException {
         String sql = "INSERT INTO usuarios (rut, nombre, email, pass, rol) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = this.connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, usuario.getRut());
             pstmt.setString(2, usuario.getNombreCompleto());
             pstmt.setString(3, usuario.getEmail());
             pstmt.setString(4, usuario.getPass());
             pstmt.setString(5, usuario.getRol().name());
             pstmt.executeUpdate();
-        } catch (SQLException e) {
-            System.out.println("Error al insertar usuario: " + e.getMessage());
         }
     }
 
-    public void eliminarUsuario(String rut) {
+    public void eliminarUsuario(Connection conn, String rut) throws SQLException {
         String sql = "DELETE FROM usuarios WHERE rut = ?";
-        try (Connection conn = this.connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, rut);
             pstmt.executeUpdate();
             System.out.println("Usuario con RUT " + rut + " eliminado correctamente.");
-        } catch (SQLException e) {
-            System.out.println("Error al eliminar usuario: " + e.getMessage());
         }
     }
 
-    public List<Usuario> getTodosLosUsuarios() {
+    public List<Usuario> getTodosLosUsuarios(Connection conn) throws SQLException {
         String sql = "SELECT rut, nombre, email, pass, rol FROM usuarios";
         List<Usuario> usuarios = new ArrayList<>();
 
-        try (Connection conn = this.connect();
-             Statement stmt = conn.createStatement();
+        try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
-
             while (rs.next()) {
                 Usuario usuario = new Usuario(
                         rs.getString("rut"),
@@ -201,8 +196,6 @@ public class MenuPrincipal {
                 );
                 usuarios.add(usuario);
             }
-        } catch (SQLException e) {
-            System.out.println("Error al obtener usuarios: " + e.getMessage());
         }
         return usuarios;
     }

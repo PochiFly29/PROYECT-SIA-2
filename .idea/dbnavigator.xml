@@ -31,9 +31,7 @@
     <last-used-providers />
   </component>
   <component name="DBNavigator.Project.DatabaseFileManager">
-    <open-files>
-      <object connection-id="83c4d55f-8803-4205-8fe0-f173eecd3ffc" object-ref="schemas/miBase/tables/usuarios" />
-    </open-files>
+    <open-files />
   </component>
   <component name="DBNavigator.Project.DatabaseSessionManager">
     <connection id="83c4d55f-8803-4205-8fe0-f173eecd3ffc" />
