@@ -1,6 +1,9 @@
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import gestores.GestorIntercambio;
 import menu.*;
-import servicios.VerificarInput;
+import ui.VentanaPrincipal;
+
+import javax.swing.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -18,33 +21,10 @@ public class Main {
             e.printStackTrace();
         }
 
-
-        String[] banner = {
-                "  _____  _____ _____  ______ ",
-                " / ____|/ ____|_   _ |  ____|",
-                "| (___ | |  __  | |  | |__   ",
-                " \\___ \\| | |_ | | |  |  __|  ",
-                " ____) | |__| |_| |_ | |____ ",
-                "|_____/ \\_____|_____||______|",
-                "",
-                "Sistema de Gestión de Intercambios Estudiantiles",
-                "[SGIE]"
-        };
-        for (String line : banner) System.out.println(line);
-
-        System.out.print("Cargando");
-        for (int i = 0; i < 3; i++) {
-            Thread.sleep(500);
-            System.out.print(".");
-        }
-        System.out.print("\n");
-
-        // Creamos las instancias de las clases principales
-        VerificarInput input = new VerificarInput();
+        FlatMacDarkLaf.setup();
         GestorIntercambio gestor = new GestorIntercambio();
 
-        // Iniciamos el menú principal como una instancia
-        MenuPrincipal menuPrincipal = new MenuPrincipal(input, gestor);
-        menuPrincipal.iniciar();
+        // Abrir la ventana
+        SwingUtilities.invokeLater(() -> new VentanaPrincipal(gestor).setVisible(true));
     }
 }

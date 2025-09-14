@@ -115,13 +115,12 @@ public class GestorIntercambio {
     }
 
     public void registrarEstudiante(String rut, String nombre, String email, String pass, String carrera, int semestres, double promedio) {
-        if (usuarios.containsKey(rut)) {
-            System.out.println("Error: Ya existe un usuario con este RUT.");
-            return;
-        }
         Estudiante nuevoEstudiante = new Estudiante(rut, nombre, email, pass, carrera, promedio, semestres);
         usuarios.put(rut, nuevoEstudiante);
-        System.out.println("Estudiante registrado exitosamente.");
+    }
+
+    public boolean existeUsuario(String rut) {
+        return usuarios.containsKey(rut);
     }
 
     public List<Programa> getProgramasVigentes() {
@@ -129,7 +128,6 @@ public class GestorIntercambio {
                 .filter(Programa::estaVigente)
                 .collect(Collectors.toList());
     }
-
 
     public Optional<Convenio> buscarConvenio(String id) {
         return Optional.ofNullable(convenios.get(id));
