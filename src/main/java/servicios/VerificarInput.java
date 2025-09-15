@@ -55,4 +55,15 @@ public class VerificarInput {
         System.out.print(prompt);
         leerLinea();
     }
+
+    public static String normalizarRut(String s) {
+        if (s == null) return "";
+        return s.toUpperCase().replaceAll("[^0-9K]", "");
+    }
+
+    public static boolean rutValido(String rut) {
+        if (rut == null) return false;
+        rut = rut.trim().toUpperCase();
+        return rut.matches("^[0-9]{8}[0-9K]$");
+    }
 }

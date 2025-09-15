@@ -1,8 +1,10 @@
 package ui;
 
 import gestores.GestorIntercambio;
+import modelo.Auditor;
+import modelo.Estudiante;
+import modelo.Funcionario;
 import modelo.Usuario;
-import ui.autorizacion.LoginPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,19 +12,20 @@ import java.awt.*;
 public class VentanaPrincipal extends JFrame {
     private static final String VIEW_LOGIN = "login";
     private static final String VIEW_HOME  = "home";
+    private static final String VIEW_ESTUDIANTE  = "estu";
+    private static final String VIEW_FUNCIONARIO = "func";
+    private static final String VIEW_AUDITOR     = "aud";
 
     private final JPanel cards = new JPanel(new CardLayout());
     private final GestorIntercambio gestor;
 
+    private EstudiantePanel estudiantePanel;
+    private JPanel funcionarioPanel;
+    private JPanel auditorPanel;
+
     public VentanaPrincipal(GestorIntercambio gestor){
         this.gestor = gestor;
         init();
-    }
-    private static String rolDe(modelo.Usuario u) {
-        if (u instanceof modelo.Estudiante) return "Estudiante";
-        if (u instanceof modelo.Funcionario) return "Funcionario";
-        if (u instanceof modelo.Auditor)     return "Auditor";
-        return "Desconocido";
     }
 
     private void init(){
@@ -33,29 +36,60 @@ public class VentanaPrincipal extends JFrame {
 
         LoginPanel login = new LoginPanel(gestor, this::onLoginOk);
 
-        // Vista “home” temporal
         JPanel home = new JPanel(new BorderLayout());
         home.add(new JLabel("Inicio (placeholder)", SwingConstants.CENTER), BorderLayout.CENTER);
 
         cards.add(login, VIEW_LOGIN);
-        cards.add(home, VIEW_HOME);
+        cards.add(home,  VIEW_HOME);
         setContentPane(cards);
 
         show(VIEW_LOGIN);
     }
 
     private void onLoginOk(Usuario usuario) {
-        JOptionPane.showMessageDialog(
-                this,
-                "Bienvenido, " + usuario.getNombreCompleto() + "\nRol: " + rolDe(usuario),
-                "Sesión iniciada",
-                JOptionPane.INFORMATION_MESSAGE
-        );
-        show(VIEW_HOME);
+        redirigirUsuario(usuario);
+    }
+
+    // Cambiado redirigir usuario de MenuPrincipal a VentanaPrincipal
+    private void redirigirUsuario(Usuario u) {
+        if (u instanceof Estudiante) {
+            if (estudiantePanel == null) {
+                estudiantePanel = new EstudiantePanel(gestor, u, this::logout);
+                cards.add(estudiantePanel, VIEW_ESTUDIANTE);
+            } else {
+                estudiantePanel.setUsuario(u);
+            }
+            show(VIEW_ESTUDIANTE);
+        } else if (u instanceof Funcionario) {
+            if (funcionarioPanel == null) {
+                funcionarioPanel = placeholder("Panel Funcionario (en construcción)");
+                cards.add(funcionarioPanel, VIEW_FUNCIONARIO);
+            }
+            show(VIEW_FUNCIONARIO);
+        } else if (u instanceof Auditor) {
+            if (auditorPanel == null) {
+                auditorPanel = placeholder("Panel Auditor (en construcción)");
+                cards.add(auditorPanel, VIEW_AUDITOR);
+            }
+            show(VIEW_AUDITOR);
+        } else {
+            show(VIEW_HOME);
+        }
+    }
+
+    private void logout() {
+        gestor.cerrarSesion();
+        show(VIEW_LOGIN);
     }
 
     private void show(String name) {
         ((CardLayout) cards.getLayout()).show(cards, name);
         revalidate(); repaint();
+    }
+
+    private JPanel placeholder(String text) {
+        JPanel p = new JPanel(new BorderLayout());
+        p.add(new JLabel(text, SwingConstants.CENTER), BorderLayout.CENTER);
+        return p;
     }
 }
