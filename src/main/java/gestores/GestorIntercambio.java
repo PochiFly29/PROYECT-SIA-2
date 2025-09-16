@@ -414,18 +414,42 @@ public class GestorIntercambio {
         return true;
     }
 
+
     public List<Postulacion> getPostulaciones(String tipoFiltro, String valorFiltro) {
         Stream<Postulacion> postulacionesStream = dataStore.getPostulaciones().stream();
+
         switch (tipoFiltro) {
             case "rut":
-                return postulacionesStream.filter(p -> p.getRutEstudiante().equals(valorFiltro)).sorted(Comparator.comparing(Postulacion::getFechaPostulacion).reversed()).collect(Collectors.toList());
+                // Ordena por fecha de postulación de forma descendente (las más recientes primero)
+                return postulacionesStream
+                        .filter(p -> p.getRutEstudiante().equals(valorFiltro))
+                        .sorted(Comparator.comparing(Postulacion::getFechaPostulacion).reversed())
+                        .collect(Collectors.toList());
             case "estado":
                 EstadoPostulacion estado = EstadoPostulacion.valueOf(valorFiltro.toUpperCase());
-                return postulacionesStream.filter(p -> p.getEstado() == estado).sorted(Comparator.comparing(Postulacion::getFechaPostulacion).reversed()).collect(Collectors.toList());
+                // Si el estado es "POR_REVISAR", ordena por fecha ascendente (las más antiguas primero)
+                if (estado == EstadoPostulacion.POR_REVISAR) {
+                    return postulacionesStream
+                            .filter(p -> p.getEstado() == estado)
+                            .sorted(Comparator.comparing(Postulacion::getFechaPostulacion)) // Orden ascendente
+                            .collect(Collectors.toList());
+                }
+                // Para otros estados, usa el orden por ID
+                return postulacionesStream
+                        .filter(p -> p.getEstado() == estado)
+                        .sorted(Comparator.comparing(p -> Integer.parseInt(p.getId().substring(1))))
+                        .collect(Collectors.toList());
             case "convenio":
-                return postulacionesStream.filter(p -> p.getIdConvenio().equals(valorFiltro)).sorted(Comparator.comparing(Postulacion::getFechaPostulacion).reversed()).collect(Collectors.toList());
+                // Ordena por ID de forma descendente (las más recientes primero)
+                return postulacionesStream
+                        .filter(p -> p.getIdConvenio().equals(valorFiltro))
+                        .sorted(Comparator.comparing(p -> Integer.parseInt(p.getId().substring(1))))
+                        .collect(Collectors.toList());
             default:
-                return postulacionesStream.sorted(Comparator.comparing(Postulacion::getFechaPostulacion).reversed()).collect(Collectors.toList());
+                // Orden general por ID de forma descendente
+                return postulacionesStream
+                        .sorted(Comparator.comparing(p -> Integer.parseInt(p.getId().substring(1))))
+                        .collect(Collectors.toList());
         }
     }
 
@@ -471,6 +495,50 @@ public class GestorIntercambio {
                 System.out.println("Error al crear el programa por defecto: " + e.getMessage());
             }
         }
+    }
+
+    public void cargarDatosIniciales() {
+
+        // Crear un funcionario y un auditor
+        Usuario funcionario = new Usuario("11111111-1", "Ana Gomez", "ana.gomez@sgie.cl", "pass123", Rol.FUNCIONARIO);
+        Usuario auditor = new Usuario("22222222-2", "Pedro Soto", "pedro.soto@sgie.cl", "pass123", Rol.AUDITOR);
+        dataStore.addUsuario(funcionario);
+        dataStore.addUsuario(auditor);
+
+        String[] carreras = {"Ingeniería Civil", "Ingeniería en Informática", "Ingeniería Comercial", "Derecho", "Medicina", "Arquitectura", "Diseño"};
+        List<Convenio> convenios = dataStore.getConvenios();
+
+        for (int i = 1; i <= 50; i++) {
+            String rut = String.format("90%07d-K", i);
+            String nombre = "Estudiante " + i;
+            String email = "estudiante" + i + "@mail.cl";
+            String pass = "pass123";
+            String carrera = carreras[i % carreras.length];
+            double promedio = 5.0 + (Math.random() * 2.0); // Promedio entre 5.0 y 7.0
+            int semestres = (int) (Math.random() * 8) + 1; // Entre 1 y 8 semestres
+
+            Estudiante estudiante = new Estudiante(rut, nombre, email, pass, carrera, promedio, semestres);
+            dataStore.addUsuario(estudiante);
+
+            // Crear una o dos postulaciones
+            int numPostulaciones = (int) (Math.random() * 2) + 1; // 1 o 2
+            for (int j = 0; j < numPostulaciones; j++) {
+                if (convenios.isEmpty()) break;
+
+                int convenioIndex = (int) (Math.random() * convenios.size());
+                Convenio convenio = convenios.get(convenioIndex);
+
+                // Verificar si el estudiante ya tiene una postulación a este convenio
+                if (!estudiante.getPostulaciones().stream().anyMatch(p -> p.getIdConvenio().equals(convenio.getId()))) {
+                    String idPostulacion = "P" + (dataStore.getPostulaciones().size() + 1);
+                    Postulacion postulacion = new Postulacion(idPostulacion, rut, convenio.getId(), LocalDate.now(), EstadoPostulacion.POR_REVISAR);
+                    postulacion.setConvenioSeleccionado(convenio); // Enlazar el objeto Convenio
+                    dataStore.addPostulacion(postulacion);
+                    estudiante.agregarPostulacion(postulacion);
+                }
+            }
+        }
+        System.out.println("Datos de prueba (50 estudiantes, 2 usuarios, postulaciones) cargados en memoria.");
     }
 
     public void recargarDatos() {

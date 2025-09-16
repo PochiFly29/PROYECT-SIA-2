@@ -41,9 +41,11 @@ public class Main {
 
         GestorIntercambio gestor = new GestorIntercambio();
 
+
         gestor.crearProgramaPorDefecto();
         gestor.recargarDatos();
-        gestor.cargarConveniosDesdeArchivo("src/main/resources/convenios.txt");
+        // gestor.cargarDatosIniciales();
+        // gestor.cargarConveniosDesdeArchivo("src/main/resources/convenios.txt");
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Cerrando la aplicación. Guardando datos...");
