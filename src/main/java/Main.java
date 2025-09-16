@@ -8,7 +8,7 @@ import java.sql.SQLException;
 public class Main {
     public static void main(String[] args) throws Exception {
         // La ruta de la base de datos debe ser la misma que en GestorIntercambio
-        String url = "jdbc:sqlite:miBase.db";
+        String url = "jdbc:sqlite:gestion_intercambio.db";
 
         try (Connection conn = DriverManager.getConnection(url)) {
             if (conn != null) {
