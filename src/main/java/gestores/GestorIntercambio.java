@@ -408,6 +408,7 @@ public class GestorIntercambio {
         }
         String nuevoId = "P" + (dataStore.getPostulaciones().size() + 1);
         Postulacion nuevaPostulacion = new Postulacion(nuevoId, estudiante.getRut(), convenio.getId(), LocalDate.now(), EstadoPostulacion.POR_REVISAR);
+        nuevaPostulacion.setConvenioSeleccionado(convenio);
         dataStore.addPostulacion(nuevaPostulacion);
         estudiante.agregarPostulacion(nuevaPostulacion);
         return true;
