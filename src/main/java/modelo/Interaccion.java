@@ -9,54 +9,35 @@ public class Interaccion {
     private Usuario autor;
     private TipoInteraccion tipo;
     private String titulo;
-    private String contenido;
     private LocalDateTime fechaHora;
+    private String rutaArchivo;
 
-    // Constructor privado que genera el ID único internamente
-    public Interaccion(Usuario autor, TipoInteraccion tipo, String titulo, String contenido, LocalDateTime fechaHora) {
-        this.id = UUID.randomUUID().toString(); // Genera un ID único automáticamente
+    // Constructor para la creación de interacciones
+    public Interaccion(Usuario autor, TipoInteraccion tipo, String titulo, LocalDateTime fechaHora, String rutaArchivo) {
+        this.id = UUID.randomUUID().toString();
         this.autor = autor;
         this.tipo = tipo;
         this.titulo = titulo;
-        this.contenido = contenido;
         this.fechaHora = fechaHora;
+        this.rutaArchivo = rutaArchivo;
     }
 
-    /**
-     * Crea una nueva interacción de tipo COMENTARIO.
-     * @param autor Usuario que realiza el comentario.
-     * @param contenido El texto del comentario.
-     * @return Una nueva instancia de Interaccion.
-     */
-    public static Interaccion ofComentario(Usuario autor, String contenido) {
-        return new Interaccion(autor, TipoInteraccion.COMENTARIO, "Comentario", contenido, LocalDateTime.now());
+    // Constructor para la carga desde la base de datos
+    public Interaccion(String id, Usuario autor, TipoInteraccion tipo, String titulo, LocalDateTime fechaHora, String rutaArchivo) {
+        this.id = id;
+        this.autor = autor;
+        this.tipo = tipo;
+        this.titulo = titulo;
+        this.fechaHora = fechaHora;
+        this.rutaArchivo = rutaArchivo;
     }
 
-    /**
-     * Crea una nueva interacción de tipo DOCUMENTO.
-     * Se usa para simular la subida de un documento.
-     * @param autor Usuario que sube el documento.
-     * @param titulo El título del documento (ej: "Copia Cédula").
-     * @param contenido La descripción del documento (ej: "Se adjunta copia de mi cédula.").
-     * @return Una nueva instancia de Interaccion.
-     */
-    public static Interaccion ofDocumento(Usuario autor, String titulo, String contenido) {
-        return new Interaccion(autor, TipoInteraccion.DOCUMENTO, titulo, contenido, LocalDateTime.now());
-    }
-
-    // Getters
+    // Getters y Setters
     public String getId() { return id; }
     public Usuario getAutor() { return autor; }
     public TipoInteraccion getTipo() { return tipo; }
     public String getTitulo() { return titulo; }
-    public String getContenido() { return contenido; }
     public LocalDateTime getFechaHora() { return fechaHora; }
-
-    // Setters
-    public void setId(String id) { this.id = id; }
-    public void setAutor(Usuario autor) { this.autor = autor; }
-    public void setTipo(TipoInteraccion tipo) { this.tipo = tipo; }
-    public void setTitulo(String titulo) { this.titulo = titulo; }
-    public void setContenido(String contenido) { this.contenido = contenido; }
-    public void setFechaHora(LocalDateTime fechaHora) { this.fechaHora = fechaHora; }
+    public String getRutaArchivo() { return rutaArchivo; }
+    public void setRutaArchivo(String rutaArchivo) { this.rutaArchivo = rutaArchivo; }
 }

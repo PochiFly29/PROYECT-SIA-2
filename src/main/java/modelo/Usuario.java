@@ -43,8 +43,17 @@ public class Usuario {
     public void setBloqueado(boolean bloqueado) { this.bloqueado = bloqueado; }
 
     public int getIntentosFallidos() { return intentosFallidos; }
+    // todo sobrecarga
     public void setIntentosFallidos(int intentosFallidos) { this.intentosFallidos = intentosFallidos; }
-
+    public void setIntentosFallidos() { this.intentosFallidos += 1; }
     public Rol getRol() { return rol; }
     public void setRol(Rol rol) { this.rol = rol; }
+/*
+public class Funcionario extends Usuario {
+    public Funcionario(String rut, String nombreCompleto, String email, String pass) {
+        super(rut, nombreCompleto, email, pass, Rol.FUNCIONARIO);
+    }
+}
+
+ */
 }

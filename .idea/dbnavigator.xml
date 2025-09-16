@@ -11,6 +11,15 @@
   </component>
   <component name="DBNavigator.Project.DatabaseAssistantManager">
     <assistants>
+      <assistant-state connection-id="25dc51e2-1188-428e-b43b-34de4095c5df" default-profile-name="" selected-conversation-id="" assistant-type="GENERIC" availability="UNAVAILABLE" acknowledgement="NONE">
+        <conversations />
+      </assistant-state>
+      <assistant-state connection-id="5bf9400a-6d2d-436f-84cd-12d5ebdbc5db" default-profile-name="" selected-conversation-id="" assistant-type="GENERIC" availability="UNAVAILABLE" acknowledgement="NONE">
+        <conversations />
+      </assistant-state>
+      <assistant-state connection-id="0f7ba8d5-430f-4ce8-b199-6265fe7ef6c4" default-profile-name="" selected-conversation-id="" assistant-type="GENERIC" availability="UNAVAILABLE" acknowledgement="NONE">
+        <conversations />
+      </assistant-state>
       <assistant-state connection-id="83c4d55f-8803-4205-8fe0-f173eecd3ffc" default-profile-name="" selected-conversation-id="" assistant-type="GENERIC" availability="UNAVAILABLE" acknowledgement="NONE">
         <conversations />
       </assistant-state>
@@ -23,25 +32,20 @@
     <loaded-nodes />
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
-    <connection id="83c4d55f-8803-4205-8fe0-f173eecd3ffc">
-      <console name="Connection" type="STANDARD" schema="miBase" session="Main" />
+    <connection id="25dc51e2-1188-428e-b43b-34de4095c5df">
+      <console name="Connection" type="STANDARD" schema="main" session="Main" />
     </connection>
   </component>
   <component name="DBNavigator.Project.DatabaseEditorStateManager">
     <last-used-providers />
   </component>
   <component name="DBNavigator.Project.DatabaseFileManager">
-    <open-files />
+    <open-files>
+      <object connection-id="25dc51e2-1188-428e-b43b-34de4095c5df" object-ref="consoles/Connection" />
+    </open-files>
   </component>
   <component name="DBNavigator.Project.DatabaseSessionManager">
-    <connection id="83c4d55f-8803-4205-8fe0-f173eecd3ffc" />
-  </component>
-  <component name="DBNavigator.Project.DatasetFilterManager">
-    <filter-actions connection-id="83c4d55f-8803-4205-8fe0-f173eecd3ffc" dataset="miBase.usuarios" active-filter-id="EMPTY_FILTER">
-      <filter id="f6b9d9fc-b145-40d4-8ac2-35e3375cb80c" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND">
-        <condition column="nombre" operator="=" value="" active="true" />
-      </filter>
-    </filter-actions>
+    <connection id="25dc51e2-1188-428e-b43b-34de4095c5df" />
   </component>
   <component name="DBNavigator.Project.ExecutionManager">
     <retain-sticky-names value="false" />
@@ -58,9 +62,12 @@
     <last-used-operator value="EQUAL" />
     <filters />
   </component>
+  <component name="DBNavigator.Project.ScriptExecutionManager" clear-outputs="true">
+    <recently-used-interfaces />
+  </component>
   <component name="DBNavigator.Project.Settings">
     <connections>
-      <connection source-id="" id="83c4d55f-8803-4205-8fe0-f173eecd3ffc" active="true" signed="true">
+      <connection source-id="" id="25dc51e2-1188-428e-b43b-34de4095c5df" active="true" signed="true">
         <database>
           <name value="Connection" />
           <description value="" />
@@ -80,7 +87,7 @@
           <protocol value="" />
           <url-parameters />
           <files>
-            <file path="C:\Users\poshe\IdeaProjects\PROYECT-SIA-2\db\miBase.db" schema="miBase" />
+            <file path="C:\Users\poshe\IdeaProjects\PROYECT-SIA-2\miBase.db" schema="main" />
           </files>
           <type value="NONE" />
           <user value="" />

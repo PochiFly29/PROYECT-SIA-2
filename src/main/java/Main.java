@@ -7,8 +7,8 @@ import java.sql.SQLException;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        // Como está dentro de resources, necesitas ruta relativa al classpath
-        String url = "jdbc:sqlite:" + System.getProperty("user.dir") + "/db/miBase.db";
+        // La ruta de la base de datos debe ser la misma que en GestorIntercambio
+        String url = "jdbc:sqlite:miBase.db";
 
         try (Connection conn = DriverManager.getConnection(url)) {
             if (conn != null) {
@@ -17,7 +17,6 @@ public class Main {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
 
         String[] banner = {
                 "  _____  _____ _____  ______ ",
@@ -40,14 +39,20 @@ public class Main {
         System.out.print("\n");
 
 
-        // Creamos las instancias de las clases principales
-        VerificarInput input = new VerificarInput();
         GestorIntercambio gestor = new GestorIntercambio();
 
+        gestor.crearProgramaPorDefecto();
+        gestor.recargarDatos();
+        gestor.cargarConveniosDesdeArchivo("src/main/resources/convenios.txt");
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Cerrando la aplicación. Guardando datos...");
+            gestor.guardarDatos();
+        }));
+
         // Iniciamos el menú principal como una instancia
+        VerificarInput input = new VerificarInput();
         MenuPrincipal menuPrincipal = new MenuPrincipal(input, gestor);
-        // Pruebas SQL
-        menuPrincipal.probarSQL();
         menuPrincipal.iniciar();
     }
 }
