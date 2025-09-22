@@ -11,10 +11,10 @@ import java.awt.*;
 
 public class VentanaPrincipal extends JFrame {
     private static final String VIEW_LOGIN = "login";
-    private static final String VIEW_HOME  = "home";
-    private static final String VIEW_ESTUDIANTE  = "estu";
+    private static final String VIEW_HOME = "home";
+    private static final String VIEW_ESTUDIANTE = "estu";
     private static final String VIEW_FUNCIONARIO = "func";
-    private static final String VIEW_AUDITOR     = "aud";
+    private static final String VIEW_AUDITOR = "aud";
 
     private final JPanel cards = new JPanel(new CardLayout());
     private final GestorIntercambio gestor;
@@ -36,11 +36,7 @@ public class VentanaPrincipal extends JFrame {
 
         LoginPanel login = new LoginPanel(gestor, this::onLoginOk);
 
-        JPanel home = new JPanel(new BorderLayout());
-        home.add(new JLabel("Inicio (placeholder)", SwingConstants.CENTER), BorderLayout.CENTER);
-
         cards.add(login, VIEW_LOGIN);
-        cards.add(home,  VIEW_HOME);
         setContentPane(cards);
 
         show(VIEW_LOGIN);
@@ -50,7 +46,6 @@ public class VentanaPrincipal extends JFrame {
         redirigirUsuario(usuario);
     }
 
-    // Cambiado redirigir usuario de MenuPrincipal a VentanaPrincipal
     private void redirigirUsuario(Usuario u) {
         if (u instanceof Estudiante) {
             if (estudiantePanel == null) {
@@ -62,13 +57,13 @@ public class VentanaPrincipal extends JFrame {
             show(VIEW_ESTUDIANTE);
         } else if (u instanceof Funcionario) {
             if (funcionarioPanel == null) {
-                funcionarioPanel = placeholder("Panel Funcionario (en construcción)");
+                funcionarioPanel = placeholder("Panel Funcionario (proximamente)");
                 cards.add(funcionarioPanel, VIEW_FUNCIONARIO);
             }
             show(VIEW_FUNCIONARIO);
         } else if (u instanceof Auditor) {
             if (auditorPanel == null) {
-                auditorPanel = placeholder("Panel Auditor (en construcción)");
+                auditorPanel = placeholder("Panel Auditor (proximamente)");
                 cards.add(auditorPanel, VIEW_AUDITOR);
             }
             show(VIEW_AUDITOR);

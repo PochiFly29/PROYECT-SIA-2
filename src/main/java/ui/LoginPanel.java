@@ -62,7 +62,7 @@ public class LoginPanel extends JPanel {
         getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
                 .put(KeyStroke.getKeyStroke("ENTER"), "enterLogin");
         getActionMap().put("enterLogin", new AbstractAction() {
-            @Override public void actionPerformed(java.awt.event.ActionEvent e) { doLogin(); }
+            public void actionPerformed(java.awt.event.ActionEvent e) { doLogin(); }
         });
     }
 
@@ -70,7 +70,7 @@ public class LoginPanel extends JPanel {
         c.putClientProperty(FlatClientProperties.OUTLINE, error ? "error" : null);
     }
 
-    @Override public void addNotify() {
+    public void addNotify() {
         super.addNotify();
         var rp = SwingUtilities.getRootPane(this);
         if (rp != null) rp.setDefaultButton(login);
