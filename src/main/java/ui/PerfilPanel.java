@@ -220,9 +220,7 @@ public class PerfilPanel extends JPanel {
         }, true);
     }
 
-    private void inlineEdit(final JLabel targetLabel,
-                            final java.util.function.Function<String, Boolean> validatorCommit,
-                            final boolean password) {
+    private void inlineEdit(final JLabel targetLabel, final java.util.function.Function<String, Boolean> validatorCommit, final boolean password) {
 
         final Container row = targetLabel.getParent();
         if (row == null) return;
@@ -287,7 +285,6 @@ public class PerfilPanel extends JPanel {
         });
     }
 
-    // ===== Helpers =====
     private static JLabel labelTitulo(String t) {
         JLabel l = new JLabel(t);
         l.putClientProperty(FlatClientProperties.STYLE, "font:bold");

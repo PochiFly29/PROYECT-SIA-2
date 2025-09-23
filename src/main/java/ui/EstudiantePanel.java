@@ -59,8 +59,11 @@ public class EstudiantePanel extends JPanel {
         panelCerrarSesion.add(btnCerrar, BorderLayout.NORTH);
 
         JButton btnPerfil = new JButton("Perfil");
+        btnPerfil.setBorder(null);
         JButton btnVerPost = new JButton("Ver Postulaciones");
+        btnVerPost.setBorder(null);
         JButton btnPostular = new JButton("Postular a un convenio");
+        btnPostular.setBorder(null);
 
         JPanel panelOpciones = new JPanel(new GridLayout(0, 1, 0, 12));
         panelOpciones.setBorder(BorderFactory.createEmptyBorder(50, 16, 12, 16));
@@ -87,7 +90,7 @@ public class EstudiantePanel extends JPanel {
         // ===== Centro (cards) =====
         perfilPanel = new PerfilPanel(usuario);
         postulacionesPanel = new PostulacionesPanel();
-        postularPanel = new PostularPanel();
+        postularPanel = new PostularPanel(gestor, usuario);
 
         centerCards.add(perfilPanel, CARD_PERFIL);
         centerCards.add(postulacionesPanel, CARD_POSTULACIONES);
