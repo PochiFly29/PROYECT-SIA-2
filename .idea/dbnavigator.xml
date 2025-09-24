@@ -28,7 +28,7 @@
   <component name="DBNavigator.Project.DatabaseBrowserManager">
     <autoscroll-to-editor value="false" />
     <autoscroll-from-editor value="true" />
-    <show-object-properties value="false" />
+    <show-object-properties value="true" />
     <loaded-nodes />
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
@@ -45,37 +45,9 @@
   <component name="DBNavigator.Project.DatabaseSessionManager">
     <connection id="25dc51e2-1188-428e-b43b-34de4095c5df" />
   </component>
-  <component name="DBNavigator.Project.DatasetFilterManager">
-    <filter-actions connection-id="25dc51e2-1188-428e-b43b-34de4095c5df" dataset="main.usuarios" active-filter-id="19832e11-59de-4c32-9b57-be1fc0bdbcaf">
-      <filter id="19832e11-59de-4c32-9b57-be1fc0bdbcaf" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
-    </filter-actions>
-    <filter-actions connection-id="25dc51e2-1188-428e-b43b-34de4095c5df" dataset="main.postulaciones" active-filter-id="f0d88a68-37df-4073-9f53-fb26aa286852">
-      <filter id="f0d88a68-37df-4073-9f53-fb26aa286852" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
-    </filter-actions>
-    <filter-actions connection-id="25dc51e2-1188-428e-b43b-34de4095c5df" dataset="main.convenios" active-filter-id="85cb993c-64b3-409a-8872-c98c4569bc4a">
-      <filter id="85cb993c-64b3-409a-8872-c98c4569bc4a" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
-    </filter-actions>
-    <filter-actions connection-id="25dc51e2-1188-428e-b43b-34de4095c5df" dataset="main.estudiantes_info" active-filter-id="8d7492e1-0084-4b7e-b8f9-2cb8786c9220">
-      <filter id="8d7492e1-0084-4b7e-b8f9-2cb8786c9220" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
-    </filter-actions>
-  </component>
-  <component name="DBNavigator.Project.ExecutionManager">
-    <retain-sticky-names value="false" />
-  </component>
-  <component name="DBNavigator.Project.MethodExecutionManager">
-    <method-browser />
-    <execution-history>
-      <group-entries value="true" />
-      <execution-inputs />
-    </execution-history>
-    <execution-variables-cache />
-  </component>
   <component name="DBNavigator.Project.ObjectQuickFilterManager">
     <last-used-operator value="EQUAL" />
     <filters />
-  </component>
-  <component name="DBNavigator.Project.ScriptExecutionManager" clear-outputs="true">
-    <recently-used-interfaces />
   </component>
   <component name="DBNavigator.Project.Settings">
     <connections>
@@ -611,9 +583,5 @@
         </visibility-settings>
       </environment>
     </general-settings>
-  </component>
-  <component name="DBNavigator.Project.StatementExecutionManager">
-    <execution-variables />
-    <execution-variable-types />
   </component>
 </project>
