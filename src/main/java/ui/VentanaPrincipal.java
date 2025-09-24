@@ -1,9 +1,7 @@
 package ui;
 
 import gestores.GestorIntercambio;
-import modelo.Auditor;
 import modelo.Estudiante;
-import modelo.Funcionario;
 import modelo.Usuario;
 
 import javax.swing.*;
@@ -55,13 +53,13 @@ public class VentanaPrincipal extends JFrame {
                 estudiantePanel.setUsuario(u);
             }
             show(VIEW_ESTUDIANTE);
-        } else if (u instanceof Funcionario) {
+        } else if (u.getRol().equals("Funcionario")) {
             if (funcionarioPanel == null) {
                 funcionarioPanel = placeholder("Panel Funcionario (proximamente)");
                 cards.add(funcionarioPanel, VIEW_FUNCIONARIO);
             }
             show(VIEW_FUNCIONARIO);
-        } else if (u instanceof Auditor) {
+        } else if (u.getRol().equals("Auditor")) {
             if (auditorPanel == null) {
                 auditorPanel = placeholder("Panel Auditor (proximamente)");
                 cards.add(auditorPanel, VIEW_AUDITOR);

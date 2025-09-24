@@ -1,3 +1,4 @@
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import gestores.GestorIntercambio;
 import menu.*;
 import ui.VentanaPrincipal;
@@ -35,9 +36,10 @@ public class Main {
             gestor.guardarDatos();
         }));
 
-        // Iniciamos el menú principal como una instancia
+        /* Iniciamos el menú principal como una instancia
         VerificarInput input = new VerificarInput();
         MenuPrincipal menuPrincipal = new MenuPrincipal(input, gestor);
         menuPrincipal.iniciar();
+         */
     }
 }
