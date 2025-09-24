@@ -1,8 +1,6 @@
-import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import gestores.GestorIntercambio;
 import menu.*;
 import ui.VentanaPrincipal;
-
 import javax.swing.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -10,8 +8,8 @@ import java.sql.SQLException;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        // Como está dentro de resources, necesitas ruta relativa al classpath
-        String url = "jdbc:sqlite:" + System.getProperty("user.dir") + "/db/miBase.db";
+        // La ruta de la base de datos debe ser la misma que en GestorIntercambio
+        String url = "jdbc:sqlite:gestion_intercambio.db";
 
         try (Connection conn = DriverManager.getConnection(url)) {
             if (conn != null) {
@@ -26,5 +24,20 @@ public class Main {
 
         // Abrir la ventana
         SwingUtilities.invokeLater(() -> new VentanaPrincipal(gestor).setVisible(true));
+
+        gestor.crearProgramaPorDefecto();
+        gestor.recargarDatos();
+        // gestor.cargarDatosIniciales();
+        // gestor.cargarConveniosDesdeArchivo("src/main/resources/convenios.txt");
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Cerrando la aplicación. Guardando datos...");
+            gestor.guardarDatos();
+        }));
+
+        // Iniciamos el menú principal como una instancia
+        VerificarInput input = new VerificarInput();
+        MenuPrincipal menuPrincipal = new MenuPrincipal(input, gestor);
+        menuPrincipal.iniciar();
     }
 }

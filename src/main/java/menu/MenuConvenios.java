@@ -6,6 +6,8 @@ import servicios.VerificarInput;
 import java.util.Optional;
 import java.util.*;
 
+import static enums.Rol.FUNCIONARIO;
+
 public class MenuConvenios {
     private final VerificarInput input;
     private final Usuario usuarioActual;
@@ -37,7 +39,7 @@ public class MenuConvenios {
             System.out.println("-------------------------------------------------------------------------------------------------------------------");
 
             // Ordenar la lista de convenios
-            List<Convenio> conveniosOrdenados = programaActual.getConveniosVigentes();
+            List<Convenio> conveniosOrdenados = programaActual.getConvenios();
             conveniosOrdenados.sort(Comparator.comparing(Convenio::getId));
 
             for (Convenio c : conveniosOrdenados) {
@@ -53,7 +55,7 @@ public class MenuConvenios {
             String prompt = "\n0) Volver | ID) Ver detalle";
             if (usuarioActual instanceof Estudiante) {
                 prompt += " y postular";
-            } else if (usuarioActual instanceof Funcionario) {
+            } else if (usuarioActual.getRol().equals(FUNCIONARIO)) {
                 prompt += " y gestionar";
             }
 
@@ -86,7 +88,7 @@ public class MenuConvenios {
                             System.out.println("No se pudo postular. Ya tienes una postulación activa para este convenio.");
                         }
                     }
-                } else if (usuarioActual instanceof Funcionario) {
+                } else if (usuarioActual.getRol().equals(FUNCIONARIO)) {
                     // Lógica para funcionarios: editar, aprobar, etc.
                     System.out.println("Lógica de gestión de convenios para funcionarios en desarrollo.");
                 }
@@ -114,7 +116,7 @@ public class MenuConvenios {
             System.out.printf("| %-5s | %-40s | %-20s | %-25s |%n", "ID", "UNIVERSIDAD", "PAÍS", "REQUISITOS ACADÉMICOS");
             System.out.println("-------------------------------------------------------------------------------------------------------------------");
 
-            List<Convenio> conveniosOrdenados = programaActual.getConveniosVigentes();
+            List<Convenio> conveniosOrdenados = programaActual.getConvenios();
             conveniosOrdenados.sort(Comparator.comparing(Convenio::getId));
 
             for (Convenio c : conveniosOrdenados) {
@@ -141,6 +143,7 @@ public class MenuConvenios {
 
             if (convenioOpt.isPresent()) {
                 Convenio c = convenioOpt.get();
+                // Aquí corregimos la llamada a la función correcta
                 menuPostulaciones.mostrarPostulacionesPorConvenio(c.getId());
             } else {
                 System.out.println("ID de convenio inválido.");

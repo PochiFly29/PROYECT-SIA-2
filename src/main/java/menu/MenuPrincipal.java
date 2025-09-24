@@ -5,6 +5,8 @@ import gestores.ResultadoLogin;
 import modelo.Usuario;
 import servicios.VerificarInput;
 
+import java.sql.*;
+
 public class MenuPrincipal {
 
     private final VerificarInput input;
@@ -57,7 +59,7 @@ public class MenuPrincipal {
         System.out.println("\n--- Registro de nuevo estudiante ---");
 
         String rut = input.leerLinea("RUT: ").trim();
-        if (!validarRut(rut, false)) {
+        if (!validarRut(rut)) {
             System.out.println("RUT inválido. Debe ser de 9 digitos sin puntos ni guión.");
             return;
         }
@@ -89,9 +91,5 @@ public class MenuPrincipal {
         if (rut == null) return false;
         rut = rut.trim().toUpperCase();
         return rut.matches("^[0-9]{8}[0-9K]$");
-    }
-
-    private static boolean validarRut(String rut, boolean validarDV) {
-        return validarRut(rut);
     }
 }

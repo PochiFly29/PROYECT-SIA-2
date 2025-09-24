@@ -23,7 +23,7 @@ public class MenuPerfil {
             System.out.println("2) Modificar email");
             System.out.println("3) Cambiar contraseña");
 
-            // Opciones específicas para Estudiantes. Se ampliara posteriormente.
+            // Opciones específicas para Estudiantes.
             if (usuarioActual instanceof Estudiante) {
                 System.out.println("4) Modificar carrera");
             }

@@ -19,7 +19,7 @@ public class Estudiante extends Usuario {
         this.postulaciones = new ArrayList<>();
     }
 
-    public void postular(Postulacion postulacion) {
+    public void agregarPostulacion(Postulacion postulacion) {
         this.postulaciones.add(postulacion);
     }
 

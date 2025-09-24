@@ -4,6 +4,7 @@ import enums.*;
 import gestores.GestorIntercambio;
 import modelo.*;
 import servicios.VerificarInput;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,10 +23,9 @@ public class MenuPostulaciones {
         while (true) {
             System.out.println("\n--- Mis Postulaciones ---");
             Estudiante estudiante = (Estudiante) usuarioActual;
-            List<Postulacion> postulaciones = estudiante.getPostulaciones();
-
+            List<Postulacion> postulaciones = gestor.getPostulaciones("rut", estudiante.getRut());
             if (mostrarListaYPermitirSeleccion(postulaciones)) {
-                return; // Si el usuario selecciona "0" o no hay postulaciones
+                return;
             }
         }
     }
@@ -38,11 +38,18 @@ public class MenuPostulaciones {
             System.out.println("0) Volver");
 
             int sel = input.leerEntero("Opción: ", -1);
+            List<Postulacion> postulacionesAMostrar;
 
             if (sel == 1) {
-                mostrarListaYPermitirSeleccion(gestor.getTodasLasPostulaciones());
+                postulacionesAMostrar = gestor.getPostulaciones("todos", "");
+                if (mostrarListaYPermitirSeleccion(postulacionesAMostrar)) {
+                    return;
+                }
             } else if (sel == 2) {
-                mostrarListaYPermitirSeleccion(gestor.getPostulacionesPorEstado(EstadoPostulacion.POR_REVISAR));
+                postulacionesAMostrar = gestor.getPostulaciones("estado", "POR_REVISAR");
+                if (mostrarListaYPermitirSeleccion(postulacionesAMostrar)) {
+                    return;
+                }
             } else if (sel == 0) {
                 return;
             } else {
@@ -53,7 +60,7 @@ public class MenuPostulaciones {
 
     public void mostrarPostulacionesPorConvenio(String convenioId) {
         System.out.println("\n>>> Postulaciones para el Convenio " + convenioId);
-        List<Postulacion> postulaciones = gestor.getPostulacionesPorConvenio(convenioId);
+        List<Postulacion> postulaciones = gestor.getPostulaciones("convenio", convenioId);
         mostrarListaYPermitirSeleccion(postulaciones);
     }
 
@@ -71,19 +78,19 @@ public class MenuPostulaciones {
 
         for (Postulacion p : postulaciones) {
             Convenio conv = p.getConvenioSeleccionado();
-            String uni = conv.getUniversidad() != null ? conv.getUniversidad() : "-";
+            Programa prog = gestor.getProgramaDeConvenio(conv);
+
+            String uni = (conv != null && conv.getUniversidad() != null) ? conv.getUniversidad() : "-";
             if (uni.length() > 34) uni = uni.substring(0, 31) + "...";
-            String pais = conv.getPais() != null ? conv.getPais() : "-";
+
+            String pais = (conv != null && conv.getPais() != null) ? conv.getPais() : "-";
             if (pais.length() > 15) pais = pais.substring(0, 12) + "...";
+
             String emitida = String.valueOf(p.getFechaPostulacion());
-            String vigencia;
-            if (conv.getFechaInicio() != null && conv.getFechaFin() != null) {
-                vigencia = conv.getFechaInicio() + " a " + conv.getFechaFin();
-            } else {
-                Programa prog = gestor.getProgramaDeConvenio(conv);
-                vigencia = (prog != null) ? (prog.getFechaInicio() + " a " + prog.getFechaFin()) : "-";
-            }
+
+            String vigencia = (prog != null) ? (prog.getFechaInicio() + " a " + prog.getFechaFin()) : "-";
             if (vigencia.length() > 23) vigencia = vigencia.substring(0, 20) + "...";
+
             System.out.printf("| %-4s | %-34s | %-15s | %-12s | %-23s | %-15s |%n",
                     p.getId(), uni, pais, emitida, vigencia, p.getEstado());
         }
@@ -107,11 +114,10 @@ public class MenuPostulaciones {
     }
 
     private void manejarSeleccionPostulacion(String op, List<Postulacion> postulaciones) {
-        String idNormalizado = op.toUpperCase().replace("P", "");
-        final String idParaBuscar = "P" + idNormalizado;
+        String idNormalizado = op.toUpperCase().startsWith("P") ? op.toUpperCase() : "P" + op.toUpperCase();
 
         Optional<Postulacion> postulacionOpt = postulaciones.stream()
-                .filter(p -> p.getId().equalsIgnoreCase(idParaBuscar))
+                .filter(p -> p.getId().equalsIgnoreCase(idNormalizado))
                 .findFirst();
 
         if (postulacionOpt.isPresent()) {
@@ -179,7 +185,7 @@ public class MenuPostulaciones {
                 Estudiante postulante = gestor.buscarEstudiantePorPostulacion(p.getId());
                 if (postulante != null) {
                     gestor.descartarOtrasPostulaciones(postulante, p.getId());
-                    System.out.println("El estudiante ha sido aceptado. Las demás postulaciones han sido marcadas como ABANDONADA.");
+                    System.out.println("El estudiante ha sido aceptado. Las demás postulaciones han sido marcadas como RECHAZADA.");
                 }
                 break;
             case 3:
@@ -201,7 +207,7 @@ public class MenuPostulaciones {
     private void mostrarDetallesPostulacion(Postulacion p) {
         System.out.println("\n--- Postulación al Convenio de " + p.getConvenioSeleccionado().getUniversidad() + " ---");
         System.out.println("País: " + p.getConvenioSeleccionado().getPais());
-        modelo.Programa programaAsociado = gestor.getProgramaDeConvenio(p.getConvenioSeleccionado());
+        Programa programaAsociado = gestor.getProgramaDeConvenio(p.getConvenioSeleccionado());
         if (programaAsociado != null) {
             System.out.println("Programa: " + programaAsociado.getNombre());
             System.out.println("Plazo: " + programaAsociado.getFechaInicio() + " a " + programaAsociado.getFechaFin());
@@ -222,9 +228,8 @@ public class MenuPostulaciones {
         if (usuarioActual.getRol() == Rol.ESTUDIANTE) {
             System.out.println("\n--- Subir Documento ---");
             String titulo = input.leerLinea("Título del documento (ej: 'PASAPORTE.pdf'): ");
-            String contenido = "Documento subido por el estudiante.";
-            Interaccion interaccion = Interaccion.ofDocumento(usuarioActual, titulo, contenido);
-            gestor.agregarInteraccionAPostulacion(p.getId(), interaccion);
+            Interaccion interaccion = new Interaccion(usuarioActual, TipoInteraccion.DOCUMENTO, titulo, LocalDateTime.now(), null);
+            p.agregarInteraccion(interaccion);
             if (p.getEstado() != EstadoPostulacion.POR_REVISAR) {
                 p.setEstado(EstadoPostulacion.POR_REVISAR);
                 System.out.println("Documento agregado exitosamente. El estado de la postulación ha sido cambiado a 'POR REVISAR'.");
@@ -233,9 +238,9 @@ public class MenuPostulaciones {
             }
         } else if (usuarioActual.getRol() == Rol.FUNCIONARIO) {
             System.out.println("\n--- Agregar Comentario ---");
-            String contenido = input.leerLinea("Ingrese su comentario: ");
-            Interaccion interaccion = Interaccion.ofComentario(usuarioActual, contenido);
-            gestor.agregarInteraccionAPostulacion(p.getId(), interaccion);
+            String titulo = input.leerLinea("Ingrese su comentario: ");
+            Interaccion interaccion = new Interaccion(usuarioActual, TipoInteraccion.COMENTARIO, titulo, LocalDateTime.now(), null);
+            p.agregarInteraccion(interaccion);
             p.setEstado(EstadoPostulacion.REVISADA);
             System.out.println("Comentario agregado y estado de postulación cambiado a 'REVISADA'.");
         }
@@ -250,12 +255,11 @@ public class MenuPostulaciones {
             System.out.printf("| %-12s | %-25s | %-50s |%n", "FECHA", "AGREGADO POR", "ARCHIVO / COMENTARIO");
             System.out.println("---------------------------------------------------------------------------------------------------");
             for (Interaccion i : p.getInteracciones()) {
-                String contenido = (i.getTipo() == TipoInteraccion.DOCUMENTO) ? i.getTitulo() : i.getContenido();
-                String contenidoFormato = contenido.length() > 47 ? contenido.substring(0, 44) + "..." : contenido;
+                String tituloFormato = i.getTitulo().length() > 47 ? i.getTitulo().substring(0, 44) + "..." : i.getTitulo();
                 System.out.printf("| %-12s | %-25s | %-50s |%n",
                         i.getFechaHora().toLocalDate(),
                         i.getAutor().getNombreCompleto(),
-                        contenidoFormato);
+                        tituloFormato);
             }
             System.out.println("---------------------------------------------------------------------------------------------------");
         }
