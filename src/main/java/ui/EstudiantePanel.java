@@ -18,14 +18,12 @@ public class EstudiantePanel extends JPanel {
 
     private JLabel lblSidebarNombre;
 
-    // Cards
     private final CardLayout centerCardsLayout = new CardLayout();
     private final JPanel centerCards = new JPanel(centerCardsLayout);
     private static final String CARD_PERFIL = "perfil";
     private static final String CARD_POSTULACIONES = "postulaciones";
     private static final String CARD_POSTULAR = "postular";
 
-    // paneles hijos
     private PerfilPanel perfilPanel;
     private PostularPanel postularPanel;
     private PostulacionesPanel postulacionesPanel;
@@ -34,7 +32,7 @@ public class EstudiantePanel extends JPanel {
         this.gestor = gestor;
         this.usuario = usuario;
         this.onLogout = onLogout;
-        initUI();
+        init();
         refreshSidebar();
     }
 
@@ -44,8 +42,8 @@ public class EstudiantePanel extends JPanel {
         if (perfilPanel != null) perfilPanel.setUsuario(u);
     }
 
-    private void initUI() {
-        // ===== Sidebar =====
+    private void init() {
+        // ===== Barra izquierda =====
         JPanel panelCerrarSesion = new JPanel(new BorderLayout());
         JButton btnCerrar = new JButton("Cerrar Sesion");
         btnCerrar.setPreferredSize(new Dimension(180, 48));
@@ -89,7 +87,7 @@ public class EstudiantePanel extends JPanel {
 
         // ===== Centro (cards) =====
         perfilPanel = new PerfilPanel(usuario);
-        postulacionesPanel = new PostulacionesPanel();
+        postulacionesPanel = new PostulacionesPanel(gestor, usuario);
         postularPanel = new PostularPanel(gestor, usuario);
 
         centerCards.add(perfilPanel, CARD_PERFIL);
@@ -104,7 +102,11 @@ public class EstudiantePanel extends JPanel {
 
         // Nav
         btnPerfil.addActionListener(e -> centerCardsLayout.show(centerCards, CARD_PERFIL));
-        btnVerPost.addActionListener(e -> centerCardsLayout.show(centerCards, CARD_POSTULACIONES));
+        btnVerPost.addActionListener(e -> {
+            postulacionesPanel.setUsuario(usuario);
+            postulacionesPanel.refresh();
+            centerCardsLayout.show(centerCards, CARD_POSTULACIONES);
+        });
         btnPostular.addActionListener(e -> centerCardsLayout.show(centerCards, CARD_POSTULAR));
     }
 

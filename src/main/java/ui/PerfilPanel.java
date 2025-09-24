@@ -130,7 +130,6 @@ public class PerfilPanel extends JPanel {
         add(tarjeta, BorderLayout.CENTER);
     }
 
-    // ===== Datos → UI =====
     private void refreshFromUsuario() {
         if (usuario == null) return;
 
@@ -164,7 +163,6 @@ public class PerfilPanel extends JPanel {
         repaint();
     }
 
-    // ===== Edición inline (misma lógica que tenías) =====
     private void onEditNombre() {
         inlineEdit(lblNombreValor, new java.util.function.Function<String, Boolean>() {
             public Boolean apply(String nuevo) {

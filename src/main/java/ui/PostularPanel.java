@@ -35,11 +35,11 @@ public class PostularPanel extends JPanel {
     public PostularPanel(GestorIntercambio gestor, Usuario usuario) {
         this.gestor = Objects.requireNonNull(gestor);
         this.usuario = usuario;
-        initUI();
+        init();
         loadData();
     }
 
-    private void initUI() {
+    private void init() {
         setLayout(new BorderLayout());
 
         // ===== Header =====
@@ -145,7 +145,6 @@ public class PostularPanel extends JPanel {
         int modelRow = table.convertRowIndexToModel(viewRow);
         Convenio c = model.getAt(modelRow);
 
-        // Diálogo con info
         JPanel info = new JPanel(new GridBagLayout());
         info.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         GridBagConstraints gc = new GridBagConstraints();
@@ -159,8 +158,7 @@ public class PostularPanel extends JPanel {
         // Opciones según el rol
         if (usuario instanceof Estudiante) {
             Object[] options = {"Postular", "Cerrar"};
-            int opt = JOptionPane.showOptionDialog(
-                    this, info, "Detalle de convenio",
+            int opt = JOptionPane.showOptionDialog(this, info, "Detalle de convenio",
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,
                     null, options, options[0]
             );
