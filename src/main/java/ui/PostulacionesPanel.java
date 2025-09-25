@@ -15,8 +15,7 @@ import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
-import java.util.Objects;
-import java.util.Comparator;
+import java.util.regex.Pattern;
 
 public class PostulacionesPanel extends JPanel {
 
@@ -53,19 +52,25 @@ public class PostulacionesPanel extends JPanel {
     }
 
     public void refresh() {
-        List<Postulacion> mias = Collections.emptyList();
-        if (usuario instanceof Estudiante) {
-            mias = ((Estudiante) usuario).getPostulaciones();
+        List<Postulacion> postulaciones;
+
+        if (usuario.getRol() == Rol.ESTUDIANTE) {
+            postulaciones = gestor.getPostulaciones("rut", usuario.getRut());
+        } else if (usuario.getRol() == Rol.FUNCIONARIO) {
+            postulaciones = gestor.getPostulaciones("estado", EstadoPostulacion.POR_REVISAR.name());
+        } else {
+            postulaciones = Collections.emptyList();
         }
 
-        if (mias == null || mias.isEmpty()) {
+        if (postulaciones.isEmpty()) {
             removeAll();
             setLayout(new GridBagLayout());
             JLabel vacio = new JLabel("No se han encontrado postulaciones.");
             vacio.putClientProperty(FlatClientProperties.STYLE, "font:+3");
             add(vacio, new GridBagConstraints());
             estructuraConstruida = false;
-            revalidate(); repaint();
+            revalidate();
+            repaint();
             return;
         }
 
@@ -75,32 +80,26 @@ public class PostulacionesPanel extends JPanel {
         }
 
         model.setRowCount(0);
-        for (Postulacion p : mias) {
+        for (Postulacion p : postulaciones) {
             Convenio conv = p.getConvenioSeleccionado();
+            // Llama al gestor para obtener el programa asociado al convenio
+            Programa prog = (conv != null) ? gestor.getProgramaDeConvenio(conv) : null;
 
-            String id      = safe(p.getId());
-            String uni     = conv != null ? safe(conv.getUniversidad()) : "-";
-            String pais    = conv != null ? safe(conv.getPais()) : "-";
-            String emitida = (p.getFechaPostulacion() != null) ? p.getFechaPostulacion().toString() : "-";
+            String vigencia = vigenciaTexto(prog);
 
-            String vigencia;
-            if (conv != null && conv.getFechaInicio() != null && conv.getFechaFin() != null) {
-                vigencia = conv.getFechaInicio() + " a " + conv.getFechaFin();
-            } else if (conv != null) {
-                Programa prog = gestor.getProgramaDeConvenio(conv);
-                if (prog != null && prog.getFechaInicio() != null && prog.getFechaFin() != null)
-                    vigencia = prog.getFechaInicio() + " a " + prog.getFechaFin();
-                else vigencia = "-";
-            } else {
-                vigencia = "-";
-            }
-
-            String estado = (p.getEstado() != null) ? p.getEstado().name() : "-";
-            model.addRow(new Object[]{ id, uni, pais, emitida, vigencia, estado, p });
+            model.addRow(new Object[]{
+                    safe(p.getId()),
+                    conv != null ? safe(conv.getUniversidad()) : "-",
+                    conv != null ? safe(conv.getPais()) : "-",
+                    (p.getFechaPostulacion() != null) ? p.getFechaPostulacion().toString() : "-",
+                    vigencia,
+                    (p.getEstado() != null) ? p.getEstado().name() : "-",
+                    p
+            });
         }
-
         applyFilter();
-        revalidate(); repaint();
+        revalidate();
+        repaint();
     }
 
     private void init() {
@@ -112,11 +111,11 @@ public class PostulacionesPanel extends JPanel {
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setBorder(new EmptyBorder(16, 24, 8, 24));
 
-        title = new JLabel("MIS POSTULACIONES", SwingConstants.CENTER);
+        String panelTitle = (usuario.getRol() == Rol.ESTUDIANTE) ? "MIS POSTULACIONES" : "POSTULACIONES PENDIENTES";
+        title = new JLabel(panelTitle, SwingConstants.CENTER);
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
         title.putClientProperty(FlatClientProperties.STYLE, "font:bold +6");
         header.add(title);
-
         header.add(Box.createVerticalStrut(10));
 
         JPanel searchRow = new JPanel(new BorderLayout());
@@ -128,12 +127,14 @@ public class PostulacionesPanel extends JPanel {
         search.putClientProperty(FlatClientProperties.STYLE, "arc:999; margin:6,14,6,14");
         searchRow.add(search, BorderLayout.CENTER);
         header.add(searchRow);
-
         add(header, BorderLayout.NORTH);
 
-        String[] cols = { "ID", "UNIVERSIDAD", "PAÍS", "EMITIDA", "VIGENCIA", "ESTADO", "_POST_" };
+        String[] cols = {"ID", "UNIVERSIDAD", "PAÍS", "EMITIDA", "VIGENCIA", "ESTADO", "_POST_"};
         model = new DefaultTableModel(cols, 0) {
-            public boolean isCellEditable(int row, int col) { return false; }
+            public boolean isCellEditable(int row, int col) {
+                return false;
+            }
+
             public Class<?> getColumnClass(int columnIndex) {
                 return columnIndex == COL_OBJ ? Postulacion.class : String.class;
             }
@@ -141,16 +142,17 @@ public class PostulacionesPanel extends JPanel {
 
         table = new JTable(model);
         table.setFillsViewportHeight(true);
-        table.setRowHeight(28); // igual que PostularPanel
+        table.setRowHeight(28);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setFocusable(false);
 
-        // Orden y filtro
         sorter = new TableRowSorter<>(model);
-        sorter.setComparator(COL_ID, Comparator.naturalOrder());
+        sorter.setComparator(COL_ID, (Comparator<String>) (s1, s2) -> {
+            int n1 = Integer.parseInt(s1.substring(1));
+            int n2 = Integer.parseInt(s2.substring(1));
+            return Integer.compare(n1, n2);
+        });
         table.setRowSorter(sorter);
-
-        add(new JScrollPane(table), BorderLayout.CENTER);
 
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -161,9 +163,17 @@ public class PostulacionesPanel extends JPanel {
         });
 
         search.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) { applyFilter(); }
-            public void removeUpdate(DocumentEvent e) { applyFilter(); }
-            public void changedUpdate(DocumentEvent e) { applyFilter(); }
+            public void insertUpdate(DocumentEvent e) {
+                applyFilter();
+            }
+
+            public void removeUpdate(DocumentEvent e) {
+                applyFilter();
+            }
+
+            public void changedUpdate(DocumentEvent e) {
+                applyFilter();
+            }
         });
 
         table.getColumnModel().getColumn(COL_OBJ).setMinWidth(0);
@@ -193,7 +203,7 @@ public class PostulacionesPanel extends JPanel {
             sorter.setRowFilter(null);
             return;
         }
-        sorter.setRowFilter(RowFilter.regexFilter("(?i)" + PatternUtil.quoteIfNeeded(txt)));
+        sorter.setRowFilter(RowFilter.regexFilter("(?i)" + Pattern.quote(txt)));
     }
 
     private Postulacion selectedPostulacion() {
@@ -207,7 +217,9 @@ public class PostulacionesPanel extends JPanel {
         if (p == null) return;
 
         Convenio conv = p.getConvenioSeleccionado();
+        // Llama al gestor para obtener el programa asociado al convenio
         Programa prog = (conv != null) ? gestor.getProgramaDeConvenio(conv) : null;
+        Estudiante est = gestor.buscarEstudiantePorPostulacion(p.getId());
 
         JPanel info = new JPanel(new GridBagLayout());
         info.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -217,13 +229,22 @@ public class PostulacionesPanel extends JPanel {
         gc.anchor = GridBagConstraints.WEST;
         gc.insets = new Insets(4, 4, 4, 4);
 
+        if (usuario.getRol() == Rol.FUNCIONARIO) {
+            info.add(new JLabel("Estudiante: " + (est != null ? est.getNombreCompleto() : "-")), gc);
+            gc.gridy++;
+            info.add(new JLabel("Carrera: " + (est != null ? est.getCarrera() : "-")), gc);
+            gc.gridy++;
+            info.add(new JLabel("Promedio: " + (est != null ? est.getPromedio() : "-")), gc);
+            gc.gridy++;
+        }
+
         info.add(new JLabel("ID: " + safe(p.getId())), gc);
         gc.gridy++;
         info.add(new JLabel("Universidad: " + (conv != null ? safe(conv.getUniversidad()) : "-")), gc);
         gc.gridy++;
         info.add(new JLabel("País: " + (conv != null ? safe(conv.getPais()) : "-")), gc);
         gc.gridy++;
-        info.add(new JLabel("Plazo: " + vigenciaTexto(conv, prog)), gc);
+        info.add(new JLabel("Plazo: " + vigenciaTexto(prog)), gc);
         gc.gridy++;
         info.add(new JLabel("Estado: " + (p.getEstado() != null ? p.getEstado().name() : "-")), gc);
         if (conv != null) {
@@ -232,9 +253,27 @@ public class PostulacionesPanel extends JPanel {
             gc.gridy++;
             info.add(new JLabel("Requisitos Económicos: " + safe(conv.getRequisitosEconomicos())), gc);
         }
-        JButton btnAdj = new JButton("📎 Adjuntar documento");
+
+        JButton btnAdj = new JButton("Adjuntar");
         JButton btnInter = new JButton("Interacciones");
+        JButton btnCambiarEstado;
+        if (usuario.getRol() == Rol.FUNCIONARIO) {
+            btnCambiarEstado = new JButton("Cambiar estado");
+        } else {
+            btnCambiarEstado = null;
+        }
         JButton btnCerrar = new JButton("Cerrar");
+
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 8));
+        actions.add(btnAdj);
+        btnAdj.putClientProperty(FlatClientProperties.STYLE, "background:#2E86FF; foreground:#FFFFFF");
+        actions.add(btnInter);
+        btnInter.putClientProperty(FlatClientProperties.STYLE, "background:#2E86FF; foreground:#FFFFFF");
+        if (btnCambiarEstado != null) {
+            actions.add(btnCambiarEstado);
+            btnCambiarEstado.putClientProperty(FlatClientProperties.STYLE, "background:#2E86FF; foreground:#FFFFFF");
+        }
+        actions.add(btnCerrar);
 
         JOptionPane pane = new JOptionPane(
                 info,
@@ -247,19 +286,14 @@ public class PostulacionesPanel extends JPanel {
 
         btnAdj.addActionListener(e -> pane.setValue(btnAdj));
         btnInter.addActionListener(e -> pane.setValue(btnInter));
+        if (btnCambiarEstado != null) {
+            btnCambiarEstado.addActionListener(e -> pane.setValue(btnCambiarEstado));
+        }
         btnCerrar.addActionListener(e -> pane.setValue(btnCerrar));
-
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
-        actions.add(btnAdj);
-        btnAdj.putClientProperty(FlatClientProperties.STYLE, "background:#2E86FF; foreground:#FFFFFF");
-        actions.add(btnInter);
-        btnInter.putClientProperty(FlatClientProperties.STYLE, "background:#2E86FF; foreground:#FFFFFF");
-        actions.add(btnCerrar);
 
         JPanel content = new JPanel(new BorderLayout(8, 8));
         content.add(info, BorderLayout.CENTER);
         content.add(actions, BorderLayout.SOUTH);
-
         pane.setMessage(content);
 
         JDialog dialog = pane.createDialog(this, "Detalle de postulación");
@@ -268,36 +302,62 @@ public class PostulacionesPanel extends JPanel {
 
         Object val = pane.getValue();
         if (val == btnAdj) {
-            // === Adjuntar documento / comentario ===
-            if (usuario.getRol() == Rol.ESTUDIANTE) {
-                JTextField tfTitulo = new JTextField();
-                tfTitulo.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ej: PASAPORTE.pdf");
-                int ok = JOptionPane.showConfirmDialog(this, tfTitulo,
-                        "Título del documento", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-                if (ok == JOptionPane.OK_OPTION && !tfTitulo.getText().trim().isEmpty()) {
-                    Interaccion inter = Interaccion.ofDocumento(usuario, tfTitulo.getText().trim(),
-                            "Documento subido por el estudiante.");
-                    gestor.agregarInteraccionAPostulacion(p.getId(), inter);
-                    if (p.getEstado() != EstadoPostulacion.POR_REVISAR) {
-                        p.setEstado(EstadoPostulacion.POR_REVISAR);
-                    }
-                    info("Documento agregado. Estado cambiado a 'POR_REVISAR'.");
-                    refresh();
-                }
-            } else if (usuario.getRol() == Rol.FUNCIONARIO) {
-                JTextArea ta = new JTextArea(5, 30);
-                int ok = JOptionPane.showConfirmDialog(this, new JScrollPane(ta),
-                        "Comentario", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-                if (ok == JOptionPane.OK_OPTION && !ta.getText().trim().isEmpty()) {
-                    Interaccion inter = Interaccion.ofComentario(usuario, ta.getText().trim());
-                    gestor.agregarInteraccionAPostulacion(p.getId(), inter);
-                    p.setEstado(EstadoPostulacion.REVISADA);
-                    info("Comentario agregado. Estado cambiado a 'REVISADA'.");
-                    refresh();
-                }
-            }
+            handleAdjuntarDocumento(p);
         } else if (val == btnInter) {
             verHistorial(p);
+        } else if (val == btnCambiarEstado && usuario.getRol() == Rol.FUNCIONARIO) {
+            handleCambiarEstado(p);
+        }
+        refresh();
+    }
+
+    private void handleAdjuntarDocumento(Postulacion p) {
+        if (usuario.getRol() == Rol.ESTUDIANTE) {
+            JTextField tfTitulo = new JTextField();
+            tfTitulo.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ej: PASAPORTE.pdf");
+            int ok = JOptionPane.showConfirmDialog(this, tfTitulo,
+                    "Título del documento", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (ok == JOptionPane.OK_OPTION && !tfTitulo.getText().trim().isEmpty()) {
+                Interaccion inter = Interaccion.ofDocumento(usuario, tfTitulo.getText().trim());
+                gestor.agregarInteraccionAPostulacion(p.getId(), inter);
+                info("Documento agregado.");
+            }
+        } else if (usuario.getRol() == Rol.FUNCIONARIO) {
+            JTextArea ta = new JTextArea(5, 30);
+            int ok = JOptionPane.showConfirmDialog(this, new JScrollPane(ta),
+                    "Comentario", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (ok == JOptionPane.OK_OPTION && !ta.getText().trim().isEmpty()) {
+                Interaccion inter = Interaccion.ofComentario(usuario, ta.getText().trim());
+                gestor.agregarInteraccionAPostulacion(p.getId(), inter);
+                info("Comentario agregado.");
+            }
+        }
+    }
+
+    private void handleCambiarEstado(Postulacion p) {
+        EstadoPostulacion[] estados = EstadoPostulacion.values();
+        EstadoPostulacion nuevoEstado = (EstadoPostulacion) JOptionPane.showInputDialog(
+                this,
+                "Seleccione el nuevo estado:",
+                "Cambiar Estado",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                estados,
+                p.getEstado()
+        );
+
+        if (nuevoEstado != null && nuevoEstado != p.getEstado()) {
+            if (nuevoEstado == EstadoPostulacion.ACEPTADA) {
+                Estudiante estudiante = gestor.buscarEstudiantePorPostulacion(p.getId());
+                if (estudiante != null) {
+                    gestor.descartarOtrasPostulaciones(estudiante.getRut(), p.getId());
+                }
+                gestor.actualizarEstadoPostulacion(p.getId(), EstadoPostulacion.ACEPTADA);
+                info("Estado de postulación " + p.getId() + " actualizado a 'ACEPTADA'. Las demás postulaciones del estudiante han sido rechazadas.");
+            } else {
+                gestor.actualizarEstadoPostulacion(p.getId(), nuevoEstado);
+                info("Estado de postulación " + p.getId() + " actualizado a '" + nuevoEstado + "'.");
+            }
         }
     }
 
@@ -312,7 +372,7 @@ public class PostulacionesPanel extends JPanel {
         for (Interaccion i : xs) {
             String contenido = (i.getTipo() == enums.TipoInteraccion.DOCUMENTO)
                     ? i.getTitulo()
-                    : i.getContenido();
+                    : i.getTitulo();
             sb.append(i.getFechaHora().toLocalDate())
                     .append(" | ")
                     .append(i.getAutor().getNombreCompleto())
@@ -332,11 +392,11 @@ public class PostulacionesPanel extends JPanel {
     }
 
     // ===== util =====
-    private static String safe(String s) { return (s == null || s.trim().isEmpty()) ? "-" : s.trim(); }
+    private static String safe(String s) {
+        return (s == null || s.trim().isEmpty()) ? "-" : s.trim();
+    }
 
-    private static String vigenciaTexto(Convenio conv, Programa prog) {
-        if (conv != null && conv.getFechaInicio() != null && conv.getFechaFin() != null)
-            return conv.getFechaInicio() + " a " + conv.getFechaFin();
+    private static String vigenciaTexto(Programa prog) {
         if (prog != null && prog.getFechaInicio() != null && prog.getFechaFin() != null)
             return prog.getFechaInicio() + " a " + prog.getFechaFin();
         return "-";
@@ -344,16 +404,5 @@ public class PostulacionesPanel extends JPanel {
 
     private void info(String msg) {
         JOptionPane.showMessageDialog(this, msg, "Información", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    private static class PatternUtil {
-        static String quoteIfNeeded(String s) {
-            StringBuilder out = new StringBuilder();
-            for (char ch : s.toCharArray()) {
-                if ("[](){}.^$|?*+\\".indexOf(ch) >= 0) out.append('\\');
-                out.append(ch);
-            }
-            return out.toString();
-        }
     }
 }

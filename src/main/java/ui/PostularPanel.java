@@ -127,7 +127,7 @@ public class PostularPanel extends JPanel {
         Programa p = programas.get(0);
         titulo.setText("CATÁLOGO • " + p.getNombre());
 
-        List<Convenio> convenios = new ArrayList<>(p.getConveniosVigentes());
+        List<Convenio> convenios = new ArrayList<>(p.getConvenios());
         convenios.sort(Comparator.comparing(Convenio::getId));
         model.setData(convenios);
 

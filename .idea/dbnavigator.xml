@@ -45,6 +45,18 @@
   <component name="DBNavigator.Project.DatabaseSessionManager">
     <connection id="25dc51e2-1188-428e-b43b-34de4095c5df" />
   </component>
+  <component name="DBNavigator.Project.DatasetFilterManager">
+    <filter-actions connection-id="25dc51e2-1188-428e-b43b-34de4095c5df" dataset="main.usuarios" active-filter-id="25485265-31ae-4f12-910a-58f98adac391">
+      <filter id="25485265-31ae-4f12-910a-58f98adac391" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND">
+        <condition column="rut" operator="=" value="" active="true" />
+      </filter>
+    </filter-actions>
+    <filter-actions connection-id="25dc51e2-1188-428e-b43b-34de4095c5df" dataset="main.convenios" active-filter-id="6b771394-f249-4a41-851a-fff3f714239f">
+      <filter id="6b771394-f249-4a41-851a-fff3f714239f" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND">
+        <condition column="id_convenio" operator="=" value="" active="true" />
+      </filter>
+    </filter-actions>
+  </component>
   <component name="DBNavigator.Project.ObjectQuickFilterManager">
     <last-used-operator value="EQUAL" />
     <filters />

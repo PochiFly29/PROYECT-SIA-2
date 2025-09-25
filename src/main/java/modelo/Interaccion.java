@@ -32,6 +32,15 @@ public class Interaccion {
         this.rutaArchivo = rutaArchivo;
     }
 
+    // Métodos estáticos para crear interacciones de forma simple
+    public static Interaccion ofComentario(Usuario autor, String comentario) {
+        return new Interaccion(autor, TipoInteraccion.COMENTARIO, comentario, LocalDateTime.now(), null);
+    }
+
+    public static Interaccion ofDocumento(Usuario autor, String titulo) {
+        return new Interaccion(autor, TipoInteraccion.DOCUMENTO, titulo, LocalDateTime.now(), null);
+    }
+
     // Getters y Setters
     public String getId() { return id; }
     public Usuario getAutor() { return autor; }

@@ -2,9 +2,6 @@ package ui;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import gestores.GestorIntercambio;
-import modelo.Auditor;
-import modelo.Estudiante;
-import modelo.Funcionario;
 import modelo.Usuario;
 
 import javax.swing.*;
@@ -86,7 +83,7 @@ public class EstudiantePanel extends JPanel {
         panelPerfilMini.setOpaque(false);
 
         // ===== Centro (cards) =====
-        perfilPanel = new PerfilPanel(usuario);
+        perfilPanel = new PerfilPanel(gestor,usuario);
         postulacionesPanel = new PostulacionesPanel(gestor, usuario);
         postularPanel = new PostularPanel(gestor, usuario);
 
