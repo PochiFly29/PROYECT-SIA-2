@@ -52,8 +52,20 @@
     <filter-actions connection-id="a28048b0-0e87-4e63-bbbc-d7bd9920f520" dataset="main.usuarios" active-filter-id="65f29ce5-76f4-43f0-b16f-5a0df026f3b3">
       <filter id="65f29ce5-76f4-43f0-b16f-5a0df026f3b3" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
     </filter-actions>
+    <filter-actions connection-id="a28048b0-0e87-4e63-bbbc-d7bd9920f520" dataset="main.interacciones" active-filter-id="101eb354-20ae-4976-a7bf-8be0b0af0603">
+      <filter id="101eb354-20ae-4976-a7bf-8be0b0af0603" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
+    </filter-actions>
+    <filter-actions connection-id="a28048b0-0e87-4e63-bbbc-d7bd9920f520" dataset="main.postulaciones" active-filter-id="49ac1438-de55-421c-b011-7c8751817e80">
+      <filter id="49ac1438-de55-421c-b011-7c8751817e80" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
+    </filter-actions>
+    <filter-actions connection-id="a28048b0-0e87-4e63-bbbc-d7bd9920f520" dataset="main.convenios" active-filter-id="ecd6c6f7-81bc-4580-bc05-738249c34218">
+      <filter id="ecd6c6f7-81bc-4580-bc05-738249c34218" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
+    </filter-actions>
     <filter-actions connection-id="a28048b0-0e87-4e63-bbbc-d7bd9920f520" dataset="main.programas" active-filter-id="6d131d66-55de-4302-bd50-a4ae8c07ee9f">
       <filter id="6d131d66-55de-4302-bd50-a4ae8c07ee9f" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
+    </filter-actions>
+    <filter-actions connection-id="a28048b0-0e87-4e63-bbbc-d7bd9920f520" dataset="main.estudiantes_info" active-filter-id="d49c68a0-932b-4eb9-b0fb-3016043247d4">
+      <filter id="d49c68a0-932b-4eb9-b0fb-3016043247d4" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
     </filter-actions>
   </component>
   <component name="DBNavigator.Project.ExecutionManager">
