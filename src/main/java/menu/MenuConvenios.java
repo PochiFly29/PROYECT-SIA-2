@@ -5,7 +5,7 @@ import modelo.*;
 import servicios.VerificarInput;
 import java.util.Optional;
 import java.util.*;
-
+/*
 public class MenuConvenios {
     private final VerificarInput input;
     private final Usuario usuarioActual;
@@ -149,3 +149,5 @@ public class MenuConvenios {
         }
     }
 }
+
+ */

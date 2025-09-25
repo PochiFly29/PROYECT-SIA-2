@@ -19,17 +19,20 @@ import java.util.Objects;
 import java.util.Comparator;
 
 public class PostulacionesPanel extends JPanel {
-
     private final GestorIntercambio gestor;
     private Usuario usuario;
 
     private JLabel title;
     private JTextField search;
+    private JComboBox<Object> cbEstado; // [Todos | EstadoPostulacion...]
     private JTable table;
     private DefaultTableModel model;
     private TableRowSorter<DefaultTableModel> sorter;
     private JButton btnDetalle;
-    private boolean estructuraConstruida = false;
+
+    // Card central: tabla / vacío
+    private final CardLayout cards = new CardLayout();
+    private JPanel centerCards;
 
     // columnas (índices)
     private static final int COL_ID = 0;
@@ -40,97 +43,131 @@ public class PostulacionesPanel extends JPanel {
     private static final int COL_ESTADO = 5;
     private static final int COL_OBJ = 6;
 
+    // Filtro opcional por convenio (para flujo de funcionario)
+    private String convenioFilterId = null;
+
     public PostulacionesPanel(GestorIntercambio gestor, Usuario usuario) {
         this.gestor = Objects.requireNonNull(gestor);
         this.usuario = usuario;
-        init();
+        initUI();
         refresh();
     }
 
+    // === API ===
     public void setUsuario(Usuario usuario) {
         this.usuario = usuario;
+    }
+
+    /** Si se establece, para FUNCIONARIO muestra solo postulaciones de ese convenio. null = sin filtro. */
+    public void setFiltroConvenio(String convenioId) {
+        this.convenioFilterId = (convenioId == null || convenioId.isBlank()) ? null : convenioId.trim();
         refresh();
     }
 
+    /** Recarga la tabla respetando el rol del usuario y el filtro de convenio (si aplica). */
     public void refresh() {
-        List<Postulacion> mias = Collections.emptyList();
-        if (usuario instanceof Estudiante) {
-            mias = ((Estudiante) usuario).getPostulaciones();
-        }
 
-        if (mias == null || mias.isEmpty()) {
-            removeAll();
-            setLayout(new GridBagLayout());
-            JLabel vacio = new JLabel("No se han encontrado postulaciones.");
-            vacio.putClientProperty(FlatClientProperties.STYLE, "font:+3");
-            add(vacio, new GridBagConstraints());
-            estructuraConstruida = false;
-            revalidate(); repaint();
-            return;
-        }
+        List<Postulacion> fuente = new ArrayList<>();
 
-        if (!estructuraConstruida) {
-            removeAll();
-            init();
+        if (usuario != null && usuario.getRol() == Rol.ESTUDIANTE && usuario instanceof Estudiante) {
+            // Mis postulaciones
+            fuente = ((Estudiante) usuario).getPostulaciones();
+            setTitulo("MIS POSTULACIONES");
+        } else if (usuario != null && usuario.getRol() == Rol.FUNCIONARIO) {
+            if (convenioFilterId != null) {
+                // Por convenio específico
+                fuente = gestor.getPostulacionesPorConvenio(convenioFilterId);
+                setTitulo("POSTULACIONES • CONVENIO " + convenioFilterId);
+            } else {
+                // Todas
+                fuente = gestor.getTodasLasPostulaciones();
+                setTitulo("POSTULACIONES");
+            }
+        } else {
+            fuente = gestor.getTodasLasPostulaciones();
+            setTitulo("POSTULACIONES");
         }
 
         model.setRowCount(0);
-        for (Postulacion p : mias) {
-            Convenio conv = p.getConvenioSeleccionado();
+        if (fuente != null) {
+            for (Postulacion p : fuente) {
+                Convenio conv = p.getConvenioSeleccionado();
 
-            String id      = safe(p.getId());
-            String uni     = conv != null ? safe(conv.getUniversidad()) : "-";
-            String pais    = conv != null ? safe(conv.getPais()) : "-";
-            String emitida = (p.getFechaPostulacion() != null) ? p.getFechaPostulacion().toString() : "-";
+                String id      = safe(p.getId());
+                String uni     = conv != null ? safe(conv.getUniversidad()) : "-";
+                String pais    = conv != null ? safe(conv.getPais()) : "-";
+                String emitida = (p.getFechaPostulacion() != null) ? p.getFechaPostulacion().toString() : "-";
 
-            String vigencia;
-            if (conv != null && conv.getFechaInicio() != null && conv.getFechaFin() != null) {
-                vigencia = conv.getFechaInicio() + " a " + conv.getFechaFin();
-            } else if (conv != null) {
-                Programa prog = gestor.getProgramaDeConvenio(conv);
-                if (prog != null && prog.getFechaInicio() != null && prog.getFechaFin() != null)
-                    vigencia = prog.getFechaInicio() + " a " + prog.getFechaFin();
-                else vigencia = "-";
-            } else {
-                vigencia = "-";
+                String vigencia;
+                if (conv != null && conv.getFechaInicio() != null && conv.getFechaFin() != null) {
+                    vigencia = conv.getFechaInicio() + " a " + conv.getFechaFin();
+                } else if (conv != null) {
+                    Programa prog = gestor.getProgramaDeConvenio(conv);
+                    if (prog != null && prog.getFechaInicio() != null && prog.getFechaFin() != null)
+                        vigencia = prog.getFechaInicio() + " a " + prog.getFechaFin();
+                    else vigencia = "-";
+                } else {
+                    vigencia = "-";
+                }
+
+                String estado = (p.getEstado() != null) ? p.getEstado().name() : "-";
+                model.addRow(new Object[]{ id, uni, pais, emitida, vigencia, estado, p });
             }
-
-            String estado = (p.getEstado() != null) ? p.getEstado().name() : "-";
-            model.addRow(new Object[]{ id, uni, pais, emitida, vigencia, estado, p });
         }
 
-        applyFilter();
-        revalidate(); repaint();
+        boolean hayDatos = model.getRowCount() > 0;
+        cards.show(centerCards, hayDatos ? "table" : "empty");
+
+        applyFilters();
+
+        revalidate();
+        repaint();
     }
 
-    private void init() {
+    // === UI ===
+    private void initUI() {
         setOpaque(false);
         setLayout(new BorderLayout());
 
+        // Header
         JPanel header = new JPanel();
         header.setOpaque(false);
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setBorder(new EmptyBorder(16, 24, 8, 24));
 
-        title = new JLabel("MIS POSTULACIONES", SwingConstants.CENTER);
+        title = new JLabel("POSTULACIONES", SwingConstants.CENTER);
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
         title.putClientProperty(FlatClientProperties.STYLE, "font:bold +6");
         header.add(title);
 
         header.add(Box.createVerticalStrut(10));
 
-        JPanel searchRow = new JPanel(new BorderLayout());
-        searchRow.setOpaque(false);
-        searchRow.setBorder(BorderFactory.createEmptyBorder(0, 240, 0, 240));
+        JPanel filterRow = new JPanel(new GridBagLayout());
+        filterRow.setOpaque(false);
+        var gc = new GridBagConstraints();
+        gc.insets = new Insets(0, 240, 0, 6);
+        gc.fill = GridBagConstraints.HORIZONTAL;
+        gc.weightx = 1;
 
         search = new JTextField();
         search.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Buscar");
         search.putClientProperty(FlatClientProperties.STYLE, "arc:999; margin:6,14,6,14");
-        searchRow.add(search, BorderLayout.CENTER);
-        header.add(searchRow);
+        filterRow.add(search, gc);
 
+        gc.insets = new Insets(0, 6, 0, 240);
+        gc.gridx = 1; gc.weightx = 0;
+        cbEstado = new JComboBox<>();
+        cbEstado.addItem("Todos");
+        for (EstadoPostulacion e : EstadoPostulacion.values()) cbEstado.addItem(e);
+        cbEstado.putClientProperty(FlatClientProperties.STYLE, "arc:999");
+        cbEstado.setBorder(BorderFactory.createEmptyBorder(3, 10, 3, 10));
+
+        filterRow.add(cbEstado, gc);
+
+        header.add(filterRow);
         add(header, BorderLayout.NORTH);
 
+        // Tabla
         String[] cols = { "ID", "UNIVERSIDAD", "PAÍS", "EMITIDA", "VIGENCIA", "ESTADO", "_POST_" };
         model = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int row, int col) { return false; }
@@ -138,10 +175,9 @@ public class PostulacionesPanel extends JPanel {
                 return columnIndex == COL_OBJ ? Postulacion.class : String.class;
             }
         };
-
         table = new JTable(model);
         table.setFillsViewportHeight(true);
-        table.setRowHeight(28); // igual que PostularPanel
+        table.setRowHeight(28);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setFocusable(false);
 
@@ -149,8 +185,6 @@ public class PostulacionesPanel extends JPanel {
         sorter = new TableRowSorter<>(model);
         sorter.setComparator(COL_ID, Comparator.naturalOrder());
         table.setRowSorter(sorter);
-
-        add(new JScrollPane(table), BorderLayout.CENTER);
 
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -161,18 +195,31 @@ public class PostulacionesPanel extends JPanel {
         });
 
         search.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) { applyFilter(); }
-            public void removeUpdate(DocumentEvent e) { applyFilter(); }
-            public void changedUpdate(DocumentEvent e) { applyFilter(); }
+            public void insertUpdate(DocumentEvent e) { applyFilters(); }
+            public void removeUpdate(DocumentEvent e) { applyFilters(); }
+            public void changedUpdate(DocumentEvent e) { applyFilters(); }
         });
+        cbEstado.addActionListener(e -> applyFilters());
 
+        // Ocultar columna objeto
         table.getColumnModel().getColumn(COL_OBJ).setMinWidth(0);
         table.getColumnModel().getColumn(COL_OBJ).setMaxWidth(0);
         table.getColumnModel().getColumn(COL_OBJ).setPreferredWidth(0);
 
+        // Center cards: table | empty
+        centerCards = new JPanel(cards);
         JScrollPane scroll = new JScrollPane(table);
-        add(scroll, BorderLayout.CENTER);
+        centerCards.add(scroll, "table");
 
+        JPanel empty = new JPanel(new GridBagLayout());
+        JLabel vacio = new JLabel("No se han encontrado postulaciones.");
+        vacio.putClientProperty(FlatClientProperties.STYLE, "font:+3");
+        empty.add(vacio, new GridBagConstraints());
+        centerCards.add(empty, "empty");
+
+        add(centerCards, BorderLayout.CENTER);
+
+        // Footer
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 10));
         footer.setOpaque(false);
         btnDetalle = new JButton("Ver detalle");
@@ -181,19 +228,38 @@ public class PostulacionesPanel extends JPanel {
             if (p != null) openDetalle(p);
         });
         footer.add(btnDetalle);
-
         add(footer, BorderLayout.SOUTH);
-        estructuraConstruida = true;
     }
 
-    private void applyFilter() {
+    private void setTitulo(String t) {
+        if (title != null) title.setText(t);
+    }
+
+    // === Filtros combinados ===
+    private void applyFilters() {
         if (sorter == null) return;
+
         String txt = search.getText() == null ? "" : search.getText().trim();
-        if (txt.isEmpty()) {
-            sorter.setRowFilter(null);
-            return;
+        Object estadoSel = cbEstado.getSelectedItem();
+
+        RowFilter<DefaultTableModel, Integer> rfTexto = null;
+        if (!txt.isEmpty()) {
+            rfTexto = RowFilter.regexFilter("(?i)" + PatternUtil.quoteIfNeeded(txt));
         }
-        sorter.setRowFilter(RowFilter.regexFilter("(?i)" + PatternUtil.quoteIfNeeded(txt)));
+
+        RowFilter<DefaultTableModel, Integer> rfEstado = null;
+        if (estadoSel instanceof EstadoPostulacion) {
+            String needle = ((EstadoPostulacion) estadoSel).name();
+            rfEstado = RowFilter.regexFilter("^" + PatternUtil.quoteIfNeeded(needle) + "$", COL_ESTADO);
+        }
+
+        if (rfTexto == null && rfEstado == null) {
+            sorter.setRowFilter(null);
+        } else if (rfTexto != null && rfEstado != null) {
+            sorter.setRowFilter(RowFilter.andFilter(List.of(rfTexto, rfEstado)));
+        } else {
+            sorter.setRowFilter(rfTexto != null ? rfTexto : rfEstado);
+        }
     }
 
     private Postulacion selectedPostulacion() {

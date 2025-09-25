@@ -2,6 +2,7 @@ package gestores;
 
 import enums.EstadoConvenio;
 import enums.EstadoPostulacion;
+import enums.Rol;
 import modelo.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -35,8 +36,8 @@ public class GestorIntercambio {
 
     private void cargarUsuariosDePrueba() {
         Estudiante est1 = new Estudiante("123", "Ivan Ferreira", "juan.perez@inst.cl", "123", "Ingenieria Civil", 5.8, 6);
-        Funcionario func1 = new Funcionario("456", "Maria Lopez", "m.lopez@inst.cl", "456");
-        Auditor aud1 = new Auditor("112233445", "Ana Torres", "a.torres@inst.cl", "audit123");
+        Usuario func1 = new Usuario("456", "María López", "m.lopez@inst.cl", "456", Rol.FUNCIONARIO);
+        Usuario aud1  = new Usuario("112233445", "Ana Torres", "a.torres@inst.cl", "audit123", Rol.AUDITOR);
         usuarios.put(est1.getRut(), est1);
         usuarios.put(func1.getRut(), func1);
         usuarios.put(aud1.getRut(), aud1);

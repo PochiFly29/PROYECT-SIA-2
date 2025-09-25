@@ -4,7 +4,7 @@
     import modelo.Usuario;
     import servicios.VerificarInput;
     import enums.Rol;
-
+/*
     public class MenuFunciones {
 
         private final VerificarInput input;
@@ -52,22 +52,14 @@
 
         private void mostrarOpcionesEstudiante() {
             System.out.println("1) Ver mi Perfil");
-            System.out.println("2) Postular a un Convenio");
-            System.out.println("3) Ver mis Postulaciones");
-            System.out.println("0) Cerrar sesión");
+            System.out.println("2) Ver mis Postulaciones");
+            System.out.println("3) Postular a un Convenio");
         }
 
         private void mostrarOpcionesFuncionario() {
             System.out.println("1) Ver mi Perfil");
-            System.out.println("2) Gestionar Convenios");
-            System.out.println("3) Revisar Postulaciones");
-            System.out.println("0) Cerrar sesión");
-        }
-
-        private void mostrarOpcionesAuditor() {
-            System.out.println("1) Ver todos los convenios");
-            System.out.println("2) Ver todas las postulaciones");
-            System.out.println("0) Cerrar sesión");
+            System.out.println("2) Revisar Postulaciones");
+            System.out.println("3) Catalogo de convenios");
         }
 
         private void procesarOpcionEstudiante(int op) {
@@ -101,17 +93,5 @@
                     System.out.println("Opción inválida.");
             }
         }
-
-        private void procesarOpcionAuditor(int op) {
-            switch (op) {
-                case 1:
-                    this.menuConvenios.ejecutarMenu();
-                    break;
-                case 2:
-                    this.menuPostulaciones.ejecutarMenuFuncionario();
-                    break;
-                default:
-                    System.out.println("Opción inválida.");
-            }
-        }
     }
+ */

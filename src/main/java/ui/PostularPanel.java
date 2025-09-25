@@ -19,11 +19,12 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class PostularPanel extends JPanel {
 
     private final GestorIntercambio gestor;
-    private final Usuario usuario;
+    private Usuario usuario; // contexto actual
 
     private final ConveniosTableModel model = new ConveniosTableModel();
     private JTable table;
@@ -32,6 +33,8 @@ public class PostularPanel extends JPanel {
     private JLabel titulo;
     private JButton btnVerDetalle;
 
+    private Consumer<String> onVerPostulacionesPorConvenio;
+
     public PostularPanel(GestorIntercambio gestor, Usuario usuario) {
         this.gestor = Objects.requireNonNull(gestor);
         this.usuario = usuario;
@@ -39,10 +42,24 @@ public class PostularPanel extends JPanel {
         loadData();
     }
 
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+        refresh();
+    }
+
+    public void setOnVerPostulacionesPorConvenio(Consumer<String> onVerPostulacionesPorConvenio) {
+        this.onVerPostulacionesPorConvenio = onVerPostulacionesPorConvenio;
+    }
+
+    public void refresh() {
+        loadData();
+        revalidate();
+        repaint();
+    }
+
     private void init() {
         setLayout(new BorderLayout());
 
-        // ===== Header =====
         JPanel header = new JPanel();
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setBorder(BorderFactory.createEmptyBorder(16, 24, 8, 24));
@@ -67,14 +84,12 @@ public class PostularPanel extends JPanel {
 
         add(header, BorderLayout.NORTH);
 
-        // ===== Tabla =====
         table = new JTable(model);
         table.setFillsViewportHeight(true);
         table.setRowHeight(28);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setFocusable(false);
 
-        // Orden y filtro
         sorter = new TableRowSorter<>(model);
         sorter.setComparator(0, Comparator.naturalOrder());
         table.setRowSorter(sorter);
@@ -87,7 +102,6 @@ public class PostularPanel extends JPanel {
             }
         });
 
-        // Filtro en vivo
         searchField.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) { applyFilter(); }
             public void removeUpdate(DocumentEvent e) { applyFilter(); }
@@ -96,7 +110,6 @@ public class PostularPanel extends JPanel {
 
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // ===== Footer acciones =====
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 10));
         footer.setOpaque(false);
         btnVerDetalle = new JButton("Ver detalle");
@@ -125,7 +138,11 @@ public class PostularPanel extends JPanel {
         }
 
         Programa p = programas.get(0);
-        titulo.setText("CATÁLOGO • " + p.getNombre());
+        if (usuario != null && usuario.getRol() != null && usuario.getRol().name().equals("ESTUDIANTE")) {
+            titulo.setText("POSTULAR • " + p.getNombre());
+        } else {
+            titulo.setText("CONVENIOS VIGENTES • " + p.getNombre());
+        }
 
         List<Convenio> convenios = new ArrayList<>(p.getConveniosVigentes());
         convenios.sort(Comparator.comparing(Convenio::getId));
@@ -134,7 +151,6 @@ public class PostularPanel extends JPanel {
         btnVerDetalle.setEnabled(!convenios.isEmpty());
     }
 
-    // Tabla de detalles del convenio
     private void verDetalleSeleccionado() {
         int viewRow = table.getSelectedRow();
         if (viewRow < 0) {
@@ -155,7 +171,7 @@ public class PostularPanel extends JPanel {
         gc.gridy++; info.add(new JLabel("Requisitos Académicos: " + c.getRequisitosAcademicos()), gc);
         gc.gridy++; info.add(new JLabel("Requisitos Económicos: " + c.getRequisitosEconomicos()), gc);
 
-        // Opciones según el rol
+        // SEGUN ROL
         if (usuario instanceof Estudiante) {
             Object[] options = {"Postular", "Cerrar"};
             int opt = JOptionPane.showOptionDialog(this, info, "Detalle de convenio",
@@ -173,26 +189,37 @@ public class PostularPanel extends JPanel {
                 }
             }
         } else {
-            // Otros roles
-            JOptionPane.showMessageDialog(this, info, "Detalle de convenio", JOptionPane.PLAIN_MESSAGE);
+            // FUNCIONARIO / otros
+            Object[] options = {"Ver postulaciones del convenio", "Cerrar"};
+            int opt = JOptionPane.showOptionDialog(this, info, "Detalle de convenio",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,
+                    null, options, options[0]
+            );
+            if (opt == 0) {
+                if (onVerPostulacionesPorConvenio != null) {
+                    onVerPostulacionesPorConvenio.accept(c.getId());
+                } else {
+                    JOptionPane.showMessageDialog(this,"Acción no conectada",
+                            "Información", JOptionPane.INFORMATION_MESSAGE);
+                }
+            }
         }
     }
 
+    // ===== Modelo de tabla =====
     private static class ConveniosTableModel extends AbstractTableModel {
         private final String[] cols = {"ID", "Universidad", "País", "Requisitos Académicos"};
         private List<Convenio> data = new ArrayList<>();
 
-        public void setData(List<Convenio> d) {
+        void setData(List<Convenio> d) {
             this.data = (d == null) ? new ArrayList<>() : d;
             fireTableDataChanged();
         }
-
-        public Convenio getAt(int row) { return data.get(row); }
+        Convenio getAt(int row) { return data.get(row); }
 
         public int getRowCount() { return data.size(); }
         public int getColumnCount() { return cols.length; }
         public String getColumnName(int column) { return cols[column]; }
-
         public Object getValueAt(int rowIndex, int columnIndex) {
             Convenio c = data.get(rowIndex);
             switch (columnIndex) {

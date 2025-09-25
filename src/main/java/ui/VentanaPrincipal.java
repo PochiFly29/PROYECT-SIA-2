@@ -1,30 +1,33 @@
 package ui;
 
 import gestores.GestorIntercambio;
-import modelo.Auditor;
-import modelo.Estudiante;
-import modelo.Funcionario;
 import modelo.Usuario;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Objects;
+
+/*
+   TODO
+ - No se refresca el panel de estudiante al entrar y salir, se queda donde antes aunque entres en otra cuenta
+ - Pequeño panel con el nombre a la esquina izquierda inferior no se actualiza al cambiar el nombre
+ - Quitar boton de gestionar Convenios de funcionario y hacer que se pueda gestionar en el otro boton
+ - Cambiar de lugar boton de cerrar sesion con el panel de la izquierda inferior y agregar un boton de cerrar programa
+ - Hacer un poco mas grande las letras en general
+ */
 
 public class VentanaPrincipal extends JFrame {
     private static final String VIEW_LOGIN = "login";
-    private static final String VIEW_HOME = "home";
-    private static final String VIEW_ESTUDIANTE = "estu";
-    private static final String VIEW_FUNCIONARIO = "func";
-    private static final String VIEW_AUDITOR = "aud";
+    private static final String VIEW_APP   = "app";
 
     private final JPanel cards = new JPanel(new CardLayout());
     private final GestorIntercambio gestor;
 
-    private EstudiantePanel estudiantePanel;
-    private JPanel funcionarioPanel;
-    private JPanel auditorPanel;
+    private LoginPanel loginPanel;
+    private UsuarioPanel appPanel;
 
     public VentanaPrincipal(GestorIntercambio gestor){
-        this.gestor = gestor;
+        this.gestor = Objects.requireNonNull(gestor);
         init();
     }
 
@@ -34,57 +37,32 @@ public class VentanaPrincipal extends JFrame {
         setSize(1280,720);
         setLocationRelativeTo(null);
 
-        LoginPanel login = new LoginPanel(gestor, this::onLoginOk);
+        // Login
+        loginPanel = new LoginPanel(gestor, this::onLoginOk);
+        cards.add(loginPanel, VIEW_LOGIN);
 
-        cards.add(login, VIEW_LOGIN);
         setContentPane(cards);
-
-        show(VIEW_LOGIN);
+        showCard(VIEW_LOGIN);
     }
 
     private void onLoginOk(Usuario usuario) {
-        redirigirUsuario(usuario);
-    }
-
-    private void redirigirUsuario(Usuario u) {
-        if (u instanceof Estudiante) {
-            if (estudiantePanel == null) {
-                estudiantePanel = new EstudiantePanel(gestor, u, this::logout);
-                cards.add(estudiantePanel, VIEW_ESTUDIANTE);
-            } else {
-                estudiantePanel.setUsuario(u);
-            }
-            show(VIEW_ESTUDIANTE);
-        } else if (u instanceof Funcionario) {
-            if (funcionarioPanel == null) {
-                funcionarioPanel = placeholder("Panel Funcionario (proximamente)");
-                cards.add(funcionarioPanel, VIEW_FUNCIONARIO);
-            }
-            show(VIEW_FUNCIONARIO);
-        } else if (u instanceof Auditor) {
-            if (auditorPanel == null) {
-                auditorPanel = placeholder("Panel Auditor (proximamente)");
-                cards.add(auditorPanel, VIEW_AUDITOR);
-            }
-            show(VIEW_AUDITOR);
+        if (appPanel == null) {
+            appPanel = new UsuarioPanel(gestor, usuario, this::logout);
+            cards.add(appPanel, VIEW_APP);
         } else {
-            show(VIEW_HOME);
+            appPanel.setUsuario(usuario);
         }
+        showCard(VIEW_APP);
     }
 
     private void logout() {
         gestor.cerrarSesion();
-        show(VIEW_LOGIN);
+        showCard(VIEW_LOGIN);
     }
 
-    private void show(String name) {
+    private void showCard(String name) {
         ((CardLayout) cards.getLayout()).show(cards, name);
-        revalidate(); repaint();
-    }
-
-    private JPanel placeholder(String text) {
-        JPanel p = new JPanel(new BorderLayout());
-        p.add(new JLabel(text, SwingConstants.CENTER), BorderLayout.CENTER);
-        return p;
+        revalidate();
+        repaint();
     }
 }

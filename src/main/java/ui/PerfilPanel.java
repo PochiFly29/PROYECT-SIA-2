@@ -20,6 +20,10 @@ public class PerfilPanel extends JPanel {
     private JLabel lblSemestres;
     private JLabel lblPromedio;
 
+    // Referencias para controlar visibilidad según rol
+    private JLabel lblCarreraTitulo;
+    private JPanel rowCarreraPanel;
+
     public PerfilPanel(Usuario usuarioInicial) {
         this.usuario = usuarioInicial;
         initUI();
@@ -69,28 +73,25 @@ public class PerfilPanel extends JPanel {
         // Izquierda
         c.gridx = 0; c.gridy = 0; detalle.add(labelTitulo("Nombre"), c);
         lblNombreValor = new JLabel("Nombre Apellido");
-        c.gridy = 1; detalle.add(rowCampo(lblNombreValor, "[cambiar nombre]", new Runnable() {
-            public void run() { onEditNombre(); }
-        }), c);
+        c.gridy = 1; detalle.add(rowCampo(lblNombreValor, "[cambiar nombre]", this::onEditNombre), c);
 
         c.gridy = 2; detalle.add(labelTitulo("Email"), c);
         lblEmailValor = new JLabel("mail@gmail.com");
-        c.gridy = 3; detalle.add(rowCampo(lblEmailValor, "[cambiar email]", new Runnable() {
-            public void run() { onEditEmail(); }
-        }), c);
+        c.gridy = 3; detalle.add(rowCampo(lblEmailValor, "[cambiar email]", this::onEditEmail), c);
 
         // Derecha
-        c.gridx = 1; c.gridy = 0; detalle.add(labelTitulo("Carrera"), c);
+        c.gridx = 1; c.gridy = 0;
+        lblCarreraTitulo = labelTitulo("Carrera");
+        detalle.add(lblCarreraTitulo, c);
+
         lblCarreraValor = new JLabel("Ingeniería");
-        c.gridy = 1; detalle.add(rowCampo(lblCarreraValor, "[cambiar carrera]", new Runnable() {
-            public void run() { onEditCarrera(); }
-        }), c);
+        c.gridy = 1;
+        rowCarreraPanel = rowCampo(lblCarreraValor, "[cambiar carrera]", this::onEditCarrera);
+        detalle.add(rowCarreraPanel, c);
 
         c.gridy = 2; detalle.add(labelTitulo("Contraseña"), c);
         lblPassValor = new JLabel("**********");
-        c.gridy = 3; detalle.add(rowCampo(lblPassValor, "[cambiar contraseña]", new Runnable() {
-            public void run() { onEditPassword(); }
-        }), c);
+        c.gridy = 3; detalle.add(rowCampo(lblPassValor, "[cambiar contraseña]", this::onEditPassword), c);
 
         JPanel tarjeta = new JPanel(new BorderLayout());
         tarjeta.putClientProperty(FlatClientProperties.STYLE, "background:#E6E6E6; arc:16");
@@ -137,17 +138,22 @@ public class PerfilPanel extends JPanel {
         String email  = safe(usuario.getEmail());
         String rolLegible = (usuario.getRol() != null) ? toTitulo(usuario.getRol().name()) : "Usuario";
 
+        boolean esEstudiante = usuario instanceof Estudiante;
+
         String carrera = "-";
         Integer semestres = null;
         Double promedio = null;
-        if (usuario instanceof Estudiante) {
+        if (esEstudiante) {
             Estudiante e = (Estudiante) usuario; // Java 11 OK
             carrera = safe(e.getCarrera());
             semestres = e.getSemestresCursados();
             promedio  = e.getPromedio();
         }
 
-        lblTituloPeq.setText(nombre + " • " + (isEmpty(carrera) ? "-" : carrera));
+        // Banner: si es estudiante muestra carrera, si no muestra rol
+        String sub = esEstudiante ? (isEmpty(carrera) ? "-" : carrera) : rolLegible;
+        lblTituloPeq.setText(nombre + " • " + sub);
+
         lblNombreValor.setText(nombre);
         lblEmailValor.setText(email);
         lblCarreraValor.setText(isEmpty(carrera) ? "-" : carrera);
@@ -159,66 +165,70 @@ public class PerfilPanel extends JPanel {
         );
         lblPromedio.setText((promedio == null) ? "—" : String.format("%.1f Promedio", promedio));
 
+        // Visibilidad según rol
+        setStudentFieldsVisible(esEstudiante);
+
         revalidate();
         repaint();
     }
 
+    private void setStudentFieldsVisible(boolean visible) {
+        if (lblCarreraTitulo != null) lblCarreraTitulo.setVisible(visible);
+        if (rowCarreraPanel != null) rowCarreraPanel.setVisible(visible);
+        if (lblSemestres != null) lblSemestres.setVisible(visible);
+        if (lblPromedio  != null) lblPromedio.setVisible(visible);
+    }
+
     private void onEditNombre() {
-        inlineEdit(lblNombreValor, new java.util.function.Function<String, Boolean>() {
-            public Boolean apply(String nuevo) {
-                if (nuevo.trim().isEmpty()) { beepWarn("El nombre no puede estar vacío."); return false; }
-                usuario.setNombreCompleto(nuevo.trim());
-                refreshFromUsuario();
-                info("Nombre actualizado correctamente.");
-                return true;
-            }
+        inlineEdit(lblNombreValor, nuevo -> {
+            if (nuevo.trim().isEmpty()) { beepWarn("El nombre no puede estar vacío."); return false; }
+            usuario.setNombreCompleto(nuevo.trim());
+            refreshFromUsuario();
+            info("Nombre actualizado correctamente.");
+            return true;
         }, false);
     }
 
     private void onEditEmail() {
-        inlineEdit(lblEmailValor, new java.util.function.Function<String, Boolean>() {
-            public Boolean apply(String nuevo) {
-                String n = nuevo.trim();
-                if (!n.contains("@") || n.startsWith("@") || n.endsWith("@")) {
-                    beepWarn("Ingrese un email válido.");
-                    return false;
-                }
-                usuario.setEmail(n);
-                refreshFromUsuario();
-                info("Email actualizado correctamente.");
-                return true;
+        inlineEdit(lblEmailValor, nuevo -> {
+            String n = nuevo.trim();
+            if (!n.contains("@") || n.startsWith("@") || n.endsWith("@")) {
+                beepWarn("Ingrese un email válido.");
+                return false;
             }
+            usuario.setEmail(n);
+            refreshFromUsuario();
+            info("Email actualizado correctamente.");
+            return true;
         }, false);
     }
 
     private void onEditCarrera() {
         if (!(usuario instanceof Estudiante)) { beepWarn("Solo los estudiantes tienen carrera."); return; }
         final Estudiante est = (Estudiante) usuario;
-        inlineEdit(lblCarreraValor, new java.util.function.Function<String, Boolean>() {
-            public Boolean apply(String nuevo) {
-                String n = nuevo.trim();
-                if (n.isEmpty()) { beepWarn("La carrera no puede estar vacía."); return false; }
-                est.setCarrera(n);
-                refreshFromUsuario();
-                info("Carrera actualizada correctamente.");
-                return true;
-            }
+        inlineEdit(lblCarreraValor, nuevo -> {
+            String n = nuevo.trim();
+            if (n.isEmpty()) { beepWarn("La carrera no puede estar vacía."); return false; }
+            est.setCarrera(n);
+            refreshFromUsuario();
+            info("Carrera actualizada correctamente.");
+            return true;
         }, false);
     }
 
     private void onEditPassword() {
-        inlineEdit(lblPassValor, new java.util.function.Function<String, Boolean>() {
-            public Boolean apply(String n) {
-                if (n.length() < 6) { beepWarn("Debe tener al menos 6 caracteres."); return false; }
-                usuario.setPass(n);
-                lblPassValor.setText(mask(n));
-                info("Contraseña actualizada correctamente.");
-                return true;
-            }
+        inlineEdit(lblPassValor, n -> {
+            if (n.length() < 6) { beepWarn("Debe tener al menos 6 caracteres."); return false; }
+            usuario.setPass(n);
+            lblPassValor.setText(mask(n));
+            info("Contraseña actualizada correctamente.");
+            return true;
         }, true);
     }
 
-    private void inlineEdit(final JLabel targetLabel, final java.util.function.Function<String, Boolean> validatorCommit, final boolean password) {
+    private void inlineEdit(final JLabel targetLabel,
+                            final java.util.function.Function<String, Boolean> validatorCommit,
+                            final boolean password) {
 
         final Container row = targetLabel.getParent();
         if (row == null) return;
@@ -251,25 +261,20 @@ public class PerfilPanel extends JPanel {
         row.repaint();
         editor.requestFocusInWindow();
 
-        final Runnable restoreLabel = new Runnable() {
-            public void run() {
-                row.remove(editor);
-                row.add(targetLabel, index);
-                row.revalidate();
-                row.repaint();
-            }
+        final Runnable restoreLabel = () -> {
+            row.remove(editor);
+            row.add(targetLabel, index);
+            row.revalidate();
+            row.repaint();
         };
 
-        final Runnable tryCommit = new Runnable() {
-            public void run() {
-                String value;
-                if (password) value = new String(((JPasswordField) editor).getPassword());
-                else value = ((JTextField) editor).getText();
+        final Runnable tryCommit = () -> {
+            String value = password ? new String(((JPasswordField) editor).getPassword())
+                    : ((JTextField) editor).getText();
 
-                boolean ok = validatorCommit.apply(value);
-                if (ok) restoreLabel.run();
-                else editor.requestFocusInWindow();
-            }
+            boolean ok = validatorCommit.apply(value);
+            if (ok) restoreLabel.run();
+            else editor.requestFocusInWindow();
         };
 
         editor.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("ENTER"), "commit");

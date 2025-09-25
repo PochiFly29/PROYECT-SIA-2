@@ -4,7 +4,7 @@ import gestores.GestorIntercambio;
 import gestores.ResultadoLogin;
 import modelo.Usuario;
 import servicios.VerificarInput;
-
+/*
 public class MenuPrincipal {
 
     private final VerificarInput input;
@@ -95,3 +95,5 @@ public class MenuPrincipal {
         return validarRut(rut);
     }
 }
+
+ */

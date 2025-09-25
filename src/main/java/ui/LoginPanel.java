@@ -58,7 +58,10 @@ public class LoginPanel extends JPanel {
         panel.add(crearSeccionRegistro(), "gapy 10");
         add(panel);
 
+        // Acciones
         login.addActionListener(e -> doLogin());
+
+        // ENTER para login
         getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
                 .put(KeyStroke.getKeyStroke("ENTER"), "enterLogin");
         getActionMap().put("enterLogin", new AbstractAction() {
@@ -91,21 +94,24 @@ public class LoginPanel extends JPanel {
         return panel;
     }
 
-    // === Lógica conectada a GestorIntercambio / ResultadoLogin ===
+    // === Lógica de login SIN validaciones/normalizaciones de RUT ===
     private void doLogin() {
         if (gestor == null) {
             JOptionPane.showMessageDialog(this, "Gestor no inicializado.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        String rutTxt  = rut.getText().trim().toUpperCase();
+
+        String rutTxt  = rut.getText().trim();
         String passTxt = new String(pass.getPassword());
 
         ResultadoLogin r = gestor.iniciarSesion(rutTxt, passTxt);
-        if (r.isExito()) onSuccess.accept(r.getUsuario());
-        else {
+        if (r.isExito()) {
+            onSuccess.accept(r.getUsuario());
+        } else {
             Toolkit.getDefaultToolkit().beep();
             JOptionPane.showMessageDialog(this, r.getMensaje(), "Inicio de sesión", JOptionPane.ERROR_MESSAGE);
-            pass.setText(""); pass.requestFocusInWindow();
+            pass.setText("");
+            pass.requestFocusInWindow();
         }
     }
 
@@ -122,10 +128,10 @@ public class LoginPanel extends JPanel {
         JSpinner promedioF = new JSpinner(new SpinnerNumberModel(5.0, 1.0, 7.0, 0.1));
         JSpinner semestresF = new JSpinner(new SpinnerNumberModel(1, 0, 30, 1));
 
-        rutF.putClientProperty(com.formdev.flatlaf.FlatClientProperties.PLACEHOLDER_TEXT, "11111111K (sin puntos ni guion)");
-        passF.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE, "showRevealButton:true");
+        rutF.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "11111111K (sin puntos ni guion)");
+        passF.putClientProperty(FlatClientProperties.STYLE, "showRevealButton:true");
 
-        JPanel p = new JPanel(new net.miginfocom.swing.MigLayout("wrap,fillx,insets 15 20 10 20", "fill,280::320"));
+        JPanel p = new JPanel(new MigLayout("wrap,fillx,insets 15 20 10 20", "fill,280::320"));
         p.add(new JLabel("RUT")); p.add(rutF);
         p.add(new JLabel("Nombre completo")); p.add(nombreF);
         p.add(new JLabel("Email")); p.add(emailF);
@@ -143,10 +149,10 @@ public class LoginPanel extends JPanel {
         String rutN = VerificarInput.normalizarRut(rutF.getText().trim());
         String nombre = nombreF.getText().trim();
         String email = emailF.getText().trim();
-        String passTxt  = new String(passF.getPassword());
-        String carrera  = carreraF.getText().trim();
+        String passTxt = new String(passF.getPassword());
+        String carrera = carreraF.getText().trim();
         double promedio = ((Number) promedioF.getValue()).doubleValue();
-        int semestres   = (int) semestresF.getValue();
+        int semestres = (int) semestresF.getValue();
 
         StringBuilder errores = new StringBuilder();
 
@@ -163,14 +169,16 @@ public class LoginPanel extends JPanel {
             errores.append("• La contraseña no puede estar vacía\n");
         }
 
-        if (errores.length()==0 && gestor.existeUsuario(rutN)) {
-            marcarError(rutF, true);
-            errores.append("• Ya existe un usuario con este RUT\n");
-        }
-
-        if (!email.contains("@")) {
+        if (!email.contains("@") || email.startsWith("@") || email.endsWith("@")) {
             marcarError(emailF, true);
             errores.append("• Email inválido\n");
+        }
+
+        if (promedio < 1.0 || promedio > 7.0) {
+            errores.append("• Promedio fuera de rango (1.0 a 7.0)\n");
+        }
+        if (semestres < 0) {
+            errores.append("• Semestres cursados no puede ser negativo\n");
         }
 
         if (errores.length() > 0) {
