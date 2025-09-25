@@ -22,6 +22,8 @@ public class VentanaPrincipal extends JFrame {
         this.gestor = gestor;
         init();
         initWindowListener();
+        // **Agrega esta línea aquí para que la ventana sea visible**
+        setVisible(true);
     }
 
     private void init() {
@@ -89,7 +91,7 @@ public class VentanaPrincipal extends JFrame {
     }
 
     private void logout() {
-        gestor.cerrarsesion();
+        gestor.cerrarSesion();
         show("login");
     }
 

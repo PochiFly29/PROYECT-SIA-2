@@ -158,7 +158,7 @@ public class GestorIntercambio {
         return dataStore.getUsuarioPorRut(rut) != null;
     }
 
-    public void cerrarsesion() {
+    public void cerrarSesion() {
 
     }
 }

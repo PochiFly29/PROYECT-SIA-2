@@ -184,7 +184,7 @@ public class MenuPostulaciones {
                 nuevoEstado = EstadoPostulacion.ACEPTADA;
                 Estudiante postulante = gestor.buscarEstudiantePorPostulacion(p.getId());
                 if (postulante != null) {
-                    gestor.descartarOtrasPostulaciones(postulante, p.getId());
+                    gestor.descartarOtrasPostulaciones(postulante.getRut(), p.getId());
                     System.out.println("El estudiante ha sido aceptado. Las demás postulaciones han sido marcadas como RECHAZADA.");
                 }
                 break;

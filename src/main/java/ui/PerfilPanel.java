@@ -235,9 +235,87 @@ public class PerfilPanel extends JPanel {
         }, true);
     }
 
-    // ... (El resto de tus métodos 'inlineEdit', 'labelTitulo', etc. se mantienen igual)
+    // Este es el método que te falta o que debes corregir
     private void inlineEdit(final JLabel targetLabel, final Function<String, Boolean> validatorCommit, final boolean password) {
-        // ... (el código es el mismo, no necesita cambios)
+        // Obtenemos el contenedor padre del JLabel a modificar.
+        JPanel parent = (JPanel) targetLabel.getParent();
+
+        // Creamos el campo de texto. Usamos JPasswordField si es para contraseña.
+        JComponent editor;
+        if (password) {
+            editor = new JPasswordField(15);
+            ((JPasswordField) editor).setText("");
+            ((JPasswordField) editor).setEchoChar('*');
+        } else {
+            editor = new JTextField(15);
+            // El texto inicial del campo será el valor actual del JLabel
+            String currentText = targetLabel.getText();
+            ((JTextField) editor).setText(currentText.equals("-") ? "" : currentText);
+        }
+
+        // Estilo visual del editor (opcional, pero mejora la UX)
+        editor.putClientProperty(FlatClientProperties.STYLE, "arc:999; margin:6,14,6,14");
+
+        // Creamos un botón para guardar los cambios
+        JButton btnGuardar = new JButton("Guardar");
+        btnGuardar.setFocusPainted(false);
+        btnGuardar.putClientProperty(FlatClientProperties.STYLE, "background:#2E86FF; foreground:#FFFFFF; arc:999;");
+
+        // Creamos un botón para cancelar la edición
+        JButton btnCancelar = new JButton("Cancelar");
+        btnCancelar.setFocusPainted(false);
+        btnCancelar.putClientProperty(FlatClientProperties.STYLE, "background:#A4A4A4; foreground:#FFFFFF; arc:999;");
+
+        // Guardamos el botón de edición original para volver a mostrarlo
+        JButton originalButton = (JButton) parent.getComponent(parent.getComponentCount() - 1);
+        originalButton.setVisible(false);
+
+        // Ocultamos el JLabel y mostramos el editor
+        targetLabel.setVisible(false);
+        parent.add(editor, 1);
+        parent.add(btnGuardar);
+        parent.add(btnCancelar);
+
+        // Agregamos listeners a los botones
+        btnGuardar.addActionListener(e -> {
+            String nuevoValor;
+            if (editor instanceof JPasswordField) {
+                nuevoValor = new String(((JPasswordField) editor).getPassword());
+            } else {
+                nuevoValor = ((JTextField) editor).getText();
+            }
+
+            // Validamos y guardamos el nuevo valor
+            if (validatorCommit.apply(nuevoValor)) {
+                // Si la validación es exitosa, restauramos la UI
+                parent.remove(editor);
+                parent.remove(btnGuardar);
+                parent.remove(btnCancelar);
+                targetLabel.setVisible(true);
+                originalButton.setVisible(true);
+            }
+        });
+
+        btnCancelar.addActionListener(e -> {
+            // Si se cancela, restauramos la UI sin guardar
+            parent.remove(editor);
+            parent.remove(btnGuardar);
+            parent.remove(btnCancelar);
+            targetLabel.setVisible(true);
+            originalButton.setVisible(true);
+        });
+
+        // Agregamos un listener al editor para guardar con "Enter"
+        if (editor instanceof JTextField) {
+            ((JTextField) editor).addActionListener(e -> btnGuardar.doClick());
+        }
+
+        // Enfocamos el campo de texto para que el usuario pueda escribir
+        editor.requestFocusInWindow();
+
+        // Forzamos el redibujado del panel
+        parent.revalidate();
+        parent.repaint();
     }
 
     private static JLabel labelTitulo(String t) {
