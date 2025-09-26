@@ -34,13 +34,12 @@ public class LoginPanel extends JPanel {
         pass = new JPasswordField();
         login = new JButton("Ingresar");
 
-        // ... El mismo diseño que tenías para el panel de login ...
         JPanel panel = new JPanel(new MigLayout("wrap,fillx,insets 35 45 30 45", "fill,250::280"));
         panel.putClientProperty(FlatClientProperties.STYLE, "arc:20; background:lighten(@background,3%)");
         pass.putClientProperty(FlatClientProperties.STYLE, "showRevealButton:true");
         login.putClientProperty(FlatClientProperties.STYLE, "background:lighten(@background,10%); borderWidth:0; focusWidth:0; innerFocusWidth:0");
-        rut.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ingrese su RUT");
-        pass.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ingrese su contraseña");
+        rut.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "(ej: 11111111K)");
+        pass.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "(al menos 3 caracteres)");
         JLabel titulo = new JLabel("¡Bienvenido!");
         JLabel descripcion =  new JLabel("Inicie sesión para ingresar a su cuenta");
         titulo.putClientProperty(FlatClientProperties.STYLE, "font:bold +10");

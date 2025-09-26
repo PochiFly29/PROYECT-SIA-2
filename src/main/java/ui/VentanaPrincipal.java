@@ -23,6 +23,7 @@ public class VentanaPrincipal extends JFrame {
         init();
         initWindowListener();
         // **Agrega esta línea aquí para que la ventana sea visible**
+
         setVisible(true);
     }
 

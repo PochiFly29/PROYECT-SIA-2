@@ -3,9 +3,11 @@ package ui;
 import com.formdev.flatlaf.FlatClientProperties;
 import gestores.GestorIntercambio;
 import modelo.Usuario;
+import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
+import javax.swing.border.MatteBorder;
 
 public class EstudiantePanel extends JPanel {
 
@@ -41,49 +43,82 @@ public class EstudiantePanel extends JPanel {
 
     private void init() {
         // ===== Barra izquierda =====
-        JPanel panelCerrarSesion = new JPanel(new BorderLayout());
-        JButton btnCerrar = new JButton("Cerrar Sesion");
-        btnCerrar.setPreferredSize(new Dimension(180, 48));
-        btnCerrar.putClientProperty(
-                FlatClientProperties.STYLE,
-                "background:#2E86FF; foreground:#FFFFFF; font:bold +2; borderWidth:0; focusWidth:0; innerFocusWidth:0"
-        );
-        btnCerrar.addActionListener(e -> { if (onLogout != null) onLogout.run(); });
+        JPanel panelIzquierdo = new JPanel(new BorderLayout());
+        panelIzquierdo.putClientProperty(FlatClientProperties.STYLE, "background:lighten(@background,3%)");
+        panelIzquierdo.setPreferredSize(new Dimension(280, 0));
 
-        panelCerrarSesion.setBorder(BorderFactory.createEmptyBorder(50, 50, 30, 50));
-        panelCerrarSesion.add(btnCerrar, BorderLayout.NORTH);
+        // Panel superior para el logo y título (eliminando la barra vacía)
+        JPanel topPanel = new JPanel(new MigLayout("wrap, fillx, insets 16 24 16 24", "fill"));
+        topPanel.setOpaque(false);
+
+        // Espacio para la imagen
+        try {
+            ImageIcon logoIcon = new ImageIcon(getClass().getResource("/logo.png"));
+            // CORRECCIÓN: Aumentamos el tamaño del logo a 100x100
+            Image scaledImage = logoIcon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+            JLabel lblLogo = new JLabel(new ImageIcon(scaledImage));
+            lblLogo.setHorizontalAlignment(SwingConstants.CENTER);
+            topPanel.add(lblLogo, "growx, center, wrap, gaptop 8");
+        } catch (Exception e) {
+            System.err.println("No se pudo cargar el logo. Asegúrate de que el archivo 'logo.png' esté en la carpeta 'src/main/resources'.");
+        }
+
+        // Título
+        JLabel lblTitulo = new JLabel("Gestiones de Intercambio");
+        lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
+        lblTitulo.putClientProperty(FlatClientProperties.STYLE, "font:bold +1");
+        topPanel.add(lblTitulo, "growx, center");
+
+        // Separador
+        JPanel separator = new JPanel();
+        separator.setPreferredSize(new Dimension(0, 1));
+        separator.setBackground(UIManager.getColor("Component.borderColor"));
+        topPanel.add(separator, "growx, gaptop 8");
+
+        // Panel de botones de navegación (CENTER)
+        JPanel navButtonsPanel = new JPanel(new GridLayout(0, 1, 0, 12));
+        navButtonsPanel.setOpaque(false);
+        navButtonsPanel.setBorder(BorderFactory.createEmptyBorder(50, 16, 12, 16));
 
         JButton btnPerfil = new JButton("Perfil");
-        btnPerfil.setBorder(null);
         JButton btnVerPost = new JButton("Ver Postulaciones");
-        btnVerPost.setBorder(null);
         JButton btnPostular = new JButton("Postular a un convenio");
-        btnPostular.setBorder(null);
 
-        JPanel panelOpciones = new JPanel(new GridLayout(0, 1, 0, 12));
-        panelOpciones.setBorder(BorderFactory.createEmptyBorder(50, 16, 12, 16));
-        panelOpciones.add(btnPerfil);
-        panelOpciones.add(btnVerPost);
-        panelOpciones.add(btnPostular);
+        // CORRECCIÓN: Se agrega un estilo para ajustar el tamaño de los botones
+        String buttonStyle = "background:#2E86FF; foreground:#FFFFFF; font:bold +1; borderWidth:0; focusWidth:0; innerFocusWidth:0";
+        btnPerfil.putClientProperty(FlatClientProperties.STYLE, buttonStyle);
+        btnVerPost.putClientProperty(FlatClientProperties.STYLE, buttonStyle);
+        btnPostular.putClientProperty(FlatClientProperties.STYLE, buttonStyle);
 
-        JPanel panelPerfilMini = new JPanel();
-        panelPerfilMini.setBorder(BorderFactory.createEmptyBorder(200, 16, 100, 16));
-        lblSidebarNombre = new JLabel("Estudiante Nombre Apellido");
-        panelPerfilMini.add(lblSidebarNombre);
+        btnPerfil.setPreferredSize(new Dimension(180, 40));
+        btnVerPost.setPreferredSize(new Dimension(180, 40));
+        btnPostular.setPreferredSize(new Dimension(180, 40));
 
-        JPanel panelIzquierdo = new JPanel(new BorderLayout());
-        panelIzquierdo.add(panelCerrarSesion, BorderLayout.NORTH);
-        panelIzquierdo.add(panelOpciones, BorderLayout.CENTER);
-        panelIzquierdo.add(panelPerfilMini, BorderLayout.SOUTH);
-        panelIzquierdo.setPreferredSize(new Dimension(280, 0));
-        panelIzquierdo.putClientProperty(FlatClientProperties.STYLE, "background:lighten(@background,3%)");
-        panelIzquierdo.setOpaque(true);
-        panelCerrarSesion.setOpaque(false);
-        panelOpciones.setOpaque(false);
-        panelPerfilMini.setOpaque(false);
+        navButtonsPanel.add(btnPerfil);
+        navButtonsPanel.add(btnVerPost);
+        navButtonsPanel.add(btnPostular);
+
+        // Panel inferior para la info del usuario y el botón de cerrar sesión (SOUTH)
+        JPanel bottomPanel = new JPanel(new MigLayout("wrap, fillx, insets 16 24 16 24", "fill"));
+        bottomPanel.setOpaque(false);
+        lblSidebarNombre = new JLabel();
+        lblSidebarNombre.setHorizontalAlignment(SwingConstants.CENTER);
+        lblSidebarNombre.putClientProperty(FlatClientProperties.STYLE, "font:bold; foreground:lighten(@foreground,20%)");
+
+        JButton btnCerrar = new JButton("Cerrar Sesion");
+        btnCerrar.putClientProperty(FlatClientProperties.STYLE, "background:#E42828; foreground:#FFFFFF; arc:999");
+        btnCerrar.putClientProperty(FlatClientProperties.BUTTON_TYPE, "destructive");
+
+        bottomPanel.add(lblSidebarNombre, "growx, gaptop 16");
+        bottomPanel.add(btnCerrar, "growx, height 40, gaptop 16");
+
+        // Añade los paneles al panel principal izquierdo
+        panelIzquierdo.add(topPanel, BorderLayout.NORTH);
+        panelIzquierdo.add(navButtonsPanel, BorderLayout.CENTER);
+        panelIzquierdo.add(bottomPanel, BorderLayout.SOUTH);
 
         // ===== Centro (cards) =====
-        perfilPanel = new PerfilPanel(gestor,usuario);
+        perfilPanel = new PerfilPanel(gestor, usuario);
         postulacionesPanel = new PostulacionesPanel(gestor, usuario);
         postularPanel = new PostularPanel(gestor, usuario);
 
@@ -105,23 +140,16 @@ public class EstudiantePanel extends JPanel {
             centerCardsLayout.show(centerCards, CARD_POSTULACIONES);
         });
         btnPostular.addActionListener(e -> centerCardsLayout.show(centerCards, CARD_POSTULAR));
+        btnCerrar.addActionListener(e -> onLogout.run());
     }
 
     private void refreshSidebar() {
         if (usuario == null) return;
-        String rolLegible = (usuario.getRol() != null)
-                ? toTitulo(usuario.getRol().name())
-                : "Usuario";
         String nombre = safe(usuario.getNombreCompleto());
-        lblSidebarNombre.setText(rolLegible + " " + nombre);
+        lblSidebarNombre.setText("Hola, " + nombre.split(" ")[0] + "!");
     }
 
     private static String safe(String s) {
-        return (s == null || s.trim().isEmpty()) ? "-" : s.trim();
-    }
-
-    private static String toTitulo(String enumName) {
-        String lower = enumName.toLowerCase();
-        return Character.toUpperCase(lower.charAt(0)) + lower.substring(1);
+        return (s == null || s.trim().isEmpty()) ? "" : s.trim();
     }
 }

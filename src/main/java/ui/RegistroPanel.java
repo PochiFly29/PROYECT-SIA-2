@@ -39,11 +39,15 @@ public class RegistroPanel extends JPanel {
         emailF = new JTextField();
         passF = new JPasswordField();
         carreraF = new JTextField();
-        promedioF = new JSpinner(new SpinnerNumberModel(5.0, 1.0, 7.0, 0.1));
-        semestresF = new JSpinner(new SpinnerNumberModel(1, 0, 30, 1));
+        promedioF = new JSpinner(new SpinnerNumberModel(4.0, 1.0, 7.0, 0.1));
+        semestresF = new JSpinner(new SpinnerNumberModel(1, 1, 15, 1));
 
         passF.putClientProperty(FlatClientProperties.STYLE, "showRevealButton:true");
+        // CORREGIDO: El placeholder ahora pide el formato sin guion, que es el que se va a guardar
         rutF.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "11111111K");
+
+        JSpinner.NumberEditor promEditor = new JSpinner.NumberEditor(promedioF, "0.0");
+        promedioF.setEditor(promEditor);
 
         p.add(titulo, "center,gapbottom 15");
         p.add(new JLabel("RUT")); p.add(rutF);
@@ -52,7 +56,7 @@ public class RegistroPanel extends JPanel {
         p.add(new JLabel("Contraseña")); p.add(passF);
         p.add(new JLabel("Carrera")); p.add(carreraF);
         p.add(new JLabel("Promedio (1.0 - 7.0)")); p.add(promedioF);
-        p.add(new JLabel("Semestres Cursados")); p.add(semestresF);
+        p.add(new JLabel("Semestres Cursados (1 - 15)")); p.add(semestresF);
 
         registrarBtn = new JButton("Registrar");
         volverBtn = new JButton("Volver al Login");
@@ -69,9 +73,25 @@ public class RegistroPanel extends JPanel {
         volverBtn.addActionListener(e -> onRegisterSuccess.run());
     }
 
+    private String toPascalCase(String s) {
+        if (s == null || s.trim().isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        String[] words = s.trim().split("\\s+");
+        for (String word : words) {
+            if (!word.isEmpty()) {
+                sb.append(Character.toUpperCase(word.charAt(0)));
+                sb.append(word.substring(1).toLowerCase());
+                sb.append(" ");
+            }
+        }
+        return sb.toString().trim();
+    }
+
     private void doRegistro() {
         try {
-            String rut = VerificarInput.normalizarRut(rutF.getText().trim());
+            String rut = rutF.getText().trim();
             String nombre = nombreF.getText().trim();
             String email = emailF.getText().trim();
             String pass = new String(passF.getPassword());
@@ -81,28 +101,50 @@ public class RegistroPanel extends JPanel {
 
             StringBuilder errores = new StringBuilder();
 
+            // CORREGIDO: Ahora el mensaje de error del RUT es coherente con el placeholder
             if (!VerificarInput.rutValido(rut)) {
-                errores.append("• RUT inválido (ej: 11111111-1)\n");
+                errores.append("• El RUT no es válido. Formato: 11111111K (sin guion)\n");
             }
-            if (gestor.existeUsuario(rut)) {
-                errores.append("• Ya existe un usuario con este RUT\n");
+            if (gestor.existeUsuario(VerificarInput.normalizarRut(rut))) {
+                errores.append("• Ya existe un usuario con este RUT.\n");
             }
-            if (pass.isEmpty()) {
-                errores.append("• La contraseña no puede estar vacía\n");
+            if (nombre.isEmpty()) {
+                errores.append("• El nombre no puede estar vacío.\n");
+            }
+            if (pass.length() < 3) {
+                errores.append("• La contraseña debe tener al menos 3 caracteres.\n");
             }
             if (!email.contains("@")) {
-                errores.append("• Email inválido\n");
+                errores.append("• El email no es válido.\n");
             }
+            if (carrera.isEmpty()) {
+                errores.append("• La carrera no puede estar vacía.\n");
+            }
+            // Agregado el control para Promedio y Semestres.
+            // Los JSpinners tienen un modelo de número que ya limita el rango,
+            // pero es buena práctica tener el mensaje de error explícito para el usuario.
+            if (promedio < 1.0 || promedio > 7.0) {
+                errores.append("• El promedio debe estar entre 1.0 y 7.0.\n");
+            }
+            if (semestres < 1 || semestres > 15) {
+                errores.append("• El número de semestres debe estar entre 1 y 15.\n");
+            }
+
             if (errores.length() > 0) {
                 JOptionPane.showMessageDialog(this, errores.toString(), "Error de Registro", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            gestor.registrarEstudiante(rut, nombre, email, pass, carrera, semestres, promedio);
+            String rutNormalizado = VerificarInput.normalizarRut(rut);
+            String nombreFormateado = toPascalCase(nombre);
+
+            gestor.registrarEstudiante(rutNormalizado, nombreFormateado, email, pass, carrera, semestres, promedio);
             JOptionPane.showMessageDialog(this, "Estudiante registrado exitosamente.");
-            onRegisterSuccess.run(); // Volver al login
+            onRegisterSuccess.run();
+
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "No se pudo registrar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
     }
 }
