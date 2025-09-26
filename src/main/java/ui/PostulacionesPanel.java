@@ -11,6 +11,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.util.*;
@@ -34,10 +35,11 @@ public class PostulacionesPanel extends JPanel {
     private static final int COL_ID = 0;
     private static final int COL_UNI = 1;
     private static final int COL_PAIS = 2;
-    private static final int COL_EMITIDA = 3;
-    private static final int COL_VIGENCIA = 4;
-    private static final int COL_ESTADO = 5;
-    private static final int COL_OBJ = 6;
+    private static final int COL_AREA = 3;
+    private static final int COL_EMITIDA = 4;
+    private static final int COL_VIGENCIA = 5;
+    private static final int COL_ESTADO = 6;
+    private static final int COL_OBJ = 7;
 
     public PostulacionesPanel(GestorIntercambio gestor, Usuario usuario) {
         this.gestor = Objects.requireNonNull(gestor);
@@ -82,15 +84,15 @@ public class PostulacionesPanel extends JPanel {
         model.setRowCount(0);
         for (Postulacion p : postulaciones) {
             Convenio conv = p.getConvenioSeleccionado();
-            // Llama al gestor para obtener el programa asociado al convenio
             Programa prog = (conv != null) ? gestor.getProgramaDeConvenio(conv) : null;
-
             String vigencia = vigenciaTexto(prog);
+            String area = (prog != null) ? safe(conv.getArea()) : "-";
 
             model.addRow(new Object[]{
                     safe(p.getId()),
                     conv != null ? safe(conv.getUniversidad()) : "-",
                     conv != null ? safe(conv.getPais()) : "-",
+                    area,
                     (p.getFechaPostulacion() != null) ? p.getFechaPostulacion().toString() : "-",
                     vigencia,
                     (p.getEstado() != null) ? p.getEstado().name() : "-",
@@ -129,7 +131,7 @@ public class PostulacionesPanel extends JPanel {
         header.add(searchRow);
         add(header, BorderLayout.NORTH);
 
-        String[] cols = {"ID", "UNIVERSIDAD", "PAÍS", "EMITIDA", "VIGENCIA", "ESTADO", "_POST_"};
+        String[] cols = {"ID", "UNIVERSIDAD", "PAÍS", "ÁREA", "EMITIDA", "VIGENCIA", "ESTADO", "_POST_"};
         model = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int row, int col) {
                 return false;
@@ -141,10 +143,18 @@ public class PostulacionesPanel extends JPanel {
         };
 
         table = new JTable(model);
+        table.setFont(table.getFont().deriveFont(14f));
+        table.getTableHeader().setFont(table.getTableHeader().getFont().deriveFont(Font.BOLD, 14f));
         table.setFillsViewportHeight(true);
         table.setRowHeight(28);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setFocusable(false);
+
+        // **Ajuste para la columna ID**
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        TableColumn idColumn = table.getColumnModel().getColumn(COL_ID);
+        idColumn.setPreferredWidth(60);
+        idColumn.setMaxWidth(60);
 
         sorter = new TableRowSorter<>(model);
         sorter.setComparator(COL_ID, (Comparator<String>) (s1, s2) -> {
@@ -217,7 +227,6 @@ public class PostulacionesPanel extends JPanel {
         if (p == null) return;
 
         Convenio conv = p.getConvenioSeleccionado();
-        // Llama al gestor para obtener el programa asociado al convenio
         Programa prog = (conv != null) ? gestor.getProgramaDeConvenio(conv) : null;
         Estudiante est = gestor.buscarEstudiantePorPostulacion(p.getId());
 
@@ -230,28 +239,54 @@ public class PostulacionesPanel extends JPanel {
         gc.insets = new Insets(4, 4, 4, 4);
 
         if (usuario.getRol() == Rol.FUNCIONARIO) {
-            info.add(new JLabel("Estudiante: " + (est != null ? est.getNombreCompleto() : "-")), gc);
+            JLabel lblEstudiante = new JLabel("Estudiante: " + (est != null ? est.getNombreCompleto() : "-"));
+            lblEstudiante.setFont(lblEstudiante.getFont().deriveFont(14f));
+            info.add(lblEstudiante, gc);
             gc.gridy++;
-            info.add(new JLabel("Carrera: " + (est != null ? est.getCarrera() : "-")), gc);
+            JLabel lblCarrera = new JLabel("Carrera: " + (est != null ? est.getCarrera() : "-"));
+            lblCarrera.setFont(lblCarrera.getFont().deriveFont(14f));
+            info.add(lblCarrera, gc);
             gc.gridy++;
-            info.add(new JLabel("Promedio: " + (est != null ? est.getPromedio() : "-")), gc);
+            JLabel lblPromedio = new JLabel("Promedio: " + (est != null ? est.getPromedio() : "-"));
+            lblPromedio.setFont(lblPromedio.getFont().deriveFont(14f));
+            info.add(lblPromedio, gc);
             gc.gridy++;
         }
 
-        info.add(new JLabel("ID: " + safe(p.getId())), gc);
+        JLabel lblID = new JLabel("ID: " + safe(p.getId()));
+        lblID.setFont(lblID.getFont().deriveFont(14f));
+        info.add(lblID, gc);
         gc.gridy++;
-        info.add(new JLabel("Universidad: " + (conv != null ? safe(conv.getUniversidad()) : "-")), gc);
+        JLabel lblUni = new JLabel("Universidad: " + (conv != null ? safe(conv.getUniversidad()) : "-"));
+        lblUni.setFont(lblUni.getFont().deriveFont(14f));
+        info.add(lblUni, gc);
         gc.gridy++;
-        info.add(new JLabel("País: " + (conv != null ? safe(conv.getPais()) : "-")), gc);
+        JLabel lblPais = new JLabel("País: " + (conv != null ? safe(conv.getPais()) : "-"));
+        lblPais.setFont(lblPais.getFont().deriveFont(14f));
+        info.add(lblPais, gc);
         gc.gridy++;
-        info.add(new JLabel("Plazo: " + vigenciaTexto(prog)), gc);
+        // CORRECCIÓN: Se agrega la etiqueta para el Área
+        JLabel lblArea = new JLabel("Área: " + (prog != null ? safe(conv.getArea()) : "-"));
+        lblArea.setFont(lblArea.getFont().deriveFont(14f));
+        info.add(lblArea, gc);
         gc.gridy++;
-        info.add(new JLabel("Estado: " + (p.getEstado() != null ? p.getEstado().name() : "-")), gc);
+
+        JLabel lblPlazo = new JLabel("Plazo: " + vigenciaTexto(prog));
+        lblPlazo.setFont(lblPlazo.getFont().deriveFont(14f));
+        info.add(lblPlazo, gc);
+        gc.gridy++;
+        JLabel lblEstado = new JLabel("Estado: " + (p.getEstado() != null ? p.getEstado().name() : "-"));
+        lblEstado.setFont(lblEstado.getFont().deriveFont(14f));
+        info.add(lblEstado, gc);
         if (conv != null) {
             gc.gridy++;
-            info.add(new JLabel("Requisitos Académicos: " + safe(conv.getRequisitosAcademicos())), gc);
+            JLabel lblReqAcad = new JLabel("Requisitos Académicos: " + safe(conv.getRequisitosAcademicos()));
+            lblReqAcad.setFont(lblReqAcad.getFont().deriveFont(14f));
+            info.add(lblReqAcad, gc);
             gc.gridy++;
-            info.add(new JLabel("Requisitos Económicos: " + safe(conv.getRequisitosEconomicos())), gc);
+            JLabel lblReqEco = new JLabel("Requisitos Económicos: " + safe(conv.getRequisitosEconomicos()));
+            lblReqEco.setFont(lblReqEco.getFont().deriveFont(14f));
+            info.add(lblReqEco, gc);
         }
 
         JButton btnAdj = new JButton("Adjuntar");
