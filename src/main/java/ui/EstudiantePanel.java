@@ -47,14 +47,14 @@ public class EstudiantePanel extends JPanel {
         panelIzquierdo.putClientProperty(FlatClientProperties.STYLE, "background:lighten(@background,3%)");
         panelIzquierdo.setPreferredSize(new Dimension(280, 0));
 
-        // Panel superior para el logo y título (eliminando la barra vacía)
+        // Panel superior para el logo y título
         JPanel topPanel = new JPanel(new MigLayout("wrap, fillx, insets 16 24 16 24", "fill"));
         topPanel.setOpaque(false);
 
         // Espacio para la imagen
         try {
             ImageIcon logoIcon = new ImageIcon(getClass().getResource("/logo.png"));
-            // CORRECCIÓN: Aumentamos el tamaño del logo a 100x100
+            // Aumentamos el tamaño del logo a 100x100
             Image scaledImage = logoIcon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
             JLabel lblLogo = new JLabel(new ImageIcon(scaledImage));
             lblLogo.setHorizontalAlignment(SwingConstants.CENTER);

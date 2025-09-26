@@ -161,4 +161,23 @@ public class GestorIntercambio {
     public void cerrarSesion() {
 
     }
+
+    public void actualizarDatosEstudiante(String rut, String nuevaCarrera, int nuevosSemestres, double nuevoPromedio) {
+        // Buscar al usuario por RUT.
+        Usuario usuario = dataStore.getUsuarioPorRut(rut);
+
+        // Verificar si el usuario existe y si es una instancia de Estudiante.
+        if (usuario instanceof Estudiante) {
+            Estudiante estudiante = (Estudiante) usuario;
+
+            // Actualizar los datos del estudiante con los nuevos valores.
+            estudiante.setCarrera(nuevaCarrera);
+            estudiante.setSemestresCursados(nuevosSemestres);
+            estudiante.setPromedio(nuevoPromedio);
+
+            // Opcional: Persistir los cambios en la base de datos o archivo.
+            // Aquí iría la llamada a tu capa de persistencia (ej. DAO).
+            // persistencia.guardarCambios(estudiante);
+        }
+    }
 }

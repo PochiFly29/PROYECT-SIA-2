@@ -23,7 +23,7 @@ public class VentanaPrincipal extends JFrame {
         init();
         initWindowListener();
         // **Agrega esta línea aquí para que la ventana sea visible**
-
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setVisible(true);
     }
 
