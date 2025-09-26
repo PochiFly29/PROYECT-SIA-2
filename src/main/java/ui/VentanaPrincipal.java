@@ -1,111 +1,92 @@
 package ui;
 
-import enums.Rol;
 import gestores.GestorIntercambio;
-import modelo.Estudiante;
 import modelo.Usuario;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Objects;
+
+/*
+   Unificacion de las dos versiones
+   - LoginPanel moderno (con o sin callback de registro)
+   - RegistroPanel (opcional): al finalizar vuelve a login
+   - Un único UsuarioPanel que cambia por rol (estudiante/funcionario/auditor)
+   - Persistencia: guardar datos al cerrar la ventana (DataStore)
+   - Cambio de sesión: reutiliza UsuarioPanel y propaga setUsuario()
+*/
 
 public class VentanaPrincipal extends JFrame {
+    private static final String VIEW_LOGIN = "login";
+    private static final String VIEW_REGISTRO = "registro";
+    private static final String VIEW_APP = "app";
 
     private final JPanel cards = new JPanel(new CardLayout());
     private final GestorIntercambio gestor;
-    private final Map<String, JPanel> paneles = new HashMap<>();
 
-    public VentanaPrincipal(GestorIntercambio gestor) {
-        this.gestor = gestor;
+    private LoginPanel loginPanel;
+    private RegistroPanel registroPanel;
+    private UsuarioPanel appPanel;
+
+    public VentanaPrincipal(GestorIntercambio gestor){
+        this.gestor = Objects.requireNonNull(gestor);
         init();
         initWindowListener();
-        // **Agrega esta línea aquí para que la ventana sea visible**
-
         setVisible(true);
     }
 
-    private void init() {
+    private void init(){
         setTitle("Gestión Intercambios Estudiantiles");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1280, 720);
+        setSize(1280,720);
         setLocationRelativeTo(null);
         setContentPane(cards);
 
-        // Agregamos el panel de Login y Registro
-        RegistroPanel registroPanel = new RegistroPanel(gestor, () -> show("login"));
-        LoginPanel loginPanel = new LoginPanel(gestor, this::onLoginOk, () -> show("registro"));
+        // Login
+        loginPanel = new LoginPanel(gestor, this::onLoginOk, () -> showCard(VIEW_REGISTRO));
+        cards.add(loginPanel, VIEW_LOGIN);
 
-        paneles.put("login", loginPanel);
-        paneles.put("registro", registroPanel);
+        // Registro
+        registroPanel = new RegistroPanel(gestor, () -> showCard(VIEW_LOGIN));
+        cards.add(registroPanel, VIEW_REGISTRO);
 
-        cards.add(loginPanel, "login");
-        cards.add(registroPanel, "registro");
-
-        show("login");
+        showCard(VIEW_LOGIN);
     }
 
     private void initWindowListener() {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                gestor.guardarDatos();
+                try {
+                    gestor.guardarDatos();
+                } catch (Exception ex) {
+                    // Evita crash al cerrar en caso de error de base de datos
+                    System.err.println("Error al guardar datos al cerrar: " + ex.getMessage());
+                }
             }
         });
     }
 
     private void onLoginOk(Usuario usuario) {
-        switch (usuario.getRol()) {
-            case ESTUDIANTE:
-                String keyEstu = "estudiante" + usuario.getRut();
-                if (!paneles.containsKey(keyEstu)) {
-                    EstudiantePanel estudiantePanel = new EstudiantePanel(gestor, usuario, this::logout);
-                    paneles.put(keyEstu, estudiantePanel);
-                    cards.add(estudiantePanel, keyEstu);
-                }
-                show(keyEstu);
-                break;
-            case FUNCIONARIO:
-                String keyFunc = "funcionario";
-                if (!paneles.containsKey(keyFunc)) {
-                    JPanel funcionarioPanel = placeholder("Panel Funcionario (próximamente)");
-                    paneles.put(keyFunc, funcionarioPanel);
-                    cards.add(funcionarioPanel, keyFunc);
-                }
-                show(keyFunc);
-                break;
-            case AUDITOR:
-                String keyAud = "auditor";
-                if (!paneles.containsKey(keyAud)) {
-                    JPanel auditorPanel = placeholder("Panel Auditor (próximamente)");
-                    paneles.put(keyAud, auditorPanel);
-                    cards.add(auditorPanel, keyAud);
-                }
-                show(keyAud);
-                break;
-            default:
-                JOptionPane.showMessageDialog(this, "Rol de usuario no reconocido.", "Error de inicio de sesión", JOptionPane.ERROR_MESSAGE);
-                break;
+        if (appPanel == null) {
+            appPanel = new UsuarioPanel(gestor, usuario, this::logout);
+            cards.add(appPanel, VIEW_APP);
+        } else {
+            appPanel.setUsuario(usuario);
         }
+        showCard(VIEW_APP);
     }
 
     private void logout() {
         gestor.cerrarSesion();
-        show("login");
+        showCard(VIEW_LOGIN);
     }
 
-    private void show(String name) {
+    private void showCard(String name) {
         ((CardLayout) cards.getLayout()).show(cards, name);
         revalidate();
         repaint();
-    }
-
-    // Panel de prueba para roles no implementados
-    private JPanel placeholder(String text) {
-        JPanel p = new JPanel(new BorderLayout());
-        p.add(new JLabel(text, SwingConstants.CENTER), BorderLayout.CENTER);
-        return p;
     }
 }

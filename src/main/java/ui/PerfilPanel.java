@@ -18,6 +18,13 @@ public class PerfilPanel extends JPanel {
     private JLabel lblNombreValor, lblEmailValor, lblCarreraValor, lblPassValor, lblRol, lblSemestres, lblPromedio;
     private JButton btnEditNombre, btnEditEmail, btnEditCarrera, btnEditPass;
 
+    public PerfilPanel(Usuario usuarioInicial) {
+        this.gestor = null;
+        this.usuario = usuarioInicial;
+        initUI();
+        refreshFromUsuario();
+    }
+
     public PerfilPanel(GestorIntercambio gestor, Usuario usuarioInicial) {
         this.gestor = gestor;
         this.usuario = usuarioInicial;
@@ -31,7 +38,6 @@ public class PerfilPanel extends JPanel {
     }
 
     private void initUI() {
-        // ===== Banner =====
         JPanel banner = new JPanel();
         banner.setLayout(new BoxLayout(banner, BoxLayout.Y_AXIS));
         banner.setBorder(BorderFactory.createEmptyBorder(16, 24, 16, 24));
@@ -117,6 +123,7 @@ public class PerfilPanel extends JPanel {
         footer.add(lblPromedio);
         footer.add(Box.createVerticalStrut(50));
 
+        // Texto oscuro dentro de la tarjeta
         Color textoOscuro = new Color(0x222222);
         tintLabels(detalle, textoOscuro);
         lblRol.setForeground(textoOscuro);
@@ -128,7 +135,6 @@ public class PerfilPanel extends JPanel {
         add(tarjeta, BorderLayout.CENTER);
     }
 
-    // Método helper para crear botones
     private JButton createEditButton(String text) {
         JButton btn = new JButton(text);
         btn.setBorderPainted(false);
@@ -137,185 +143,6 @@ public class PerfilPanel extends JPanel {
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.setForeground(new Color(0x2E86FF));
         return btn;
-    }
-
-    private void refreshFromUsuario() {
-        if (usuario == null) return;
-        String nombre = safe(usuario.getNombreCompleto());
-        String email = safe(usuario.getEmail());
-        String rolLegible = (usuario.getRol() != null) ? toTitulo(usuario.getRol().name()) : "Usuario";
-
-        String carrera = "-";
-        Integer semestres = null;
-        Double promedio = null;
-        if (usuario instanceof Estudiante) {
-            Estudiante e = (Estudiante) usuario;
-            carrera = safe(e.getCarrera());
-            semestres = e.getSemestresCursados();
-            promedio = e.getPromedio();
-            btnEditCarrera.setVisible(true);
-        } else {
-            btnEditCarrera.setVisible(false);
-        }
-
-        lblTituloPeq.setText(nombre + " • " + (isEmpty(carrera) ? "-" : carrera));
-        lblNombreValor.setText(nombre);
-        lblEmailValor.setText(email);
-        lblCarreraValor.setText(isEmpty(carrera) ? "-" : carrera);
-        lblPassValor.setText(mask(usuario.getPass()));
-
-        lblRol.setText(rolLegible);
-        lblSemestres.setText((semestres == null) ? "—" : (semestres + (semestres == 1 ? " semestre cursado" : " semestres cursados")));
-        lblPromedio.setText((promedio == null) ? "—" : String.format("%.1f Promedio", promedio));
-
-        revalidate();
-        repaint();
-    }
-
-    private void onEditNombre() {
-        inlineEdit(lblNombreValor, nuevo -> {
-            if (nuevo.trim().isEmpty()) {
-                beepWarn("El nombre no puede estar vacío.");
-                return false;
-            }
-            gestor.actualizarNombreUsuario(usuario.getRut(), nuevo.trim());
-            usuario.setNombreCompleto(nuevo.trim());
-            refreshFromUsuario();
-            info("Nombre actualizado correctamente.");
-            return true;
-        }, false);
-    }
-
-    private void onEditEmail() {
-        inlineEdit(lblEmailValor, nuevo -> {
-            String n = nuevo.trim();
-            if (!n.contains("@") || n.startsWith("@") || n.endsWith("@")) {
-                beepWarn("Ingrese un email válido.");
-                return false;
-            }
-            gestor.actualizarEmailUsuario(usuario.getRut(), n);
-            usuario.setEmail(n);
-            refreshFromUsuario();
-            info("Email actualizado correctamente.");
-            return true;
-        }, false);
-    }
-
-    private void onEditCarrera() {
-        if (!(usuario instanceof Estudiante)) {
-            beepWarn("Solo los estudiantes tienen carrera.");
-            return;
-        }
-        final Estudiante est = (Estudiante) usuario;
-        inlineEdit(lblCarreraValor, nuevo -> {
-            String n = nuevo.trim();
-            if (n.isEmpty()) {
-                beepWarn("La carrera no puede estar vacía.");
-                return false;
-            }
-            gestor.actualizarCarreraEstudiante(est.getRut(), n);
-            est.setCarrera(n);
-            refreshFromUsuario();
-            info("Carrera actualizada correctamente.");
-            return true;
-        }, false);
-    }
-
-    private void onEditPassword() {
-        inlineEdit(lblPassValor, nuevo -> {
-            if (nuevo.length() < 6) {
-                beepWarn("Debe tener al menos 6 caracteres.");
-                return false;
-            }
-            gestor.actualizarPasswordUsuario(usuario.getRut(), nuevo);
-            usuario.setPass(nuevo);
-            lblPassValor.setText(mask(nuevo));
-            info("Contraseña actualizada correctamente.");
-            return true;
-        }, true);
-    }
-
-    // Este es el método que te falta o que debes corregir
-    private void inlineEdit(final JLabel targetLabel, final Function<String, Boolean> validatorCommit, final boolean password) {
-        // Obtenemos el contenedor padre del JLabel a modificar.
-        JPanel parent = (JPanel) targetLabel.getParent();
-
-        // Creamos el campo de texto. Usamos JPasswordField si es para contraseña.
-        JComponent editor;
-        if (password) {
-            editor = new JPasswordField(15);
-            ((JPasswordField) editor).setText("");
-            ((JPasswordField) editor).setEchoChar('*');
-        } else {
-            editor = new JTextField(15);
-            // El texto inicial del campo será el valor actual del JLabel
-            String currentText = targetLabel.getText();
-            ((JTextField) editor).setText(currentText.equals("-") ? "" : currentText);
-        }
-
-        // Estilo visual del editor (opcional, pero mejora la UX)
-        editor.putClientProperty(FlatClientProperties.STYLE, "arc:999; margin:6,14,6,14");
-
-        // Creamos un botón para guardar los cambios
-        JButton btnGuardar = new JButton("Guardar");
-        btnGuardar.setFocusPainted(false);
-        btnGuardar.putClientProperty(FlatClientProperties.STYLE, "background:#2E86FF; foreground:#FFFFFF; arc:999;");
-
-        // Creamos un botón para cancelar la edición
-        JButton btnCancelar = new JButton("Cancelar");
-        btnCancelar.setFocusPainted(false);
-        btnCancelar.putClientProperty(FlatClientProperties.STYLE, "background:#A4A4A4; foreground:#FFFFFF; arc:999;");
-
-        // Guardamos el botón de edición original para volver a mostrarlo
-        JButton originalButton = (JButton) parent.getComponent(parent.getComponentCount() - 1);
-        originalButton.setVisible(false);
-
-        // Ocultamos el JLabel y mostramos el editor
-        targetLabel.setVisible(false);
-        parent.add(editor, 1);
-        parent.add(btnGuardar);
-        parent.add(btnCancelar);
-
-        // Agregamos listeners a los botones
-        btnGuardar.addActionListener(e -> {
-            String nuevoValor;
-            if (editor instanceof JPasswordField) {
-                nuevoValor = new String(((JPasswordField) editor).getPassword());
-            } else {
-                nuevoValor = ((JTextField) editor).getText();
-            }
-
-            // Validamos y guardamos el nuevo valor
-            if (validatorCommit.apply(nuevoValor)) {
-                // Si la validación es exitosa, restauramos la UI
-                parent.remove(editor);
-                parent.remove(btnGuardar);
-                parent.remove(btnCancelar);
-                targetLabel.setVisible(true);
-                originalButton.setVisible(true);
-            }
-        });
-
-        btnCancelar.addActionListener(e -> {
-            // Si se cancela, restauramos la UI sin guardar
-            parent.remove(editor);
-            parent.remove(btnGuardar);
-            parent.remove(btnCancelar);
-            targetLabel.setVisible(true);
-            originalButton.setVisible(true);
-        });
-
-        // Agregamos un listener al editor para guardar con "Enter"
-        if (editor instanceof JTextField) {
-            ((JTextField) editor).addActionListener(e -> btnGuardar.doClick());
-        }
-
-        // Enfocamos el campo de texto para que el usuario pueda escribir
-        editor.requestFocusInWindow();
-
-        // Forzamos el redibujado del panel
-        parent.revalidate();
-        parent.repaint();
     }
 
     private static JLabel labelTitulo(String t) {
@@ -332,6 +159,173 @@ public class PerfilPanel extends JPanel {
         return row;
     }
 
+    // ====== Lógica ======
+    private void refreshFromUsuario() {
+        if (usuario == null) return;
+
+        String nombre = safe(usuario.getNombreCompleto());
+        String email  = safe(usuario.getEmail());
+        String rolLegible = (usuario.getRol() != null) ? toTitulo(usuario.getRol().name()) : "Usuario";
+
+        String carrera = "-";
+        Integer semestres = null;
+        Double promedio = null;
+        boolean esEstudiante = usuario instanceof Estudiante;
+        if (esEstudiante) {
+            Estudiante e = (Estudiante) usuario;
+            carrera = safe(e.getCarrera());
+            semestres = e.getSemestresCursados();
+            promedio  = e.getPromedio();
+        }
+
+        // Banner
+        String sub = esEstudiante ? (isEmpty(carrera) ? "-" : carrera) : rolLegible;
+        lblTituloPeq.setText(nombre + " • " + sub);
+
+        lblNombreValor.setText(nombre);
+        lblEmailValor.setText(email);
+        lblCarreraValor.setText(isEmpty(carrera) ? "-" : carrera);
+        lblPassValor.setText(mask(usuario.getPass()));
+
+        lblRol.setText(rolLegible);
+        lblSemestres.setText((semestres == null) ? "—" : (semestres + (semestres == 1 ? " semestre cursado" : " semestres cursados")));
+        lblPromedio.setText((promedio == null) ? "—" : String.format("%.1f Promedio", promedio));
+
+        // Solo estudiantes pueden editar carrera
+        btnEditCarrera.setVisible(esEstudiante);
+
+        revalidate();
+        repaint();
+    }
+
+    private void onEditNombre() {
+        inlineEdit(lblNombreValor, nuevo -> {
+            String n = nuevo.trim();
+            if (n.isEmpty()) { beepWarn("El nombre no puede estar vacío."); return false; }
+            if (gestor != null) gestor.actualizarNombreUsuario(usuario.getRut(), n);
+            usuario.setNombreCompleto(n);
+            refreshFromUsuario();
+            info("Nombre actualizado correctamente.");
+            return true;
+        }, false, btnEditNombre);
+    }
+
+    private void onEditEmail() {
+        inlineEdit(lblEmailValor, nuevo -> {
+            String n = nuevo.trim();
+            if (!n.contains("@") || n.startsWith("@") || n.endsWith("@")) {
+                beepWarn("Ingrese un email válido.");
+                return false;
+            }
+            if (gestor != null) gestor.actualizarEmailUsuario(usuario.getRut(), n);
+            usuario.setEmail(n);
+            refreshFromUsuario();
+            info("Email actualizado correctamente.");
+            return true;
+        }, false, btnEditEmail);
+    }
+
+    private void onEditCarrera() {
+        if (!(usuario instanceof Estudiante)) { beepWarn("Solo los estudiantes tienen carrera."); return; }
+        final Estudiante est = (Estudiante) usuario;
+        inlineEdit(lblCarreraValor, nuevo -> {
+            String n = nuevo.trim();
+            if (n.isEmpty()) { beepWarn("La carrera no puede estar vacía."); return false; }
+            if (gestor != null) gestor.actualizarCarreraEstudiante(est.getRut(), n);
+            est.setCarrera(n);
+            refreshFromUsuario();
+            info("Carrera actualizada correctamente.");
+            return true;
+        }, false, btnEditCarrera);
+    }
+
+    private void onEditPassword() {
+        inlineEdit(lblPassValor, nuevo -> {
+            if (nuevo.length() < 6) { beepWarn("Debe tener al menos 6 caracteres."); return false; }
+            if (gestor != null) gestor.actualizarPasswordUsuario(usuario.getRut(), nuevo);
+            usuario.setPass(nuevo);
+            lblPassValor.setText(mask(nuevo));
+            info("Contraseña actualizada correctamente.");
+            return true;
+        }, true, btnEditPass);
+    }
+
+    private void inlineEdit(final JLabel targetLabel,
+                            final Function<String, Boolean> validatorCommit,
+                            final boolean password,
+                            final JButton editBtn) {
+
+        final JPanel row = (JPanel) targetLabel.getParent();
+
+        final JComponent editor;
+        if (password) {
+            JPasswordField pf = new JPasswordField(15);
+            pf.setText("");
+            pf.setEchoChar('*');
+            editor = pf;
+        } else {
+            JTextField tf = new JTextField(15);
+            String currentText = targetLabel.getText();
+            tf.setText("-".equals(currentText) ? "" : currentText);
+            tf.selectAll();
+            editor = tf;
+        }
+
+        editor.putClientProperty(FlatClientProperties.STYLE, "arc:999; margin:6,14,6,14");
+
+        final JButton btnGuardar = new JButton("Guardar");
+        btnGuardar.setFocusPainted(false);
+        btnGuardar.putClientProperty(FlatClientProperties.STYLE, "background:#2E86FF; foreground:#FFFFFF; arc:999;");
+        final JButton btnCancelar = new JButton("Cancelar");
+        btnCancelar.setFocusPainted(false);
+        btnCancelar.putClientProperty(FlatClientProperties.STYLE, "background:#A4A4A4; foreground:#FFFFFF; arc:999;");
+
+        if (editBtn != null) editBtn.setVisible(false);
+
+        targetLabel.setVisible(false);
+        row.add(editor, 1);
+        row.add(btnGuardar);
+        row.add(btnCancelar);
+        row.revalidate();
+        row.repaint();
+        editor.requestFocusInWindow();
+
+        // Guardar
+        btnGuardar.addActionListener(e -> {
+            String nuevoValor = (editor instanceof JPasswordField)
+                    ? new String(((JPasswordField) editor).getPassword())
+                    : ((JTextField) editor).getText();
+
+            boolean ok = validatorCommit.apply(nuevoValor);
+            if (ok) {
+                restoreRow(row, editor, btnGuardar, btnCancelar, targetLabel, editBtn);
+            } else {
+                editor.requestFocusInWindow();
+            }
+        });
+
+        // Cancelar
+        btnCancelar.addActionListener(e ->
+                restoreRow(row, editor, btnGuardar, btnCancelar, targetLabel, editBtn)
+        );
+
+        if (editor instanceof JTextField) {
+            ((JTextField) editor).addActionListener(e ->
+                    btnGuardar.doClick()
+            );
+        }
+    }
+
+    private void restoreRow(JPanel row, JComponent editor, JButton btnGuardar, JButton btnCancelar, JLabel targetLabel, JButton editBtn) {
+        row.remove(editor);
+        row.remove(btnGuardar);
+        row.remove(btnCancelar);
+        targetLabel.setVisible(true);
+        if (editBtn != null) editBtn.setVisible(true);
+        row.revalidate();
+        row.repaint();
+    }
+
     private static void tintLabels(Container parent, Color color) {
         for (Component comp : parent.getComponents()) {
             if (comp instanceof JLabel) ((JLabel) comp).setForeground(color);
@@ -343,7 +337,9 @@ public class PerfilPanel extends JPanel {
         if (real == null) return "—";
         int n = real.length();
         if (n <= 0) return "—";
-        return "*".repeat(n);
+        StringBuilder sb = new StringBuilder(n);
+        for (int i = 0; i < n; i++) sb.append('*');
+        return sb.toString();
     }
 
     private void info(String msg) {
