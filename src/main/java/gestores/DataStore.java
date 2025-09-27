@@ -15,24 +15,63 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * La clase {@code DataStore} gestiona la persistencia y la sincronización
+ * de los datos del sistema de intercambio académico entre la base de datos
+ * SQLite y las estructuras en memoria.
+ * <p>
+ * Se encarga de:
+ * <ul>
+ *   <li>Conectar y crear las tablas en la base de datos.</li>
+ *   <li>Cargar y guardar información de usuarios, programas, convenios y postulaciones.</li>
+ *   <li>Mantener la coherencia entre objetos en memoria y la base de datos.</li>
+ * </ul>
+ */
 public class DataStore {
+
+    /** URL de conexión a la base de datos SQLite */
     private final String URL = "jdbc:sqlite:gestion_intercambio.db";
+
+    /** Mapa de usuarios indexados por RUT */
     private final Map<String, Usuario> usuariosPorRut = new HashMap<>();
+
+    /** Mapa de convenios indexados por ID */
     private final Map<String, Convenio> conveniosPorId = new HashMap<>();
+
+    /** Mapa de programas indexados por ID */
     private final Map<Integer, Programa> programasPorId = new HashMap<>();
+
+    /** Mapa de postulaciones indexadas por ID */
     private final Map<String, Postulacion> postulacionesPorId = new HashMap<>();
 
+    /**
+     * Constructor por defecto de {@code DataStore}.
+     * Inicializa los mapas internos.
+     */
     public DataStore() {}
 
     // --- Métodos de Conexión y Persistencia (SQL) ---
 
+    /**
+     * Establece una conexión con la base de datos SQLite.
+     *
+     * @return la conexión activa
+     * @throws SQLException si ocurre un error al conectar
+     */
     private Connection connect() throws SQLException {
         return DriverManager.getConnection(URL);
     }
 
+    /**
+     * Crea las tablas necesarias en la base de datos si no existen.
+     *
+     * @throws SQLException si ocurre un error al ejecutar las sentencias SQL
+     */
     public void crearTablas() throws SQLException {
         try (Connection conn = connect(); Statement stmt = conn.createStatement()) {
             stmt.execute("PRAGMA foreign_keys = ON;");
+
+            // Tabla usuarios
             String sqlUsuarios = "CREATE TABLE IF NOT EXISTS usuarios (\n"
                     + " rut TEXT PRIMARY KEY,\n"
                     + " nombre TEXT NOT NULL,\n"
@@ -42,6 +81,8 @@ public class DataStore {
                     + " bloqueado INTEGER NOT NULL DEFAULT 0,\n"
                     + " intentos_fallidos INTEGER NOT NULL DEFAULT 0\n"
                     + ");";
+
+            // Tabla estudiantes_info
             String sqlEstudiantes = "CREATE TABLE IF NOT EXISTS estudiantes_info (\n"
                     + " rut_estudiante TEXT PRIMARY KEY,\n"
                     + " carrera TEXT NOT NULL,\n"
@@ -49,12 +90,16 @@ public class DataStore {
                     + " semestres_cursados INTEGER NOT NULL,\n"
                     + " FOREIGN KEY (rut_estudiante) REFERENCES usuarios(rut)\n"
                     + ");";
+
+            // Tabla programas
             String sqlProgramas = "CREATE TABLE IF NOT EXISTS programas (\n"
                     + " id_programa INTEGER PRIMARY KEY,\n"
                     + " nombre TEXT NOT NULL,\n"
                     + " fecha_inicio TEXT NOT NULL,\n"
                     + " fecha_fin TEXT NOT NULL\n"
                     + ");";
+
+            // Tabla convenios
             String sqlConvenios = "CREATE TABLE IF NOT EXISTS convenios (\n"
                     + " id_convenio TEXT PRIMARY KEY,\n"
                     + " universidad TEXT NOT NULL,\n"
@@ -65,6 +110,8 @@ public class DataStore {
                     + " id_programa INTEGER NOT NULL,\n"
                     + " FOREIGN KEY (id_programa) REFERENCES programas(id_programa)\n"
                     + ");";
+
+            // Tabla postulaciones
             String sqlPostulaciones = "CREATE TABLE IF NOT EXISTS postulaciones (\n"
                     + " id_postulacion TEXT PRIMARY KEY,\n"
                     + " rut_estudiante TEXT NOT NULL,\n"
@@ -93,6 +140,13 @@ public class DataStore {
         }
     }
 
+    // ---------------- Carga de datos ----------------
+    /**
+     * Carga todos los datos desde la base de datos a las estructuras en memoria.
+     * Realiza el enlace entre convenios, programas, estudiantes y postulaciones.
+     *
+     * @throws SQLException si ocurre un error al leer de la base de datos
+     */
     public void cargarDatosDesdeBD() throws SQLException {
         usuariosPorRut.clear();
         conveniosPorId.clear();
@@ -108,6 +162,12 @@ public class DataStore {
         enlazarDatos();
     }
 
+    /**
+     * Enlaza los datos cargados en memoria, asignando convenios a programas,
+     * postulaciones a estudiantes y agregando interacciones.
+     *
+     * @throws SQLException si ocurre un error al leer interacciones
+     */
     private void enlazarDatos() throws SQLException {
         conveniosPorId.values().forEach(c -> {
             Programa programa = programasPorId.get(c.getIdPrograma());
@@ -129,6 +189,12 @@ public class DataStore {
     }
 
     // Métodos para leer de la base de datos
+    /**
+     * Obtiene todos los usuarios desde la base de datos.
+     *
+     * @return lista de usuarios
+     * @throws SQLException si ocurre un error en la consulta
+     */
     private List<Usuario> getTodosLosUsuariosBD() throws SQLException {
         // ... (Tu código de lectura de usuarios) ...
         List<Usuario> usuarios = new ArrayList<>();
@@ -162,6 +228,14 @@ public class DataStore {
         return usuarios;
     }
 
+    // Métodos  de escritura y sincronización
+
+    /**
+     * Obtiene todos los programas desde la base de datos.
+     *
+     * @return lista de programas
+     * @throws SQLException si ocurre un error en la consulta
+     */
     private List<Programa> getTodosLosProgramasBD() throws SQLException {
         // ... (Tu código de lectura de programas) ...
         List<Programa> programas = new ArrayList<>();
@@ -178,6 +252,12 @@ public class DataStore {
         return programas;
     }
 
+    /**
+     * Obtiene todos los convenios desde la base de datos.
+     *
+     * @return lista de convenios
+     * @throws SQLException si ocurre un error en la consulta
+     */
     private List<Convenio> getTodosLosConveniosBD() throws SQLException {
         // ... (Tu código de lectura de convenios) ...
         List<Convenio> convenios = new ArrayList<>();
@@ -197,8 +277,13 @@ public class DataStore {
         return convenios;
     }
 
+    /**
+     * Obtiene todas las postulaciones desde la base de datos.
+     *
+     * @return lista de postulaciones
+     * @throws SQLException si ocurre un error en la consulta
+     */
     private List<Postulacion> getTodasLasPostulacionesBD() throws SQLException {
-        // ... (Tu código de lectura de postulaciones) ...
         List<Postulacion> postulaciones = new ArrayList<>();
         String sql = "SELECT id_postulacion, rut_estudiante, id_convenio, fecha_postulacion, estado FROM postulaciones";
         try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql); ResultSet rs = pstmt.executeQuery()) {
@@ -214,8 +299,14 @@ public class DataStore {
         return postulaciones;
     }
 
+    /**
+     * Obtiene todas las interacciones asociadas a una postulacion.
+     *
+     * @param idPostulacion ID de la postulacion
+     * @return lista de interacciones
+     * @throws SQLException si ocurre un error en la consulta
+     */
     private List<Interaccion> getInteraccionesPorPostulacionBD(String idPostulacion) throws SQLException {
-        // ... (Tu código de lectura de interacciones) ...
         List<Interaccion> interacciones = new ArrayList<>();
         String sql = "SELECT rut_autor, tipo, titulo, fecha_hora FROM interacciones WHERE id_postulacion = ? ORDER BY fecha_hora ASC";
         try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -238,6 +329,11 @@ public class DataStore {
 
     // --- Métodos de escritura en la base de datos (transaccionales) ---
 
+    /**
+     * Guarda todos los datos en la base de datos, reemplazando los existentes.
+     *
+     * @throws SQLException si ocurre un error al guardar
+     */
     public void guardarDatos() throws SQLException {
         try (Connection conn = connect()) {
             conn.setAutoCommit(false);
@@ -273,6 +369,13 @@ public class DataStore {
         }
     }
 
+    /**
+     * Inserta un usuario en la base de datos.
+     *
+     * @param conn la conexión activa
+     * @param usuario el usuario a insertar
+     * @throws SQLException si ocurre un error al ejecutar el INSERT
+     */
     private void insertarUsuario(Connection conn, Usuario usuario) throws SQLException {
         String sql = "INSERT INTO usuarios (rut, nombre, email, pass, rol, bloqueado, intentos_fallidos) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -309,6 +412,13 @@ public class DataStore {
         }
     }
 
+    /**
+     * Inserta un convenio en la base de datos.
+     *
+     * @param conn    la conexión activa
+     * @param convenio el convenio a insertar
+     * @throws SQLException si ocurre un error al ejecutar el INSERT
+     */
     private void insertarConvenio(Connection conn, Convenio convenio) throws SQLException {
         String sql = "INSERT INTO convenios (id_convenio, universidad, pais, area_estudios, requisitos_academicos, requisitos_economicos, id_programa) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -323,6 +433,13 @@ public class DataStore {
         }
     }
 
+    /**
+     * Inserta una postulación en la base de datos.
+     *
+     * @param conn        la conexión activa
+     * @param postulacion la postulación a insertar
+     * @throws SQLException si ocurre un error al ejecutar el INSERT
+     */
     private void insertarPostulacion(Connection conn, Postulacion postulacion) throws SQLException {
         String sql = "INSERT INTO postulaciones (id_postulacion, rut_estudiante, id_convenio, fecha_postulacion, estado) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -335,6 +452,14 @@ public class DataStore {
         }
     }
 
+    /**
+     * Inserta una interacción asociada a una postulación en la base de datos.
+     *
+     * @param conn          la conexión activa
+     * @param interaccion   la interacción a insertar
+     * @param idPostulacion el ID de la postulación a la que pertenece
+     * @throws SQLException si ocurre un error al ejecutar el INSERT
+     */
     private void insertarInteraccion(Connection conn, Interaccion interaccion, String idPostulacion) throws SQLException {
         String sql = "INSERT INTO interacciones (id_postulacion, rut_autor, tipo, titulo, fecha_hora) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -349,6 +474,11 @@ public class DataStore {
 
     // --- Métodos de sincronización bidireccional (en memoria y BD) ---
 
+    /**
+     * Agrega un usuario en memoria y en la base de datos.
+     *
+     * @param u usuario a agregar
+     */
     public void addUsuario(Usuario u) {
         usuariosPorRut.put(u.getRut(), u);
         try (Connection conn = connect()) {
@@ -382,7 +512,7 @@ public class DataStore {
             System.out.println("Error al guardar postulación en la BD: " + e.getMessage());
         }
     }
-
+/*
     public void actualizarNombreUsuario(String rut, String nuevoNombre) {
         usuariosPorRut.get(rut).setNombreCompleto(nuevoNombre);
         String sql = "UPDATE usuarios SET nombre = ? WHERE rut = ?";
@@ -394,6 +524,25 @@ public class DataStore {
             System.out.println("Error al actualizar nombre en la BD: " + e.getMessage());
         }
     }
+*/
+    public void actualizarNombreUsuario(String rut, String nuevoNombre) {
+        Usuario u = usuariosPorRut.get(rut);
+        if (u != null) {
+            // Actualizar en memoria
+            u.setNombreCompleto(nuevoNombre);
+
+            // Actualizar en BD
+            String sql = "UPDATE usuarios SET nombre = ? WHERE rut = ?";
+            try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, nuevoNombre);
+                pstmt.setString(2, rut);
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                System.out.println("Error al actualizar nombre en la BD: " + e.getMessage());
+            }
+        }
+    }
+
 
     public void actualizarEmailUsuario(String rut, String nuevoEmail) {
         usuariosPorRut.get(rut).setEmail(nuevoEmail);
@@ -476,6 +625,12 @@ public class DataStore {
 
     // --- Métodos para obtener elementos (desde la memoria) ---
 
+    /**
+     * Obtiene un usuario por su RUT.
+     *
+     * @param rut RUT del usuario
+     * @return el usuario correspondiente, o null si no existe
+     */
     public Usuario getUsuarioPorRut(String rut) { return usuariosPorRut.get(rut); }
     public Convenio getConvenioPorId(String id) { return conveniosPorId.get(id); }
     public Programa getProgramaPorId(int id) { return programasPorId.get(id); }
