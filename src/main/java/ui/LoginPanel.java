@@ -2,9 +2,8 @@ package ui;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import gestores.GestorIntercambio;
-import gestores.ResultadoLogin;
+import modelo.ResultadoLogin;
 import modelo.Usuario;
-import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,31 +27,84 @@ public class LoginPanel extends JPanel {
     }
 
     private void init(){
-        setLayout(new MigLayout("fill,insets 20", "[center]", "[center]"));
+        // Contenedor principal para centrar el formulario en la ventana
+        setLayout(new GridBagLayout());
 
         rut = new JTextField();
         pass = new JPasswordField();
         login = new JButton("Ingresar");
 
-        JPanel panel = new JPanel(new MigLayout("wrap,fillx,insets 35 45 30 45", "fill,250::280"));
-        panel.putClientProperty(FlatClientProperties.STYLE, "arc:20; background:lighten(@background,3%)");
+        // --- Panel del Formulario (Contiene todos los campos y el recuadro de estilo) ---
+        JPanel formPanel = new JPanel(new GridBagLayout());
+
+        // Estilo del Recuadro Central (FlatLaf)
+        formPanel.putClientProperty(FlatClientProperties.STYLE, "arc:20; background:lighten(@background,3%)");
+
+        // Estilos para los componentes internos
         pass.putClientProperty(FlatClientProperties.STYLE, "showRevealButton:true");
         login.putClientProperty(FlatClientProperties.STYLE, "background:lighten(@background,10%); borderWidth:0; focusWidth:0; innerFocusWidth:0");
         rut.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "(ej: 11111111K)");
         pass.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "(al menos 3 caracteres)");
+
         JLabel titulo = new JLabel("¡Bienvenido!");
-        JLabel descripcion =  new JLabel("Inicie sesión para ingresar a su cuenta");
+        JLabel descripcion = new JLabel("Inicie sesión para ingresar a su cuenta");
+
+        // CORRECCIÓN CLAVE: Aplicar el centrado de texto de Swing directamente
+        titulo.setHorizontalAlignment(SwingConstants.CENTER);
+        descripcion.setHorizontalAlignment(SwingConstants.CENTER);
+
+        // Aplicar estilos FlatLaf restantes (SIN la propiedad horizontalAlignment:center)
         titulo.putClientProperty(FlatClientProperties.STYLE, "font:bold +10");
         descripcion.putClientProperty(FlatClientProperties.STYLE, "foreground:darken(@foreground,30%)");
-        panel.add(titulo);
-        panel.add(descripcion);
-        panel.add(new JLabel("RUT"), "gapy 8");
-        panel.add(rut);
-        panel.add(new JLabel("Contraseña"), "gapy 8");
-        panel.add(pass);
-        panel.add(login, "gapy 10");
-        panel.add(crearSeccionRegistro(), "gapy 10");
-        add(panel);
+
+        // Definición del tamaño de los campos: 300px de ancho y 32px de alto
+        Dimension fieldPrefSize = new Dimension(300, 32);
+        rut.setPreferredSize(fieldPrefSize);
+        pass.setPreferredSize(fieldPrefSize);
+        login.setPreferredSize(fieldPrefSize);
+
+        // Aseguramos que los labels de título/descripción ocupen el mismo ancho para centrarse bien.
+        titulo.setPreferredSize(fieldPrefSize);
+        descripcion.setPreferredSize(fieldPrefSize);
+
+        // --- GridBagLayout para la disposición interna del formulario ---
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(4, 20, 4, 20); // Padding interno del recuadro
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridwidth = GridBagConstraints.REMAINDER; // Cada componente ocupa toda la fila
+
+        // 1. Título y Descripción
+        gbc.insets = new Insets(20, 20, 5, 20);
+        formPanel.add(titulo, gbc);
+        gbc.insets = new Insets(0, 20, 30, 20);
+        formPanel.add(descripcion, gbc);
+
+        // 2. Campo RUT
+        gbc.insets = new Insets(0, 20, 3, 20);
+        gbc.anchor = GridBagConstraints.WEST;
+        formPanel.add(new JLabel("RUT"), gbc);
+        gbc.insets = new Insets(0, 20, 10, 20);
+        gbc.anchor = GridBagConstraints.CENTER;
+        formPanel.add(rut, gbc);
+
+        // 3. Campo Contraseña
+        gbc.insets = new Insets(5, 20, 3, 20);
+        gbc.anchor = GridBagConstraints.WEST;
+        formPanel.add(new JLabel("Contraseña"), gbc);
+        gbc.insets = new Insets(0, 20, 20, 20);
+        gbc.anchor = GridBagConstraints.CENTER;
+        formPanel.add(pass, gbc);
+
+        // 4. Botón Ingresar
+        gbc.insets = new Insets(0, 20, 15, 20);
+        formPanel.add(login, gbc);
+
+        // 5. Sección de Registro
+        gbc.insets = new Insets(0, 20, 20, 20);
+        formPanel.add(crearSeccionRegistro(), gbc);
+
+        // Agregar el panel del formulario al panel principal (para centrar)
+        add(formPanel);
 
         // Agregamos el ActionListener y KeyStroke para el login
         login.addActionListener(e -> doLogin());
@@ -65,23 +117,26 @@ public class LoginPanel extends JPanel {
     private Component crearSeccionRegistro(){
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER,0,0));
         panel.putClientProperty(FlatClientProperties.STYLE, "background:null");
+
         JButton registrar = new JButton("<html><a href=\"#\">Registrar</a></html>");
         registrar.putClientProperty(FlatClientProperties.STYLE, "border:3,3,3,3");
         registrar.setContentAreaFilled(false);
         registrar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        registrar.addActionListener(e -> onRegisterRequest.run()); // Llama al método de callback
+        registrar.addActionListener(e -> onRegisterRequest.run());
+
         JLabel label = new JLabel("¿No tienes una cuenta? ");
         label.putClientProperty(FlatClientProperties.STYLE, "foreground:darken(@foreground,30%)");
+
         panel.add(label);
         panel.add(registrar);
         return panel;
     }
 
     private void doLogin() {
-        String rutTxt  = rut.getText().trim().toUpperCase();
+        String rutTxt  = rut.getText().trim().replace(".", "").replace("-", "").toUpperCase();
         String passTxt = new String(pass.getPassword());
 
-        ResultadoLogin r = gestor.iniciarSesion(rutTxt, passTxt);
+        ResultadoLogin r = gestor.getServicioAutenticacion().iniciarSesion(rutTxt, passTxt);
         if (r.isExito()) {
             onSuccess.accept(r.getUsuario());
         } else {
@@ -90,5 +145,11 @@ public class LoginPanel extends JPanel {
             pass.setText("");
             pass.requestFocusInWindow();
         }
+    }
+
+    public void limpiarCampos() {
+        rut.setText("");
+        pass.setText("");
+        rut.requestFocusInWindow();
     }
 }

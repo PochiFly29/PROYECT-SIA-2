@@ -105,7 +105,7 @@ public class RegistroPanel extends JPanel {
             if (!VerificarInput.rutValido(rut)) {
                 errores.append("• El RUT no es válido. Formato: 11111111K (sin guion)\n");
             }
-            if (gestor.existeUsuario(VerificarInput.normalizarRut(rut))) {
+            if (gestor.getServicioAutenticacion().existeUsuario(VerificarInput.normalizarRut(rut))) {
                 errores.append("• Ya existe un usuario con este RUT.\n");
             }
             if (nombre.isEmpty()) {
@@ -138,7 +138,7 @@ public class RegistroPanel extends JPanel {
             String rutNormalizado = VerificarInput.normalizarRut(rut);
             String nombreFormateado = toPascalCase(nombre);
 
-            gestor.registrarEstudiante(rutNormalizado, nombreFormateado, email, pass, carrera, semestres, promedio);
+            gestor.getServicioAutenticacion().registrarEstudiante(rutNormalizado, nombreFormateado, email, pass, carrera, semestres, promedio);
             JOptionPane.showMessageDialog(this, "Estudiante registrado exitosamente.");
             onRegisterSuccess.run();
 

@@ -1,7 +1,7 @@
 package enums;
 
 public enum EstadoPostulacion {
-    POR_REVISAR,
+    PENDIENTE,
     REVISADA,
     ACEPTADA,
     RECHAZADA,

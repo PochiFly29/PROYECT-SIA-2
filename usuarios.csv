@@ -1,0 +1,58 @@
+rol,rut,nombre,email,clave,carrera,semestres,promedio
+# --- FUNCIONARIOS (Clave: 123f) ---
+FUNCIONARIO,100000001,Catalina Fuentes,c.fuentes@u.cl,123f,,,
+FUNCIONARIO,100000002,Roberto Salas,r.salas@u.cl,123f,,,
+# --- AUDITORES (Clave: 123a) ---
+AUDITOR,100000003,Diana Moya,d.moya@u.cl,123a,,,
+AUDITOR,100000004,Elias Soto,e.soto@u.cl,123a,,,
+# --- ESTUDIANTES (50 - Clave: 123) ---
+ESTUDIANTE,111111111,Andrea Bravo,a.bravo@alumnos.cl,123,Ingenieria Civil,5,5.8
+ESTUDIANTE,122222222,Benjamín Cid,b.cid@alumnos.cl,123,Derecho,3,6.2
+ESTUDIANTE,133333333,Camila Díaz,c.diaz@alumnos.cl,123,Medicina,7,5.5
+ESTUDIANTE,144444444,Daniel Espinoza,d.espinoza@alumnos.cl,123,Arquitectura,4,6.5
+ESTUDIANTE,155555555,Elena Flores,e.flores@alumnos.cl,123,Psicologia,6,5.1
+ESTUDIANTE,166666666,Felipe Gómez,f.gomez@alumnos.cl,123,Ingenieria Comercial,8,5.9
+ESTUDIANTE,177777777,Gabriela Herrera,g.herrera@alumnos.cl,123,Diseño,2,6.0
+ESTUDIANTE,188888888,Hugo Ibarra,h.ibarra@alumnos.cl,123,Odontologia,5,5.7
+ESTUDIANTE,199999999,Ignacia Jiménez,i.jimenez@alumnos.cl,123,Kinesiologia,3,6.3
+ESTUDIANTE,200000000,Javier López,j.lopez@alumnos.cl,123,Geología,7,5.4
+ESTUDIANTE,211111111,Karen Molina,k.molina@alumnos.cl,123,Ingenieria Civil,4,6.6
+ESTUDIANTE,222222222,Luis Núñez,l.nunez@alumnos.cl,123,Derecho,6,5.0
+ESTUDIANTE,233333333,María Olivares,m.olivares@alumnos.cl,123,Medicina,8,5.8
+ESTUDIANTE,244444444,Nicolás Pérez,n.perez@alumnos.cl,123,Arquitectura,3,6.1
+ESTUDIANTE,255555555,Octavia Quezada,o.quezada@alumnos.cl,123,Psicologia,5,5.6
+ESTUDIANTE,266666666,Pablo Rojas,p.rojas@alumnos.cl,123,Ingenieria Comercial,7,6.4
+ESTUDIANTE,277777777,Quirina Soto,q.soto@alumnos.cl,123,Diseño,4,5.2
+ESTUDIANTE,288888888,Rafael Torres,r.torres@alumnos.cl,123,Odontologia,6,5.9
+ESTUDIANTE,299999999,Sofía Urbina,s.urbina@alumnos.cl,123,Kinesiologia,2,6.7
+ESTUDIANTE,300000000,Tomás Vargas,t.vargas@alumnos.cl,123,Geología,5,5.3
+ESTUDIANTE,311111111,Úrsula Wells,u.wells@alumnos.cl,123,Ingenieria Civil,7,6.2
+ESTUDIANTE,322222222,Víctor Xavier,v.xavier@alumnos.cl,123,Derecho,4,5.4
+ESTUDIANTE,333333333,Wanda Yáñez,w.yanez@alumnos.cl,123,Medicina,6,6.5
+ESTUDIANTE,344444444,Xavier Zárate,x.zarate@alumnos.cl,123,Arquitectura,8,5.0
+ESTUDIANTE,355555555,Yara Alarcón,y.alarcon@alumnos.cl,123,Psicologia,3,5.8
+ESTUDIANTE,366666666,Zacarías Brito,z.brito@alumnos.cl,123,Ingenieria Comercial,5,6.1
+ESTUDIANTE,377777777,Alma Castro,a.castro@alumnos.cl,123,Diseño,7,5.6
+ESTUDIANTE,388888888,Bruno Delgado,b.delgado@alumnos.cl,123,Odontologia,4,6.4
+ESTUDIANTE,399999999,Cora Farías,c.farias@alumnos.cl,123,Kinesiologia,6,5.2
+ESTUDIANTE,400000000,Dante Gallardo,d.gallardo@alumnos.cl,123,Geología,2,6.7
+ESTUDIANTE,411111111,Elisa Henríquez,e.henriquez@alumnos.cl,123,Ingenieria Civil,5,5.3
+ESTUDIANTE,422222222,Franco Illanes,f.illanes@alumnos.cl,123,Derecho,7,6.2
+ESTUDIANTE,433333333,Gladys Jerez,g.jerez@alumnos.cl,123,Medicina,4,5.4
+ESTUDIANTE,444444444,Hernán Lagos,h.lagos@alumnos.cl,123,Arquitectura,6,6.5
+ESTUDIANTE,455555555,Iván Miranda,i.miranda@alumnos.cl,123,Psicologia,8,5.0
+ESTUDIANTE,466666666,Julieta Navarro,j.navarro@alumnos.cl,123,Ingenieria Comercial,3,5.8
+ESTUDIANTE,477777777,Kevin Oviedo,k.oviedo@alumnos.cl,123,Diseño,5,6.1
+ESTUDIANTE,488888888,Laura Pardo,l.pardo@alumnos.cl,123,Odontologia,7,5.6
+ESTUDIANTE,499999999,Matías Rivas,m.rivas@alumnos.cl,123,Kinesiologia,4,6.4
+ESTUDIANTE,500000000,Nora Sáez,n.saez@alumnos.cl,123,Geología,6,5.2
+ESTUDIANTE,511111111,Óscar Tapia,o.tapia@alumnos.cl,123,Ingenieria Civil,2,6.7
+ESTUDIANTE,522222222,Paula Ulloa,p.ulloa@alumnos.cl,123,Derecho,5,5.3
+ESTUDIANTE,533333333,Quique Vera,q.vera@alumnos.cl,123,Medicina,7,6.2
+ESTUDIANTE,544444444,Romina Walker,r.walker@alumnos.cl,123,Arquitectura,4,5.4
+ESTUDIANTE,555555555,Sergio Yáñez,s.yanez@alumnos.cl,123,Psicologia,6,6.5
+ESTUDIANTE,566666666,Tania Zavala,t.zavala@alumnos.cl,123,Ingenieria Comercial,8,5.0
+ESTUDIANTE,577777777,Uriel Álvarez,u.alvarez@alumnos.cl,123,Diseño,3,5.8
+ESTUDIANTE,588888888,Verónica Baeza,v.baeza@alumnos.cl,123,Odontologia,5,6.1
+ESTUDIANTE,599999999,Wilson Cárcamo,w.carcamo@alumnos.cl,123,Kinesiologia,7,5.6
+ESTUDIANTE,600000000,Yasmín Durán,y.duran@alumnos.cl,123,Geología,4,6.4

@@ -1,5 +1,5 @@
 package menu;
-
+/*
 import enums.*;
 import gestores.GestorIntercambio;
 import modelo.*;
@@ -10,10 +10,10 @@ import java.util.Optional;
 
 public class MenuPostulaciones {
     private final VerificarInput input;
-    private final Usuario usuarioActual;
+    private final int usuarioActual;
     private final GestorIntercambio gestor;
 
-    public MenuPostulaciones(VerificarInput input, GestorIntercambio gestor, Usuario usuarioActual) {
+    public MenuPostulaciones(VerificarInput input, GestorIntercambio gestor, int usuarioActual) {
         this.input = input;
         this.gestor = gestor;
         this.usuarioActual = usuarioActual;
@@ -80,10 +80,10 @@ public class MenuPostulaciones {
             Convenio conv = p.getConvenioSeleccionado();
             Programa prog = gestor.getProgramaDeConvenio(conv);
 
-            String uni = (conv != null && conv.getUniversidad() != null) ? conv.getUniversidad() : "-";
+            int uni = (conv != null && conv.getUniversidad() != null) ? conv.getUniversidad() : "-";
             if (uni.length() > 34) uni = uni.substring(0, 31) + "...";
 
-            String pais = (conv != null && conv.getPais() != null) ? conv.getPais() : "-";
+            int pais = (conv != null && conv.getPais() != null) ? conv.getPais() : "-";
             if (pais.length() > 15) pais = pais.substring(0, 12) + "...";
 
             String emitida = String.valueOf(p.getFechaPostulacion());
@@ -266,3 +266,5 @@ public class MenuPostulaciones {
         input.pausaEnter("\n[Enter] para continuar...");
     }
 }
+
+ */

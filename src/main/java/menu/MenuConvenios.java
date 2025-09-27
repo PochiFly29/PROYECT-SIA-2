@@ -7,14 +7,14 @@ import java.util.Optional;
 import java.util.*;
 
 import static enums.Rol.FUNCIONARIO;
-
+/*
 public class MenuConvenios {
     private final VerificarInput input;
-    private final Usuario usuarioActual;
+    private final int usuarioActual;
     private final GestorIntercambio gestor;
     private final MenuPostulaciones menuPostulaciones;
 
-    public MenuConvenios(VerificarInput input, GestorIntercambio gestor, Usuario usuarioActual, MenuPostulaciones menuPostulaciones) {
+    public MenuConvenios(VerificarInput input, GestorIntercambio gestor, int usuarioActual, MenuPostulaciones menuPostulaciones) {
         this.input = input;
         this.gestor = gestor;
         this.usuarioActual = usuarioActual;
@@ -43,9 +43,9 @@ public class MenuConvenios {
             conveniosOrdenados.sort(Comparator.comparing(Convenio::getId));
 
             for (Convenio c : conveniosOrdenados) {
-                String uni = c.getUniversidad().length() > 37 ? c.getUniversidad().substring(0, 37) + "..." : c.getUniversidad();
-                String pais = c.getPais().length() > 17 ? c.getPais().substring(0, 17) + "..." : c.getPais();
-                String req = c.getRequisitosAcademicos().length() > 22 ? c.getRequisitosAcademicos().substring(0, 22) + "..." : c.getRequisitosAcademicos();
+                int uni = c.getUniversidad().length() > 37 ? c.getUniversidad().substring(0, 37) + "..." : c.getUniversidad();
+                int pais = c.getPais().length() > 17 ? c.getPais().substring(0, 17) + "..." : c.getPais();
+                int req = c.getRequisitosAcademicos().length() > 22 ? c.getRequisitosAcademicos().substring(0, 22) + "..." : c.getRequisitosAcademicos();
 
                 System.out.printf("| %-5s | %-40s | %-20s | %-25s |%n",
                         c.getId(), uni, pais, req);
@@ -120,9 +120,9 @@ public class MenuConvenios {
             conveniosOrdenados.sort(Comparator.comparing(Convenio::getId));
 
             for (Convenio c : conveniosOrdenados) {
-                String uni = c.getUniversidad().length() > 37 ? c.getUniversidad().substring(0, 37) + "..." : c.getUniversidad();
-                String pais = c.getPais().length() > 17 ? c.getPais().substring(0, 17) + "..." : c.getPais();
-                String req = c.getRequisitosAcademicos().length() > 22 ? c.getRequisitosAcademicos().substring(0, 22) + "..." : c.getRequisitosAcademicos();
+                int uni = c.getUniversidad().length() > 37 ? c.getUniversidad().substring(0, 37) + "..." : c.getUniversidad();
+                int pais = c.getPais().length() > 17 ? c.getPais().substring(0, 17) + "..." : c.getPais();
+                int req = c.getRequisitosAcademicos().length() > 22 ? c.getRequisitosAcademicos().substring(0, 22) + "..." : c.getRequisitosAcademicos();
 
                 System.out.printf("| %-5s | %-40s | %-20s | %-25s |%n",
                         c.getId(), uni, pais, req);
@@ -152,3 +152,5 @@ public class MenuConvenios {
         }
     }
 }
+
+ */

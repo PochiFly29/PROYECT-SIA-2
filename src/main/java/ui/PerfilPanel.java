@@ -4,390 +4,212 @@ import com.formdev.flatlaf.FlatClientProperties;
 import gestores.GestorIntercambio;
 import modelo.Estudiante;
 import modelo.Usuario;
-import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.function.Function;
+import java.util.Objects;
 
 public class PerfilPanel extends JPanel {
 
     private final GestorIntercambio gestor;
-    private Usuario usuario;
+    private Usuario usuario; // Almacenamos el Usuario base
 
-    private JLabel lblTituloPeq;
-    private JLabel lblNombreValor, lblEmailValor, lblPassValor, lblRolValor;
-    private JButton btnEditNombre, btnEditEmail, btnEditPass, btnEstudianteData;
+    // Campos del Perfil (Comunes)
+    private JLabel lblRol;
+    private JLabel lblRut;
+    private JTextField txtNombre;
+    private JTextField txtEmail;
+    private JPasswordField txtPass;
 
-    public PerfilPanel(GestorIntercambio gestor, Usuario usuarioInicial) {
+    // Campos del Perfil (Específicos de Estudiante)
+    private JPanel panelAcademico; // Panel que contendrá la info académica
+    private JTextField txtCarrera;
+    private JTextField txtSemestres;
+    private JTextField txtPromedio;
+
+    // Constructor que acepta el objeto Usuario/Estudiante
+    public PerfilPanel(GestorIntercambio gestor, Usuario usuario) {
         this.gestor = gestor;
-        this.usuario = usuarioInicial;
-        initUI();
-        refreshFromUsuario();
+        this.usuario = usuario;
+        init();
+        refreshData();
     }
 
+    // Método para actualizar la instancia de Usuario si se necesita (ej: en el EstudiantePanel)
     public void setUsuario(Usuario u) {
         this.usuario = u;
-        refreshFromUsuario();
+        refreshData();
     }
 
-    private void initUI() {
-        // ===== Banner =====
-        JPanel banner = new JPanel();
-        banner.setLayout(new BoxLayout(banner, BoxLayout.Y_AXIS));
-        banner.setBorder(BorderFactory.createEmptyBorder(16, 24, 16, 24));
-        banner.setOpaque(true);
-
-        lblTituloPeq = new JLabel("Nombre Apellido • Rol", SwingConstants.CENTER);
-        lblTituloPeq.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lblTituloPeq.putClientProperty(FlatClientProperties.STYLE, "font:+2; foreground:lighten(@foreground,10%)");
-
-        JLabel avatar = new JLabel();
-        avatar.setPreferredSize(new Dimension(160, 160));
-        avatar.setOpaque(true);
-        avatar.putClientProperty(FlatClientProperties.STYLE, "background:#E6E6E6; arc:16");
-        avatar.setBorder(new javax.swing.border.LineBorder(new Color(0xE6E6E6), 0, true));
-
-        try {
-            ImageIcon userIcon;
-            java.net.URL imageUrl = getClass().getResource("/imagen.jpg");
-            if (imageUrl != null) {
-                userIcon = new ImageIcon(imageUrl);
-            } else {
-                userIcon = new ImageIcon("src/main/resources/imagen.jpg");
-            }
-            Image scaledImage = userIcon.getImage().getScaledInstance(160, 160, Image.SCALE_SMOOTH);
-            avatar.setIcon(new ImageIcon(scaledImage));
-        } catch (Exception e) {
-            System.err.println("No se pudo cargar la imagen de perfil. " + e.getMessage());
-        }
-
-        JPanel avatarWrap = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        avatarWrap.setOpaque(false);
-        avatarWrap.add(avatar);
-
-        banner.add(lblTituloPeq);
-        banner.add(Box.createVerticalStrut(10));
-        banner.add(avatarWrap);
-
-        // ===== Detalle (tarjeta) =====
-        JPanel detalle = new JPanel(new GridBagLayout());
-        detalle.setOpaque(false);
-        detalle.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
-
-        GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(8, 100, 8, 16);
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.weightx = 0.5;
-
-        // Izquierda
-        c.gridx = 0; c.gridy = 0; detalle.add(labelTitulo("Nombre", 2), c);
-        lblNombreValor = new JLabel("Nombre Apellido");
-        btnEditNombre = createEditButton("Cambiar nombre");
-        btnEditNombre.addActionListener(e -> onEditNombre());
-        c.gridy = 1; detalle.add(rowCampo(lblNombreValor, btnEditNombre, 2), c);
-
-        c.gridy = 2; detalle.add(labelTitulo("Email", 2), c);
-        lblEmailValor = new JLabel("mail@gmail.com");
-        btnEditEmail = createEditButton("Cambiar email");
-        btnEditEmail.addActionListener(e -> onEditEmail());
-        c.gridy = 3; detalle.add(rowCampo(lblEmailValor, btnEditEmail, 2), c);
-
-        // Derecha
-        c.gridx = 1; c.gridy = 0; detalle.add(labelTitulo("Rol", 2), c);
-        lblRolValor = new JLabel();
-        lblRolValor.putClientProperty(FlatClientProperties.STYLE, "font:+2");
-        c.gridy = 1; detalle.add(lblRolValor, c);
-
-        c.gridy = 2; detalle.add(labelTitulo("Contraseña", 2), c);
-        lblPassValor = new JLabel("**********");
-        btnEditPass = createEditButton("Cambiar contraseña");
-        btnEditPass.addActionListener(e -> onEditPassword());
-        c.gridy = 3; detalle.add(rowCampo(lblPassValor, btnEditPass, 2), c);
-
-        // CORRECCIÓN: Botón de estudiante ahora se añade al panel de detalle con un layout específico.
-        btnEstudianteData = new JButton("Ver y actualizar mis datos de estudiante");
-        btnEstudianteData.putClientProperty(FlatClientProperties.STYLE, "background:#2E86FF; foreground:#FFFFFF; arc:999; font:bold +1");
-        btnEstudianteData.setPreferredSize(new Dimension(300, 40));
-        btnEstudianteData.addActionListener(e -> onEditEstudiante());
-
-        JPanel tarjeta = new JPanel(new BorderLayout());
-        tarjeta.putClientProperty(FlatClientProperties.STYLE, "background:#E6E6E6; arc:16");
-        tarjeta.setBorder(BorderFactory.createCompoundBorder(
-                new javax.swing.border.LineBorder(new Color(0xE6E6E6), 3, false),
-                BorderFactory.createEmptyBorder(8, 24, 8, 24)
-        ));
-
-        // Nuevo panel para el botón, para centrarlo correctamente
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        buttonPanel.setOpaque(false);
-        buttonPanel.add(btnEstudianteData);
-
-        // Añadimos el botón al layout de la tarjeta
-        tarjeta.add(detalle, BorderLayout.CENTER);
-        tarjeta.add(buttonPanel, BorderLayout.SOUTH);
-
-        Color textoOscuro = new Color(0x444444);
-        tintLabels(detalle, textoOscuro);
-
+    private void init() {
         setLayout(new BorderLayout());
-        add(banner, BorderLayout.NORTH);
-        add(tarjeta, BorderLayout.CENTER);
+
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(8, 5, 8, 5);
+        gbc.weightx = 1.0;
+
+        JLabel title = new JLabel("Mi Perfil");
+        title.putClientProperty(FlatClientProperties.STYLE, "font:bold +10; foreground:darken(@background, 50%)");
+        gbc.gridwidth = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        formPanel.add(title, gbc);
+
+        // --- Datos Básicos (Comunes a todos) ---
+        gbc.gridwidth = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+
+        lblRol = new JLabel();
+        lblRol.putClientProperty(FlatClientProperties.STYLE, "font:bold +2; foreground:lighten(@foreground,20%)");
+        addLabelAndComponent(formPanel, "Rol:", lblRol, gbc, 1);
+
+        lblRut = new JLabel();
+        addLabelAndComponent(formPanel, "RUT:", lblRut, gbc, 2);
+
+        txtNombre = new JTextField(20);
+        addLabelAndComponent(formPanel, "Nombre Completo:", txtNombre, gbc, 3);
+
+        txtEmail = new JTextField(20);
+        addLabelAndComponent(formPanel, "Email:", txtEmail, gbc, 4);
+
+        txtPass = new JPasswordField(20);
+        txtPass.putClientProperty(FlatClientProperties.STYLE, "showRevealButton:true");
+        addLabelAndComponent(formPanel, "Contraseña (Nueva):", txtPass, gbc, 5);
+
+        // --- Datos Académicos (Solo para Estudiante) ---
+        panelAcademico = new JPanel(new GridBagLayout());
+        panelAcademico.setOpaque(false);
+        GridBagConstraints gbcAcademico = new GridBagConstraints();
+        gbcAcademico.fill = GridBagConstraints.HORIZONTAL;
+        gbcAcademico.insets = new Insets(8, 5, 8, 5);
+        gbcAcademico.weightx = 1.0;
+        gbcAcademico.gridwidth = 2;
+
+        JLabel acaTitle = new JLabel("Información Académica");
+        acaTitle.putClientProperty(FlatClientProperties.STYLE, "font:bold +1; foreground:lighten(@foreground,20%)");
+        gbcAcademico.gridx = 0;
+        gbcAcademico.gridy = 0;
+        panelAcademico.add(acaTitle, gbcAcademico);
+
+        gbcAcademico.gridwidth = 1;
+
+        txtCarrera = new JTextField(20);
+        addLabelAndComponent(panelAcademico, "Carrera:", txtCarrera, gbcAcademico, 1);
+
+        txtSemestres = new JTextField(5);
+        addLabelAndComponent(panelAcademico, "Semestres Cursados:", txtSemestres, gbcAcademico, 2);
+
+        txtPromedio = new JTextField(5);
+        addLabelAndComponent(panelAcademico, "Promedio Ponderado:", txtPromedio, gbcAcademico, 3);
+
+        // Añadir el panel académico al formulario principal (inicialmente invisible si no es estudiante)
+        gbc.gridwidth = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        formPanel.add(panelAcademico, gbc);
+
+
+        // --- Botón de Guardar ---
+        JButton btnGuardar = new JButton("Guardar Cambios");
+        btnGuardar.putClientProperty(FlatClientProperties.STYLE, "background:#2E86FF; foreground:#FFFFFF; font:bold +1");
+        gbc.gridwidth = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        gbc.insets = new Insets(30, 5, 8, 5);
+        formPanel.add(btnGuardar, gbc);
+
+        // Añadir el formulario al centro del PerfilPanel (para que no ocupe todo el espacio)
+        add(new JScrollPane(formPanel), BorderLayout.CENTER);
+
+        // --- Listeners ---
+        btnGuardar.addActionListener(e -> guardarCambios());
     }
 
-    private void onEditEstudiante() {
-        if (usuario instanceof Estudiante) {
-            new EstudianteDialog(SwingUtilities.getWindowAncestor(this), gestor, (Estudiante) usuario);
-            refreshFromUsuario();
-        }
+    private void addLabelAndComponent(JPanel panel, String labelText, JComponent component, GridBagConstraints gbc, int row) {
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        panel.add(new JLabel(labelText), gbc);
+
+        gbc.gridx = 1;
+        panel.add(component, gbc);
     }
 
-    private JButton createEditButton(String text) {
-        JButton btn = new JButton(text);
-        btn.setBorderPainted(false);
-        btn.setContentAreaFilled(false);
-        btn.setFocusPainted(false);
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.setForeground(new Color(0x2E86FF));
-        return btn;
-    }
-
-    private void refreshFromUsuario() {
+    public void refreshData() {
         if (usuario == null) return;
-        String nombre = safe(usuario.getNombreCompleto());
-        String email = safe(usuario.getEmail());
-        String rolLegible = (usuario.getRol() != null) ? toTitulo(usuario.getRol().name()) : "Usuario";
 
-        // CORRECCIÓN: Se actualiza el texto del lblRolValor
-        lblRolValor.setText(rolLegible);
+        lblRol.setText(usuario.getRol().name());
+        lblRut.setText(usuario.getRut());
+        txtNombre.setText(usuario.getNombreCompleto());
+        txtEmail.setText(usuario.getEmail());
+        txtPass.setText(""); // Siempre limpia la contraseña
 
-        lblTituloPeq.setText(nombre + " • " + rolLegible);
-        lblNombreValor.setText(nombre);
-        lblEmailValor.setText(email);
-        lblPassValor.setText(mask(usuario.getPass()));
+        // --- Lógica polimórfica: Solo muestra info académica si es Estudiante ---
+        boolean esEstudiante = usuario instanceof Estudiante;
+        panelAcademico.setVisible(esEstudiante);
 
-        btnEstudianteData.setVisible(usuario instanceof Estudiante);
-
-        revalidate();
-        repaint();
-    }
-
-    private void onEditNombre() {
-        inlineEdit(lblNombreValor, nuevo -> {
-            if (nuevo.trim().isEmpty()) {
-                beepWarn("El nombre no puede estar vacío.");
-                return false;
-            }
-            gestor.actualizarNombreUsuario(usuario.getRut(), nuevo.trim());
-            usuario.setNombreCompleto(nuevo.trim());
-            refreshFromUsuario();
-            info("Nombre actualizado correctamente.");
-            return true;
-        }, false);
-    }
-
-    private void onEditEmail() {
-        inlineEdit(lblEmailValor, nuevo -> {
-            String n = nuevo.trim();
-            if (!n.contains("@") || n.startsWith("@") || n.endsWith("@")) {
-                beepWarn("Ingrese un email válido.");
-                return false;
-            }
-            gestor.actualizarEmailUsuario(usuario.getRut(), n);
-            usuario.setEmail(n);
-            refreshFromUsuario();
-            info("Email actualizado correctamente.");
-            return true;
-        }, false);
-    }
-
-    private void onEditPassword() {
-        inlineEdit(lblPassValor, nuevo -> {
-            if (nuevo.length() < 6) {
-                beepWarn("Debe tener al menos 6 caracteres.");
-                return false;
-            }
-            gestor.actualizarPasswordUsuario(usuario.getRut(), nuevo);
-            usuario.setPass(nuevo);
-            lblPassValor.setText(mask(nuevo));
-            info("Contraseña actualizada correctamente.");
-            return true;
-        }, true);
-    }
-
-    private void inlineEdit(final JLabel targetLabel, final Function<String, Boolean> validatorCommit, final boolean password) {
-        JPanel parent = (JPanel) targetLabel.getParent();
-
-        JComponent editor;
-        if (password) {
-            editor = new JPasswordField(15);
-            ((JPasswordField) editor).setText("");
-            ((JPasswordField) editor).setEchoChar('*');
-        } else {
-            editor = new JTextField(15);
-            String currentText = targetLabel.getText();
-            ((JTextField) editor).setText(currentText.equals("-") ? "" : currentText);
-        }
-
-        editor.putClientProperty(FlatClientProperties.STYLE, "arc:999; margin:6,14,6,14");
-
-        JButton btnGuardar = new JButton("Guardar");
-        btnGuardar.setFocusPainted(false);
-        btnGuardar.putClientProperty(FlatClientProperties.STYLE, "background:#2E86FF; foreground:#FFFFFF; arc:999;");
-
-        JButton btnCancelar = new JButton("Cancelar");
-        btnCancelar.setFocusPainted(false);
-        btnCancelar.putClientProperty(FlatClientProperties.STYLE, "background:#A4A4A4; foreground:#FFFFFF; arc:999;");
-
-        JButton originalButton = (JButton) parent.getComponent(parent.getComponentCount() - 1);
-        originalButton.setVisible(false);
-
-        targetLabel.setVisible(false);
-        parent.add(editor, 1);
-        parent.add(btnGuardar);
-        parent.add(btnCancelar);
-
-        btnGuardar.addActionListener(e -> {
-            String nuevoValor;
-            if (editor instanceof JPasswordField) {
-                nuevoValor = new String(((JPasswordField) editor).getPassword());
-            } else {
-                nuevoValor = ((JTextField) editor).getText();
-            }
-
-            if (validatorCommit.apply(nuevoValor)) {
-                parent.remove(editor);
-                parent.remove(btnGuardar);
-                parent.remove(btnCancelar);
-                targetLabel.setVisible(true);
-                originalButton.setVisible(true);
-            }
-        });
-
-        btnCancelar.addActionListener(e -> {
-            parent.remove(editor);
-            parent.remove(btnGuardar);
-            parent.remove(btnCancelar);
-            targetLabel.setVisible(true);
-            originalButton.setVisible(true);
-        });
-
-        if (editor instanceof JTextField) {
-            ((JTextField) editor).addActionListener(e -> btnGuardar.doClick());
-        }
-
-        editor.requestFocusInWindow();
-        parent.revalidate();
-        parent.repaint();
-    }
-
-    private static void tintLabels(Container parent, Color color) {
-        for (Component comp : parent.getComponents()) {
-            if (comp instanceof JLabel) {
-                ((JLabel) comp).setForeground(color);
-            } else if (comp instanceof Container) {
-                tintLabels((Container) comp, color);
-            }
+        if (esEstudiante) {
+            Estudiante estudiante = (Estudiante) usuario;
+            txtCarrera.setText(estudiante.getCarrera());
+            txtSemestres.setText(String.valueOf(estudiante.getSemestresCursados()));
+            txtPromedio.setText(String.format("%.2f", estudiante.getPromedio()));
         }
     }
 
-    private static JLabel labelTitulo(String t, int sizeOffset) {
-        JLabel l = new JLabel(t);
-        l.putClientProperty(FlatClientProperties.STYLE, "font:bold +" + sizeOffset);
-        return l;
-    }
+    private void guardarCambios() {
+        try {
+            String rut = usuario.getRut();
+            boolean cambiosRealizados = false;
 
-    private JPanel rowCampo(JLabel valorLabel, JButton linkButton, int sizeOffset) {
-        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        row.setOpaque(false);
-        valorLabel.putClientProperty(FlatClientProperties.STYLE, "font:+" + sizeOffset);
-        valorLabel.setForeground(new Color(0x444444));
-        row.add(valorLabel);
-        row.add(linkButton);
-        return row;
-    }
+            // 1. Validar y Guardar Cambios Comunes (Nombre y Email)
+            String nuevoNombre = txtNombre.getText().trim();
+            String nuevoEmail = txtEmail.getText().trim();
 
-    private static String mask(String real) {
-        if (real == null) return "—";
-        int n = real.length();
-        if (n <= 0) return "—";
-        return "*".repeat(n);
-    }
+            if (!nuevoNombre.equals(usuario.getNombreCompleto()) || !nuevoEmail.equals(usuario.getEmail())) {
+                // CAMBIO: Usamos un solo método del servicio para actualizar el perfil básico.
+                gestor.getServicioAutenticacion().actualizarPerfilUsuario(rut, nuevoNombre, nuevoEmail);
+                cambiosRealizados = true;
+            }
 
-    private void info(String msg) {
-        JOptionPane.showMessageDialog(this, msg, "Información", JOptionPane.INFORMATION_MESSAGE);
-    }
+            // 2. Validar y Guardar Nueva Contraseña
+            String nuevaPass = new String(txtPass.getPassword());
+            if (nuevaPass.length() >= 3) {
+                // CAMBIO: Llamamos al servicio correspondiente.
+                gestor.getServicioAutenticacion().actualizarPasswordUsuario(rut, nuevaPass);
+                cambiosRealizados = true;
+            }
+            txtPass.setText(""); // Limpiar campo después de guardar
 
-    private void beepWarn(String msg) {
-        Toolkit.getDefaultToolkit().beep();
-        JOptionPane.showMessageDialog(this, msg, "Atención", JOptionPane.WARNING_MESSAGE);
-    }
+            // 3. Validar y Guardar Cambios de Estudiante
+            if (usuario instanceof Estudiante) {
+                Estudiante estudiante = (Estudiante) usuario;
+                String nuevaCarrera = txtCarrera.getText().trim();
+                int nuevosSemestres = Integer.parseInt(txtSemestres.getText().trim());
+                double nuevoPromedio = Double.parseDouble(txtPromedio.getText().trim().replace(',', '.'));
 
-    private static String safe(String s) {
-        return (s == null || s.trim().isEmpty()) ? "-" : s.trim();
-    }
-    private static String toTitulo(String enumName) {
-        String lower = enumName.toLowerCase();
-        return Character.toUpperCase(lower.charAt(0)) + lower.substring(1);
-    }
-
-    private class EstudianteDialog extends JDialog {
-        public EstudianteDialog(Window parent, GestorIntercambio gestor, Estudiante estudiante) {
-            super(parent, "Datos de Estudiante", ModalityType.APPLICATION_MODAL);
-            setSize(400, 300);
-            setLocationRelativeTo(parent);
-            setResizable(false);
-
-            JPanel mainPanel = new JPanel(new MigLayout("wrap 2, insets 20", "[right]10[left, grow]"));
-            mainPanel.putClientProperty(FlatClientProperties.STYLE, "background:lighten(@background,3%)");
-
-            JLabel lblCarrera = new JLabel("Carrera:");
-            JTextField txtCarrera = new JTextField(estudiante.getCarrera());
-            JLabel lblSemestres = new JLabel("Semestres Cursados:");
-            JTextField txtSemestres = new JTextField(String.valueOf(estudiante.getSemestresCursados()));
-            JLabel lblPromedio = new JLabel("Promedio:");
-            JTextField txtPromedio = new JTextField(String.format("%.1f", estudiante.getPromedio()));
-
-            lblCarrera.putClientProperty(FlatClientProperties.STYLE, "font:+2");
-            txtCarrera.putClientProperty(FlatClientProperties.STYLE, "font:+2");
-            lblSemestres.putClientProperty(FlatClientProperties.STYLE, "font:+2");
-            txtSemestres.putClientProperty(FlatClientProperties.STYLE, "font:+2");
-            lblPromedio.putClientProperty(FlatClientProperties.STYLE, "font:+2");
-            txtPromedio.putClientProperty(FlatClientProperties.STYLE, "font:+2");
-
-            JButton btnGuardar = new JButton("Guardar Cambios");
-            btnGuardar.putClientProperty(FlatClientProperties.STYLE, "background:#2E86FF; foreground:#FFFFFF; arc:999");
-
-            mainPanel.add(lblCarrera); mainPanel.add(txtCarrera, "growx");
-            mainPanel.add(lblSemestres); mainPanel.add(txtSemestres, "growx");
-            mainPanel.add(lblPromedio); mainPanel.add(txtPromedio, "growx");
-            mainPanel.add(btnGuardar, "span 2, center, gaptop 20");
-
-            btnGuardar.addActionListener(e -> {
-                try {
-                    String nuevaCarrera = txtCarrera.getText().trim();
-                    int nuevosSemestres = Integer.parseInt(txtSemestres.getText().trim());
-                    double nuevoPromedio = Double.parseDouble(txtPromedio.getText().trim());
-
-                    if (nuevaCarrera.isEmpty() || nuevosSemestres <= 0 || nuevoPromedio <= 0 || nuevoPromedio > 7.0) {
-                        JOptionPane.showMessageDialog(this, "Datos inválidos. Verifique los campos.", "Error", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-
-                    gestor.actualizarDatosEstudiante(estudiante.getRut(), nuevaCarrera, nuevosSemestres, nuevoPromedio);
-                    estudiante.setCarrera(nuevaCarrera);
-                    estudiante.setSemestresCursados(nuevosSemestres);
-                    estudiante.setPromedio(nuevoPromedio);
-
-                    JOptionPane.showMessageDialog(this, "Datos de estudiante actualizados.");
-                    dispose();
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Semestres y promedio deben ser números válidos.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
+                // Comprobamos si alguno de los datos académicos ha cambiado
+                if (!nuevaCarrera.equals(estudiante.getCarrera()) || nuevosSemestres != estudiante.getSemestresCursados() || nuevoPromedio != estudiante.getPromedio()) {
+                    // CAMBIO: Usamos un método específico para datos académicos.
+                    gestor.getServicioAutenticacion().actualizarDatosAcademicos(rut, nuevaCarrera, nuevosSemestres, nuevoPromedio);
+                    cambiosRealizados = true;
                 }
-            });
+            }
 
-            setContentPane(mainPanel);
-            setVisible(true);
+            if (cambiosRealizados) {
+                JOptionPane.showMessageDialog(this, "Perfil actualizado con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                refreshData(); // Recargar datos para reflejar cambios
+            } else {
+                JOptionPane.showMessageDialog(this, "No se detectaron cambios para guardar.", "Información", JOptionPane.INFORMATION_MESSAGE);
+            }
+
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Error en el formato de los números (semestres/promedio).", "Error de Formato", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Ocurrió un error al guardar los cambios: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
     }
 }

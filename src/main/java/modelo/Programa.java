@@ -4,33 +4,39 @@ import java.time.LocalDate;
 import java.util.*;
 
 public class Programa {
-    private int id;
-    private String nombre;
-    private LocalDate fechaInicio;
-    private LocalDate fechaFin;
-    private List<Convenio> convenios;
+    private final int id; // CAMBIO: Inmutable
+    private final String nombre; // CAMBIO: Inmutable
+    private final LocalDate fechaInicio; // CAMBIO: Inmutable
+    private final LocalDate fechaFin; // CAMBIO: Inmutable
+    private final List<Postulacion> postulaciones;
 
     public Programa(int id, String nombre, LocalDate fechaInicio, LocalDate fechaFin) {
         this.id = id;
         this.nombre = nombre;
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
-        this.convenios = new ArrayList<>();
+        this.postulaciones = new ArrayList<>();
     }
-    // Getters, Setters y otros métodos...
+
+    // Getters
     public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
     public String getNombre() { return nombre; }
     public LocalDate getFechaInicio() { return fechaInicio; }
     public LocalDate getFechaFin() { return fechaFin; }
-    public List<Convenio> getConvenios() { return convenios; }
-    public boolean agregarConvenio(Convenio conv) {
-        if (convenios.contains(conv)) {
-            return false;
-        }
-        convenios.add(conv);
-        return true;
+    public List<Postulacion> getPostulaciones() {
+        return Collections.unmodifiableList(postulaciones); // CAMBIO: Se retorna una vista de solo lectura
     }
+
+    // Métodos de gestión
+    public void agregarPostulacion(Postulacion post) {
+        this.postulaciones.add(post);
+    }
+
+    public void setPostulaciones(List<Postulacion> postulaciones) {
+        this.postulaciones.clear();
+        this.postulaciones.addAll(postulaciones);
+    }
+
     public boolean estaVigente() {
         LocalDate hoy = LocalDate.now();
         return !hoy.isBefore(this.fechaInicio) && !hoy.isAfter(this.fechaFin);

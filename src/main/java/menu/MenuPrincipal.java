@@ -1,7 +1,7 @@
 package menu;
-
+/*
 import gestores.GestorIntercambio;
-import gestores.ResultadoLogin;
+import modelo.ResultadoLogin;
 import modelo.Usuario;
 import servicios.VerificarInput;
 
@@ -74,7 +74,7 @@ public class MenuPrincipal {
         gestor.registrarEstudiante(rut, nombre, email, pass, carrera, semestres, promedio);
     }
 
-    private void redirigirUsuario(Usuario usuario) {
+    private void redirigirUsuario(int usuario) {
         // Creamos una única instancia de cada menú
         MenuPostulaciones menuPostulaciones = new MenuPostulaciones(input, gestor, usuario);
         MenuConvenios menuConvenios = new MenuConvenios(input, gestor, usuario, menuPostulaciones);
@@ -93,3 +93,5 @@ public class MenuPrincipal {
         return rut.matches("^[0-9]{8}[0-9K]$");
     }
 }
+
+ */

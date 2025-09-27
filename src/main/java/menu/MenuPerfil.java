@@ -1,15 +1,15 @@
 package menu;
-
+/*
 import modelo.*;
 import servicios.VerificarInput;
 import gestores.GestorIntercambio;
 
 public class MenuPerfil {
     private final VerificarInput input;
-    private final Usuario usuarioActual;
+    private final int usuarioActual;
     private final GestorIntercambio gestor;
 
-    public MenuPerfil(VerificarInput input, GestorIntercambio gestor, Usuario usuarioActual) {
+    public MenuPerfil(VerificarInput input, GestorIntercambio gestor, int usuarioActual) {
         this.input = input;
         this.gestor = gestor;
         this.usuarioActual = usuarioActual;
@@ -71,3 +71,5 @@ public class MenuPerfil {
         }
     }
 }
+
+ */

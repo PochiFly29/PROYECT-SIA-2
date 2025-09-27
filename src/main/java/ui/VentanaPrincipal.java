@@ -11,6 +11,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class VentanaPrincipal extends JFrame {
 
@@ -22,7 +23,6 @@ public class VentanaPrincipal extends JFrame {
         this.gestor = gestor;
         init();
         initWindowListener();
-        // **Agrega esta línea aquí para que la ventana sea visible**
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setVisible(true);
     }
@@ -34,8 +34,9 @@ public class VentanaPrincipal extends JFrame {
         setLocationRelativeTo(null);
         setContentPane(cards);
 
-        // Agregamos el panel de Login y Registro
+        // Los LoginPanel y RegistroPanel ahora manejan objetos Usuario/Estudiante
         RegistroPanel registroPanel = new RegistroPanel(gestor, () -> show("login"));
+        // El Consumer<Usuario> aquí es this::onLoginOk
         LoginPanel loginPanel = new LoginPanel(gestor, this::onLoginOk, () -> show("registro"));
 
         paneles.put("login", loginPanel);
@@ -51,34 +52,41 @@ public class VentanaPrincipal extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                gestor.guardarDatos();
+                gestor.getServicioAutenticacion().guardarCambiosDeUsuarios();
             }
         });
     }
 
+    // Método corregido: recibe objeto Usuario y lo maneja por rol.
     private void onLoginOk(Usuario usuario) {
-        switch (usuario.getRol()) {
+        Rol rol = usuario.getRol();
+
+        switch (rol) {
             case ESTUDIANTE:
                 String keyEstu = "estudiante" + usuario.getRut();
                 if (!paneles.containsKey(keyEstu)) {
-                    EstudiantePanel estudiantePanel = new EstudiantePanel(gestor, usuario, this::logout);
+                    // Casteo explícito a Estudiante para el panel específico
+                    Estudiante estudiante = (Estudiante) usuario;
+                    EstudiantePanel estudiantePanel = new EstudiantePanel(gestor, estudiante, this::logout);
                     paneles.put(keyEstu, estudiantePanel);
                     cards.add(estudiantePanel, keyEstu);
                 }
                 show(keyEstu);
                 break;
             case FUNCIONARIO:
-                String keyFunc = "funcionario";
+                String keyFunc = "funcionario" + usuario.getRut();
                 if (!paneles.containsKey(keyFunc)) {
-                    JPanel funcionarioPanel = placeholder("Panel Funcionario (próximamente)");
+                    // Nuevo panel para funcionario. No requiere castear ya que Usuario base es suficiente
+                    FuncionarioPanel funcionarioPanel = new FuncionarioPanel(gestor, usuario, this::logout);
                     paneles.put(keyFunc, funcionarioPanel);
                     cards.add(funcionarioPanel, keyFunc);
                 }
                 show(keyFunc);
                 break;
             case AUDITOR:
-                String keyAud = "auditor";
+                String keyAud = "auditor" + usuario.getRut();
                 if (!paneles.containsKey(keyAud)) {
+                    // Placeholder simple, ya que el auditor es complejo
                     JPanel auditorPanel = placeholder("Panel Auditor (próximamente)");
                     paneles.put(keyAud, auditorPanel);
                     cards.add(auditorPanel, keyAud);
@@ -92,11 +100,14 @@ public class VentanaPrincipal extends JFrame {
     }
 
     private void logout() {
-        gestor.cerrarSesion();
+        LoginPanel loginPanel = (LoginPanel) paneles.get("login");
+        if (loginPanel != null) {
+            loginPanel.limpiarCampos();
+        }
         show("login");
     }
 
-    private void show(String name) {
+    public void show(String name) {
         ((CardLayout) cards.getLayout()).show(cards, name);
         revalidate();
         repaint();

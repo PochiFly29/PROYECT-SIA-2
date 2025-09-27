@@ -58,6 +58,7 @@
     <filter-actions connection-id="a28048b0-0e87-4e63-bbbc-d7bd9920f520" dataset="main.postulaciones" active-filter-id="49ac1438-de55-421c-b011-7c8751817e80">
       <filter id="49ac1438-de55-421c-b011-7c8751817e80" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
     </filter-actions>
+    <filter-actions connection-id="a28048b0-0e87-4e63-bbbc-d7bd9920f520" dataset="main.sqlite_sequence" active-filter-id="" />
     <filter-actions connection-id="a28048b0-0e87-4e63-bbbc-d7bd9920f520" dataset="main.convenios" active-filter-id="ecd6c6f7-81bc-4580-bc05-738249c34218">
       <filter id="ecd6c6f7-81bc-4580-bc05-738249c34218" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
     </filter-actions>

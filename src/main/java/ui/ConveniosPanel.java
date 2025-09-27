@@ -3,9 +3,7 @@ package ui;
 import com.formdev.flatlaf.FlatClientProperties;
 import gestores.GestorIntercambio;
 import modelo.Convenio;
-import modelo.Estudiante;
 import modelo.Programa;
-import modelo.Usuario;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -16,30 +14,30 @@ import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
-public class PostularPanel extends JPanel {
+public class ConveniosPanel extends JPanel {
 
     private final GestorIntercambio gestor;
-    private final Estudiante estudiante;
+    private final Consumer<String> onConvenioSelected;
 
     private final ConveniosTableModel model = new ConveniosTableModel();
     private JTable table;
     private TableRowSorter<ConveniosTableModel> sorter;
     private JTextField searchField;
     private JLabel titulo;
-    private JButton btnVerDetalle;
+    private JButton btnDetalleAccion;
 
     private static final int COL_ID = 0;
 
-    public PostularPanel(GestorIntercambio gestor, Estudiante estudiante) {
+    public ConveniosPanel(GestorIntercambio gestor, Consumer<String> onConvenioSelected) {
         this.gestor = Objects.requireNonNull(gestor);
-        this.estudiante = estudiante;
+        this.onConvenioSelected = onConvenioSelected;
         init();
         loadData();
     }
@@ -51,12 +49,13 @@ public class PostularPanel extends JPanel {
     private void init() {
         setLayout(new BorderLayout());
 
+        // Header y Título
         JPanel header = new JPanel();
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setBorder(BorderFactory.createEmptyBorder(16, 24, 8, 24));
         header.setOpaque(false);
 
-        titulo = new JLabel("LISTA DE CONVENIOS", SwingConstants.CENTER);
+        titulo = new JLabel("CATÁLOGO DE CONVENIOS VIGENTES", SwingConstants.CENTER);
         titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
         titulo.putClientProperty(FlatClientProperties.STYLE, "font:bold +6");
         header.add(titulo);
@@ -75,6 +74,7 @@ public class PostularPanel extends JPanel {
 
         add(header, BorderLayout.NORTH);
 
+        // Configuración de la Tabla
         table = new JTable(model);
         table.setFont(table.getFont().deriveFont(14f));
         table.getTableHeader().setFont(table.getTableHeader().getFont().deriveFont(Font.BOLD, 14f));
@@ -95,7 +95,7 @@ public class PostularPanel extends JPanel {
         table.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2 && table.getSelectedRow() >= 0) {
-                    verDetalleSeleccionado();
+                    executeConvenioAction();
                 }
             }
         });
@@ -106,15 +106,108 @@ public class PostularPanel extends JPanel {
             public void changedUpdate(DocumentEvent e) { applyFilter(); }
         });
 
+
         add(new JScrollPane(table), BorderLayout.CENTER);
 
+        // Footer con el botón de acción
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 10));
         footer.setOpaque(false);
-        btnVerDetalle = new JButton("Ver detalle");
-        btnVerDetalle.addActionListener(e -> verDetalleSeleccionado());
-        footer.add(btnVerDetalle);
+
+        String btnText = (onConvenioSelected != null) ? "Buscar Postulaciones Asociadas" : "Ver Detalle";
+        btnDetalleAccion = new JButton(btnText);
+        btnDetalleAccion.addActionListener(e -> executeConvenioAction());
+
+        footer.add(btnDetalleAccion);
 
         add(footer, BorderLayout.SOUTH);
+    }
+
+    // Método para mostrar el detalle del convenio
+    private JPanel buildDetallePanel(Convenio c) {
+        JPanel info = new JPanel(new GridBagLayout());
+        info.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // 🚨 CORRECCIÓN: Declaramos GridBagConstraints dentro del método
+        final GridBagConstraints gc = new GridBagConstraints();
+        gc.gridx = 0; gc.gridy = 0; gc.anchor = GridBagConstraints.WEST; gc.insets = new Insets(4,4,4,4);
+
+        // Función auxiliar para añadir etiquetas
+        // 🚨 CORRECCIÓN: La lambda ya no necesita ser 'final', pero sigue modificando
+        // una variable que no es local a su propio ámbito.
+        // Para ser totalmente compatible y evitar errores de 'effectively final' en todas las versiones de Java,
+        // la implementación más limpia es usar la propia variable gc:
+
+        Consumer<String> addLabel = (text) -> {
+            JLabel lbl = new JLabel(text);
+            lbl.setFont(lbl.getFont().deriveFont(14f));
+            info.add(lbl, gc);
+            // El problema está aquí: gc.gridy++ es una modificación a una variable externa.
+            // La solución más simple para un código limpio es eliminar la lambda y usar la variable directamente.
+        };
+
+        // 🚨 SOLUCIÓN: Reemplazamos la lambda por el código directo para evitar el error 'effectively final'.
+        // Usamos la variable 'gc' declarada en este método.
+
+        // Fila 0
+        JLabel lblID = new JLabel("ID: " + c.getId());
+        lblID.setFont(lblID.getFont().deriveFont(14f));
+        info.add(lblID, gc);
+
+        // Fila 1
+        gc.gridy++;
+        JLabel lblUni = new JLabel("Universidad: " + c.getUniversidad());
+        lblUni.setFont(lblUni.getFont().deriveFont(14f));
+        info.add(lblUni, gc);
+
+        // Fila 2
+        gc.gridy++;
+        JLabel lblPais = new JLabel("País: " + c.getPais());
+        lblPais.setFont(lblPais.getFont().deriveFont(14f));
+        info.add(lblPais, gc);
+
+        // Fila 3
+        gc.gridy++;
+        JLabel lblArea = new JLabel("Área: " + (c.getArea() != null ? c.getArea() : "-"));
+        lblArea.setFont(lblArea.getFont().deriveFont(14f));
+        info.add(lblArea, gc);
+
+        // Fila 4
+        gc.gridy++;
+        JLabel lblReqAcad = new JLabel("Requisitos Académicos: " + c.getRequisitosAcademicos());
+        lblReqAcad.setFont(lblReqAcad.getFont().deriveFont(14f));
+        info.add(lblReqAcad, gc);
+
+        // Fila 5
+        gc.gridy++;
+        JLabel lblReqEco = new JLabel("Requisitos Económicos: " + c.getRequisitosEconomicos());
+        lblReqEco.setFont(lblReqEco.getFont().deriveFont(14f));
+        info.add(lblReqEco, gc);
+
+        return info;
+    }
+
+    // Método para ejecutar la acción de la selección
+    private void executeConvenioAction() {
+        int viewRow = table.getSelectedRow();
+        if (viewRow < 0) {
+            JOptionPane.showMessageDialog(this, "Seleccione un convenio.", "Información", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        int modelRow = table.convertRowIndexToModel(viewRow);
+        Convenio c = model.getAt(modelRow);
+
+        // 1. Mostrar el detalle
+        Object[] options = (onConvenioSelected != null) ? new Object[]{"Seleccionar", "Cerrar"} : new Object[]{"Cerrar"};
+
+        int opt = JOptionPane.showOptionDialog(this, buildDetallePanel(c), "Detalle de convenio",
+                (onConvenioSelected != null) ? JOptionPane.YES_NO_OPTION : JOptionPane.DEFAULT_OPTION,
+                JOptionPane.PLAIN_MESSAGE, null, options, options[0]
+        );
+
+        // 2. Ejecutar el callback (Solo si el rol es Funcionario y selecciona "Seleccionar")
+        if (onConvenioSelected != null && opt == 0) {
+            onConvenioSelected.accept(c.getId());
+        }
     }
 
     private void applyFilter() {
@@ -126,96 +219,14 @@ public class PostularPanel extends JPanel {
         sorter.setRowFilter(RowFilter.regexFilter("(?i)" + Pattern.quote(txt)));
     }
 
-    private void loadData() {
+    public void loadData() {
         List<Convenio> todosConvenios = gestor.getServicioConsulta().getTodosLosConvenios();
 
-        if (todosConvenios.isEmpty()) {
-            model.setData(List.of());
-            titulo.setText("NO HAY CONVENIOS REGISTRADOS");
-            btnVerDetalle.setEnabled(false);
-            return;
-        }
-
-        titulo.setText("CATÁLOGO DE CONVENIOS (" + todosConvenios.size() + " disponibles)");
         todosConvenios.sort(Comparator.comparing(Convenio::getId));
         model.setData(todosConvenios);
-        btnVerDetalle.setEnabled(true);
-    }
 
-    private void verDetalleSeleccionado() {
-        int viewRow = table.getSelectedRow();
-        if (viewRow < 0) {
-            Toolkit.getDefaultToolkit().beep();
-            JOptionPane.showMessageDialog(this, "Seleccione un convenio.", "Información", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-        int modelRow = table.convertRowIndexToModel(viewRow);
-        Convenio c = model.getAt(modelRow);
-
-        JPanel info = new JPanel(new GridBagLayout());
-        info.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        GridBagConstraints gc = new GridBagConstraints();
-        gc.gridx = 0; gc.gridy = 0; gc.anchor = GridBagConstraints.WEST; gc.insets = new Insets(4,4,4,4);
-
-        JLabel lblID = new JLabel("ID: " + c.getId());
-        lblID.setFont(lblID.getFont().deriveFont(14f));
-        info.add(lblID, gc);
-
-        gc.gridy++;
-        JLabel lblUni = new JLabel("Universidad: " + c.getUniversidad());
-        lblUni.setFont(lblUni.getFont().deriveFont(14f));
-        info.add(lblUni, gc);
-
-        gc.gridy++;
-        JLabel lblPais = new JLabel("País: " + c.getPais());
-        lblPais.setFont(lblPais.getFont().deriveFont(14f));
-        info.add(lblPais, gc);
-
-        gc.gridy++;
-        JLabel lblArea = new JLabel("Área: " + (c.getArea() != null ? c.getArea() : "-"));
-        lblArea.setFont(lblArea.getFont().deriveFont(14f));
-        info.add(lblArea, gc);
-
-        gc.gridy++;
-        JLabel lblReqAcad = new JLabel("Requisitos Académicos: " + c.getRequisitosAcademicos());
-        lblReqAcad.setFont(lblReqAcad.getFont().deriveFont(14f));
-        info.add(lblReqAcad, gc);
-
-        gc.gridy++;
-        JLabel lblReqEco = new JLabel("Requisitos Económicos: " + c.getRequisitosEconomicos());
-        lblReqEco.setFont(lblReqEco.getFont().deriveFont(14f));
-        info.add(lblReqEco, gc);
-
-
-        Object[] options = {"Postular", "Cerrar"};
-        int opt = JOptionPane.showOptionDialog(this, info, "Detalle de convenio",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,
-                null, options, options[0]
-        );
-
-        if (opt == 0) {
-            try {
-                // CAMBIO CLAVE: Obtenemos el programa activo y llamamos al servicio de postulación.
-                // En nuestro diseño simple, asumimos que siempre trabajamos con el programa ID 1.
-                Programa programaActivo = gestor.getServicioConsulta()
-                        .getProgramaPorId(1)
-                        .orElseThrow(() -> new IllegalStateException("El programa de intercambio principal no fue encontrado."));
-
-                boolean ok = gestor.getServicioPostulacion().crearPostulacion(programaActivo, estudiante, c);
-
-                if (ok) {
-                    JOptionPane.showMessageDialog(this, "¡Postulación exitosa!", "Postulación", JOptionPane.INFORMATION_MESSAGE);
-                } else {
-                    JOptionPane.showMessageDialog(this, "No se pudo postular.\nPuede que ya tengas una postulación activa para este convenio.",
-                            "Postulación", JOptionPane.WARNING_MESSAGE);
-                }
-            } catch (SQLException | IllegalStateException ex) {
-                // Manejamos posibles errores de la base de datos o si el programa no se encuentra.
-                JOptionPane.showMessageDialog(this, "Error al procesar la postulación: " + ex.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
-                ex.printStackTrace();
-            }
-        }
+        titulo.setText("CATÁLOGO DE CONVENIOS VIGENTES (" + todosConvenios.size() + ")");
+        btnDetalleAccion.setEnabled(!todosConvenios.isEmpty());
     }
 
     private static class ConveniosTableModel extends AbstractTableModel {
@@ -244,7 +255,6 @@ public class PostularPanel extends JPanel {
                 default: return "";
             }
         }
-
         public Class<?> getColumnClass(int columnIndex) { return String.class; }
         public boolean isCellEditable(int rowIndex, int columnIndex) { return false; }
     }
