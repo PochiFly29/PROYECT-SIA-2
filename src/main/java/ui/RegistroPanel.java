@@ -43,7 +43,6 @@ public class RegistroPanel extends JPanel {
         semestresF = new JSpinner(new SpinnerNumberModel(1, 1, 15, 1));
 
         passF.putClientProperty(FlatClientProperties.STYLE, "showRevealButton:true");
-        // CORREGIDO: El placeholder ahora pide el formato sin guion, que es el que se va a guardar
         rutF.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "11111111K");
 
         JSpinner.NumberEditor promEditor = new JSpinner.NumberEditor(promedioF, "0.0");
@@ -101,7 +100,6 @@ public class RegistroPanel extends JPanel {
 
             StringBuilder errores = new StringBuilder();
 
-            // CORREGIDO: Ahora el mensaje de error del RUT es coherente con el placeholder
             if (!VerificarInput.rutValido(rut)) {
                 errores.append("• El RUT no es válido. Formato: 11111111K (sin guion)\n");
             }
@@ -120,9 +118,6 @@ public class RegistroPanel extends JPanel {
             if (carrera.isEmpty()) {
                 errores.append("• La carrera no puede estar vacía.\n");
             }
-            // Agregado el control para Promedio y Semestres.
-            // Los JSpinners tienen un modelo de número que ya limita el rango,
-            // pero es buena práctica tener el mensaje de error explícito para el usuario.
             if (promedio < 1.0 || promedio > 7.0) {
                 errores.append("• El promedio debe estar entre 1.0 y 7.0.\n");
             }

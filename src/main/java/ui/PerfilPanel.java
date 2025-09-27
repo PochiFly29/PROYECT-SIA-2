@@ -25,13 +25,6 @@ public class PerfilPanel extends JPanel {
         refreshFromUsuario();
     }
 
-    public PerfilPanel(GestorIntercambio gestor, Usuario usuarioInicial) {
-        this.gestor = gestor;
-        this.usuario = usuarioInicial;
-        initUI();
-        refreshFromUsuario();
-    }
-
     public void setUsuario(Usuario u) {
         this.usuario = u;
         refreshFromUsuario();
@@ -123,7 +116,6 @@ public class PerfilPanel extends JPanel {
         footer.add(lblPromedio);
         footer.add(Box.createVerticalStrut(50));
 
-        // Texto oscuro dentro de la tarjeta
         Color textoOscuro = new Color(0x222222);
         tintLabels(detalle, textoOscuro);
         lblRol.setForeground(textoOscuro);
@@ -191,7 +183,6 @@ public class PerfilPanel extends JPanel {
         lblSemestres.setText((semestres == null) ? "—" : (semestres + (semestres == 1 ? " semestre cursado" : " semestres cursados")));
         lblPromedio.setText((promedio == null) ? "—" : String.format("%.1f Promedio", promedio));
 
-        // Solo estudiantes pueden editar carrera
         btnEditCarrera.setVisible(esEstudiante);
 
         revalidate();
@@ -250,11 +241,7 @@ public class PerfilPanel extends JPanel {
         }, true, btnEditPass);
     }
 
-    private void inlineEdit(final JLabel targetLabel,
-                            final Function<String, Boolean> validatorCommit,
-                            final boolean password,
-                            final JButton editBtn) {
-
+    private void inlineEdit(final JLabel targetLabel, final Function<String, Boolean> validatorCommit, final boolean password, final JButton editBtn) {
         final JPanel row = (JPanel) targetLabel.getParent();
 
         final JComponent editor;
@@ -290,7 +277,6 @@ public class PerfilPanel extends JPanel {
         row.repaint();
         editor.requestFocusInWindow();
 
-        // Guardar
         btnGuardar.addActionListener(e -> {
             String nuevoValor = (editor instanceof JPasswordField)
                     ? new String(((JPasswordField) editor).getPassword())
@@ -304,7 +290,6 @@ public class PerfilPanel extends JPanel {
             }
         });
 
-        // Cancelar
         btnCancelar.addActionListener(e ->
                 restoreRow(row, editor, btnGuardar, btnCancelar, targetLabel, editBtn)
         );

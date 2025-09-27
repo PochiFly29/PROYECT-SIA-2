@@ -25,9 +25,9 @@ public class UsuarioPanel extends JPanel {
             this.verPostTodas = verPostTodas;
         }
         static Permisos para(Rol r) {
-            if (r == Rol.ESTUDIANTE) return new Permisos(true,true, true,false);
-            if (r == Rol.FUNCIONARIO) return new Permisos(true,false, false,true );
-            if (r == Rol.AUDITOR) return new Permisos(false,false,false,true );
+            if (r == Rol.ESTUDIANTE) return new Permisos(true, true,  true,  false);
+            if (r == Rol.FUNCIONARIO) return new Permisos(true, false, false, true );
+            if (r == Rol.AUDITOR) return new Permisos(false,false, false, true );
             return new Permisos(false,false,false,false);
         }
     }
@@ -64,15 +64,16 @@ public class UsuarioPanel extends JPanel {
 
     public void setUsuario(Usuario u) {
         this.usuario = Objects.requireNonNull(u);
-        if (perfilPanel != null)perfilPanel.setUsuario(u);
-        if (postulacionesPanel != null)postulacionesPanel.setUsuario(u);
-        if (postularPanel != null)postularPanel.setUsuario(u);
+        if (perfilPanel != null) perfilPanel.setUsuario(u);
+        if (postulacionesPanel != null) postulacionesPanel.setUsuario(u);
+        if (postularPanel != null) postularPanel.setUsuario(u);
         applyUsuario();
     }
 
     private void init() {
         setLayout(new BorderLayout());
 
+        // ===== Sidebar =====
         JPanel panelIzquierdo = new JPanel(new BorderLayout());
         panelIzquierdo.putClientProperty(FlatClientProperties.STYLE, "background:lighten(@background,3%)");
         panelIzquierdo.setPreferredSize(new Dimension(280, 0));
@@ -87,8 +88,7 @@ public class UsuarioPanel extends JPanel {
             JLabel lblLogo = new JLabel(new ImageIcon(scaledImage));
             lblLogo.setHorizontalAlignment(SwingConstants.CENTER);
             topPanel.add(lblLogo, "growx, center, wrap, gaptop 8");
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
 
         JLabel lblTitulo = new JLabel("Gestiones de Intercambio");
         lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
@@ -107,7 +107,7 @@ public class UsuarioPanel extends JPanel {
         navButtonsPanel.setBorder(BorderFactory.createEmptyBorder(32, 16, 12, 16));
 
         btnPerfil = new JButton("Perfil");
-        btnPostulaciones  = new JButton("Ver postulaciones");
+        btnPostulaciones = new JButton("Ver postulaciones");
         btnCatalogo = new JButton("Catálogo de convenios");
 
         String buttonStyle = "background:#2E86FF; foreground:#FFFFFF; font:bold +1; borderWidth:0; focusWidth:0; innerFocusWidth:0; arc:999";
@@ -140,10 +140,9 @@ public class UsuarioPanel extends JPanel {
         bottomPanel.add(btnCerrar, "growx, height 40, gaptop 12");
 
         panelIzquierdo.add(bottomPanel, BorderLayout.SOUTH);
-
         add(panelIzquierdo, BorderLayout.WEST);
 
-        // Centro
+        // ===== Centro =====
         perfilPanel = new PerfilPanel(usuario);
         postulacionesPanel = new PostulacionesPanel(gestor, usuario);
         postularPanel = new PostularPanel(gestor, usuario);
@@ -156,8 +155,7 @@ public class UsuarioPanel extends JPanel {
                 currentCard = CARD_POSTULACIONES;
                 cardsLayout.show(cards, CARD_POSTULACIONES);
             });
-        } catch (NoSuchMethodError | Exception ignored) {
-        }
+        } catch (NoSuchMethodError | Exception ignored) {}
 
         cards.add(perfilPanel, CARD_PERFIL);
         cards.add(postulacionesPanel, CARD_POSTULACIONES);
@@ -166,11 +164,8 @@ public class UsuarioPanel extends JPanel {
         add(cards, BorderLayout.CENTER);
         cardsLayout.show(cards, currentCard);
 
-        // Navegacion
-        btnPerfil.addActionListener(e -> {
-            currentCard = CARD_PERFIL;
-            cardsLayout.show(cards, CARD_PERFIL);
-        });
+        // Navegación
+        btnPerfil.addActionListener(e -> { currentCard = CARD_PERFIL; cardsLayout.show(cards, CARD_PERFIL); });
 
         btnPostulaciones.addActionListener(e -> {
             postulacionesPanel.setUsuario(usuario);
@@ -188,12 +183,10 @@ public class UsuarioPanel extends JPanel {
     }
 
     private void applyUsuario() {
-        // Saludo
         String rolLegible = (usuario.getRol() != null) ? toTitulo(usuario.getRol().name()) : "Usuario";
         String nombreCorto = firstNameSafe(usuario.getNombreCompleto());
         lblSidebarNombre.setText(rolLegible + " • Hola, " + nombreCorto + "!");
 
-        // permisos por rol
         Permisos p = Permisos.para(usuario.getRol());
 
         if (usuario.getRol() == Rol.ESTUDIANTE) {
@@ -210,7 +203,6 @@ public class UsuarioPanel extends JPanel {
             btnCatalogo.setText("Catálogo de convenios");
         }
 
-        // visibilidad por permisos
         btnCatalogo.setVisible(p.verCatalogo || p.postular);
         btnPostulaciones.setVisible(p.verPostPropias || p.verPostTodas);
 

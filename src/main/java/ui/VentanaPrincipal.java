@@ -5,35 +5,32 @@ import modelo.Usuario;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.Objects;
 
 /*
-   Unificacion de las dos versiones
-   - LoginPanel moderno (con o sin callback de registro)
-   - RegistroPanel (opcional): al finalizar vuelve a login
-   - Un único UsuarioPanel que cambia por rol (estudiante/funcionario/auditor)
-   - Persistencia: guardar datos al cerrar la ventana (DataStore)
-   - Cambio de sesión: reutiliza UsuarioPanel y propaga setUsuario()
+   TODO
+ - No se refresca el panel de estudiante al entrar y salir, se queda donde antes aunque entres en otra cuenta
+ - Pequeño panel con el nombre a la esquina izquierda inferior no se actualiza al cambiar el nombre
+ - Quitar boton de gestionar Convenios de funcionario y hacer que se pueda gestionar en el otro boton
+ - Cambiar de lugar boton de cerrar sesion con el panel de la izquierda inferior y agregar un boton de cerrar programa
+ - Hacer un poco mas grande las letras en general
+ - Agregar un boton para cambiar de modo oscuro a claro
 */
 
 public class VentanaPrincipal extends JFrame {
     private static final String VIEW_LOGIN = "login";
-    private static final String VIEW_REGISTRO = "registro";
     private static final String VIEW_APP = "app";
+    private static final String VIEW_REG = "registro";
 
     private final JPanel cards = new JPanel(new CardLayout());
     private final GestorIntercambio gestor;
 
     private LoginPanel loginPanel;
-    private RegistroPanel registroPanel;
     private UsuarioPanel appPanel;
 
     public VentanaPrincipal(GestorIntercambio gestor){
         this.gestor = Objects.requireNonNull(gestor);
         init();
-        initWindowListener();
         setVisible(true);
     }
 
@@ -42,31 +39,15 @@ public class VentanaPrincipal extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1280,720);
         setLocationRelativeTo(null);
-        setContentPane(cards);
 
-        // Login
-        loginPanel = new LoginPanel(gestor, this::onLoginOk, () -> showCard(VIEW_REGISTRO));
+        RegistroPanel registroPanel = new RegistroPanel(gestor, () -> showCard(VIEW_LOGIN));
+        cards.add(registroPanel, VIEW_REG);
+
+        loginPanel = new LoginPanel(gestor, this::onLoginOk, () -> showCard(VIEW_REG));
         cards.add(loginPanel, VIEW_LOGIN);
 
-        // Registro
-        registroPanel = new RegistroPanel(gestor, () -> showCard(VIEW_LOGIN));
-        cards.add(registroPanel, VIEW_REGISTRO);
-
+        setContentPane(cards);
         showCard(VIEW_LOGIN);
-    }
-
-    private void initWindowListener() {
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                try {
-                    gestor.guardarDatos();
-                } catch (Exception ex) {
-                    // Evita crash al cerrar en caso de error de base de datos
-                    System.err.println("Error al guardar datos al cerrar: " + ex.getMessage());
-                }
-            }
-        });
     }
 
     private void onLoginOk(Usuario usuario) {
