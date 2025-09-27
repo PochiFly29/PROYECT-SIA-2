@@ -11,6 +11,9 @@
   </component>
   <component name="DBNavigator.Project.DatabaseAssistantManager">
     <assistants>
+      <assistant-state connection-id="a28048b0-0e87-4e63-bbbc-d7bd9920f520" default-profile-name="" selected-conversation-id="" assistant-type="GENERIC" availability="UNAVAILABLE" acknowledgement="NONE">
+        <conversations />
+      </assistant-state>
       <assistant-state connection-id="25dc51e2-1188-428e-b43b-34de4095c5df" default-profile-name="" selected-conversation-id="" assistant-type="GENERIC" availability="UNAVAILABLE" acknowledgement="NONE">
         <conversations />
       </assistant-state>
@@ -28,11 +31,11 @@
   <component name="DBNavigator.Project.DatabaseBrowserManager">
     <autoscroll-to-editor value="false" />
     <autoscroll-from-editor value="true" />
-    <show-object-properties value="true" />
+    <show-object-properties value="false" />
     <loaded-nodes />
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
-    <connection id="25dc51e2-1188-428e-b43b-34de4095c5df">
+    <connection id="a28048b0-0e87-4e63-bbbc-d7bd9920f520">
       <console name="Connection" type="STANDARD" schema="main" session="Main" />
     </connection>
   </component>
@@ -43,7 +46,38 @@
     <open-files />
   </component>
   <component name="DBNavigator.Project.DatabaseSessionManager">
-    <connection id="25dc51e2-1188-428e-b43b-34de4095c5df" />
+    <connection id="a28048b0-0e87-4e63-bbbc-d7bd9920f520" />
+  </component>
+  <component name="DBNavigator.Project.DatasetFilterManager">
+    <filter-actions connection-id="a28048b0-0e87-4e63-bbbc-d7bd9920f520" dataset="main.usuarios" active-filter-id="65f29ce5-76f4-43f0-b16f-5a0df026f3b3">
+      <filter id="65f29ce5-76f4-43f0-b16f-5a0df026f3b3" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
+    </filter-actions>
+    <filter-actions connection-id="a28048b0-0e87-4e63-bbbc-d7bd9920f520" dataset="main.interacciones" active-filter-id="101eb354-20ae-4976-a7bf-8be0b0af0603">
+      <filter id="101eb354-20ae-4976-a7bf-8be0b0af0603" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
+    </filter-actions>
+    <filter-actions connection-id="a28048b0-0e87-4e63-bbbc-d7bd9920f520" dataset="main.postulaciones" active-filter-id="49ac1438-de55-421c-b011-7c8751817e80">
+      <filter id="49ac1438-de55-421c-b011-7c8751817e80" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
+    </filter-actions>
+    <filter-actions connection-id="a28048b0-0e87-4e63-bbbc-d7bd9920f520" dataset="main.convenios" active-filter-id="ecd6c6f7-81bc-4580-bc05-738249c34218">
+      <filter id="ecd6c6f7-81bc-4580-bc05-738249c34218" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
+    </filter-actions>
+    <filter-actions connection-id="a28048b0-0e87-4e63-bbbc-d7bd9920f520" dataset="main.programas" active-filter-id="6d131d66-55de-4302-bd50-a4ae8c07ee9f">
+      <filter id="6d131d66-55de-4302-bd50-a4ae8c07ee9f" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
+    </filter-actions>
+    <filter-actions connection-id="a28048b0-0e87-4e63-bbbc-d7bd9920f520" dataset="main.estudiantes_info" active-filter-id="d49c68a0-932b-4eb9-b0fb-3016043247d4">
+      <filter id="d49c68a0-932b-4eb9-b0fb-3016043247d4" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND" />
+    </filter-actions>
+  </component>
+  <component name="DBNavigator.Project.ExecutionManager">
+    <retain-sticky-names value="false" />
+  </component>
+  <component name="DBNavigator.Project.MethodExecutionManager">
+    <method-browser />
+    <execution-history>
+      <group-entries value="true" />
+      <execution-inputs />
+    </execution-history>
+    <execution-variables-cache />
   </component>
   <component name="DBNavigator.Project.ObjectQuickFilterManager">
     <last-used-operator value="EQUAL" />
@@ -51,7 +85,7 @@
   </component>
   <component name="DBNavigator.Project.Settings">
     <connections>
-      <connection source-id="" id="25dc51e2-1188-428e-b43b-34de4095c5df" active="true" signed="true">
+      <connection source-id="" id="a28048b0-0e87-4e63-bbbc-d7bd9920f520" active="true" signed="true">
         <database>
           <name value="Connection" />
           <description value="" />
@@ -102,7 +136,7 @@
           <session-management value="true" />
           <ddl-file-binding value="true" />
           <database-logging value="true" />
-          <connect-automatically value="true" />
+          <connect-automatically value="false" />
           <restore-workspace value="true" />
           <restore-workspace-deep value="false" />
           <environment-type value="default" />

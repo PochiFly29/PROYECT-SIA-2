@@ -1,233 +1,290 @@
 package gestores;
 
-import enums.EstadoConvenio;
 import enums.EstadoPostulacion;
 import modelo.*;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+
+import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+/**
+ * Clase encargada de la gestión de intercambios académicos.
+ * Administra usuarios, estudiantes, programas, convenios y postulaciones.
+ * Integra las operaciones de consulta, registro, actualización y postulación
+ * utilizando el DataStore para persistencia en base de datos.
+ */
 public class GestorIntercambio {
-    private final Map<String, Usuario> usuarios;
-    private final Map<String, Programa> programas;
-    private final Map<String, Convenio> convenios;
-    private Usuario usuarioActual;
-    private int nextPostulacionId;
 
+    /** Objeto DataStore que maneja la persistencia y los datos en memoria */
+    private DataStore dataStore;
+
+    /**
+     * Constructor que inicializa el gestor.
+     * Crea las tablas si no existen y carga los datos desde la base de datos.
+     * Enlaza los datos en memoria para uso posterior.
+     */
     public GestorIntercambio() {
-        this.usuarios = new HashMap<>();
-        this.programas = new HashMap<>();
-        this.convenios = new HashMap<>();
-        this.nextPostulacionId = 1;
-        cargarDatosDesdeArchivos();
-    }
-
-    public void cargarDatosDesdeArchivos() {
-        System.out.println("Cargando datos...");
-        cargarUsuariosDePrueba();
-        cargarConveniosDesdeArchivo("src/main/resources/convenios.txt");
-        crearProgramaDePrueba();
-        System.out.println("Datos cargados. Usuarios: " + usuarios.size() + ", Convenios: " + convenios.size() + ", Programas: " + programas.size());
-    }
-
-    private void cargarUsuariosDePrueba() {
-        Estudiante est1 = new Estudiante("123", "Ivan Ferreira", "juan.perez@inst.cl", "123", "Ingenieria Civil", 5.8, 6);
-        Funcionario func1 = new Funcionario("456", "Maria Lopez", "m.lopez@inst.cl", "456");
-        Auditor aud1 = new Auditor("112233445", "Ana Torres", "a.torres@inst.cl", "audit123");
-        usuarios.put(est1.getRut(), est1);
-        usuarios.put(func1.getRut(), func1);
-        usuarios.put(aud1.getRut(), aud1);
-    }
-
-    private void cargarConveniosDesdeArchivo(String archivo) {
-        try (BufferedReader br = new BufferedReader(new FileReader(archivo))) {
-            String linea;
-            while ((linea = br.readLine()) != null) {
-                String[] datos = linea.split(";");
-                if (datos.length == 8) {
-                    String id = datos[0].trim();
-                    String universidad = datos[1].trim();
-                    String pais = datos[2].trim();
-                    String area = datos[3].trim();
-                    String requisitosAcademicos = datos[4].trim();
-                    String requisitosEconomicos = datos[5].trim();
-                    LocalDate fechaInicio = LocalDate.parse(datos[6].trim());
-                    LocalDate fechaFin = LocalDate.parse(datos[7].trim());
-                    Convenio convenio = new Convenio(id, universidad, pais, area,
-                            requisitosAcademicos, requisitosEconomicos,
-                            fechaInicio, fechaFin);
-                    if (convenio.estaVigente()) {
-                        convenio.setEstado(EstadoConvenio.VIGENTE);
-                    } else {
-                        convenio.setEstado(EstadoConvenio.VENCIDO);
-                    }
-                    convenios.put(id, convenio);
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("Error al leer el archivo de convenios. Asegúrate de que '" + archivo + "' exista en el directorio de trabajo. " + e.getMessage());
+        this.dataStore = new DataStore();
+        try {
+            dataStore.crearTablas();
+            dataStore.cargarDatosDesdeBD();
+            System.out.println("Datos cargados y enlazados en DataStore. Usuarios: " + dataStore.getUsuarios().size() + ", Convenios: " + dataStore.getConvenios().size() + ", Postulaciones: " + dataStore.getPostulaciones().size());
+        } catch (SQLException e) {
+            System.out.println("Error al inicializar el gestor: " + e.getMessage());
         }
     }
 
-    private void crearProgramaDePrueba() {
-        if (convenios.isEmpty()) {
-            System.err.println("La lista de convenios está vacía. No se puede crear el programa de prueba.");
-            return;
+    /**
+     * Guarda todos los datos en la base de datos a partir de la memoria.
+     * Captura excepciones de SQL y muestra mensajes de error en consola.
+     */
+    public void guardarDatos() {
+        try {
+            dataStore.guardarDatos();
+        } catch (SQLException e) {
+            System.out.println("Error al guardar datos: " + e.getMessage());
         }
-
-        Programa prog2025 = new Programa("S1-2025", "Movilidad Semestral 2025", LocalDate.of(2025, 3, 1), LocalDate.of(2025, 12, 31));        for (Convenio c : convenios.values()) {
-            prog2025.agregarConvenio(c);
-        }
-        programas.put(prog2025.getId(), prog2025);
     }
 
+
+    /**
+     * Intenta iniciar sesión para un usuario dado su RUT y contraseña.
+     * Controla intentos fallidos y bloqueos.
+     *
+     * @param rut RUT del usuario
+     * @param pass Contraseña
+     * @return ResultadoLogin con información del usuario o mensaje de error
+     */
     public ResultadoLogin iniciarSesion(String rut, String pass) {
-        Usuario usuario = usuarios.get(rut);
-
+        Usuario usuario = dataStore.getUsuarioPorRut(rut);
         if (usuario == null) {
-            return new ResultadoLogin("Usuario no encontrado.");
+            return new ResultadoLogin("El RUT no está registrado.");
         }
-
         if (usuario.isBloqueado()) {
-            return new ResultadoLogin("Tu cuenta está bloqueada debido a múltiples intentos fallidos.");
+            return new ResultadoLogin("Su cuenta ha sido bloqueada. Contacte a un funcionario.");
         }
-
-        if (usuario.validarCredenciales(pass)) {
+        if (usuario.getPass().equals(pass)) {
             usuario.setIntentosFallidos(0);
-            this.usuarioActual = usuario;
             return new ResultadoLogin(usuario);
         } else {
-            usuario.setIntentosFallidos(usuario.getIntentosFallidos() + 1);
-            String mensaje = "Contraseña incorrecta. Intentos restantes: " + (3 - usuario.getIntentosFallidos());
+            usuario.setIntentosFallidos();
             if (usuario.getIntentosFallidos() >= 3) {
                 usuario.setBloqueado(true);
-                mensaje += "\nTu cuenta ha sido bloqueada. Contacta a un administrador.";
+                return new ResultadoLogin("Demasiados intentos fallidos. Su cuenta ha sido bloqueada.");
             }
-            return new ResultadoLogin(mensaje);
+            return new ResultadoLogin("Contraseña incorrecta. Intento " + usuario.getIntentosFallidos() + " de 3.");
         }
     }
 
-    public void cerrarSesion() {
-        this.usuarioActual = null;
+    /**
+     * Actualiza el nombre de un usuario.
+     *
+     * @param rut RUT del usuario
+     * @param nuevoNombre Nuevo nombre a asignar
+     */
+    public void actualizarNombreUsuario(String rut, String nuevoNombre) {
+        dataStore.actualizarNombreUsuario(rut, nuevoNombre);
     }
 
-    public void registrarEstudiante(String rut, String nombre, String email, String pass, String carrera, int semestres, double promedio) {
-        Estudiante nuevoEstudiante = new Estudiante(rut, nombre, email, pass, carrera, promedio, semestres);
-        usuarios.put(rut, nuevoEstudiante);
+    /**
+     * Actualiza el email de un usuario.
+     *
+     * @param rut RUT del usuario
+     * @param nuevoEmail Nuevo correo electrónico
+     */
+    public void actualizarEmailUsuario(String rut, String nuevoEmail) {
+        dataStore.actualizarEmailUsuario(rut, nuevoEmail);
     }
 
-    public boolean existeUsuario(String rut) {
-        return usuarios.containsKey(rut);
+    /**
+     * Actualiza la contraseña de un usuario.
+     *
+     * @param rut RUT del usuario
+     * @param nuevaPass Nueva contraseña
+     */
+    public void actualizarPasswordUsuario(String rut, String nuevaPass) {
+        dataStore.actualizarPasswordUsuario(rut, nuevaPass);
     }
 
-    public List<Programa> getProgramasVigentes() {
-        return programas.values().stream()
-                .filter(Programa::estaVigente)
-                .collect(Collectors.toList());
+    /**
+     * Actualiza la carrera de un estudiante.
+     *
+     * @param rut RUT del estudiante
+     * @param nuevaCarrera Nueva carrera
+     */
+    public void actualizarCarreraEstudiante(String rut, String nuevaCarrera) {
+        dataStore.actualizarCarreraEstudiante(rut, nuevaCarrera);
     }
 
-    public Optional<Convenio> buscarConvenio(String id) {
-        return Optional.ofNullable(convenios.get(id));
-    }
-
-    public boolean postular(Estudiante estudiante, Convenio convenio) {
-        boolean yaExiste = estudiante.getPostulaciones().stream()
-                .anyMatch(p -> p.getConvenioSeleccionado().getId().equals(convenio.getId()));
-        if (!yaExiste) {
-            String idPostulacion = "P" + nextPostulacionId++;
-            Postulacion nuevaPostulacion = new Postulacion(idPostulacion, convenio, LocalDate.now(), EstadoPostulacion.POR_REVISAR);
-            estudiante.postular(nuevaPostulacion);
-            return true;
-        }
-        return false;
-    }
-
+    /**
+     * Agrega una interacción a una postulacion específica.
+     *
+     * @param idPostulacion ID de la postulacion
+     * @param interaccion Interacción a agregar
+     */
     public void agregarInteraccionAPostulacion(String idPostulacion, Interaccion interaccion) {
-        for (Usuario user : usuarios.values()) {
-            if (user instanceof Estudiante) {
-                Estudiante est = (Estudiante) user;
-                Optional<Postulacion> pOpt = est.getPostulaciones().stream()
-                        .filter(p -> p.getId().equals(idPostulacion))
-                        .findFirst();
-                if (pOpt.isPresent()) {
-                    pOpt.get().agregarInteraccion(interaccion);
-                    return;
-                }
-            }
-        }
+        dataStore.agregarInteraccionAPostulacion(idPostulacion, interaccion);
     }
 
     /**
-     * Obtiene una lista de todas las postulaciones de todos los estudiantes.
-     * @return Una lista que contiene todas las postulaciones.
+     * Actualiza el estado de una postulacion.
+     *
+     * @param idPostulacion ID de la postulacion
+     * @param nuevoEstado Nuevo estado a asignar
      */
-    public List<Postulacion> getTodasLasPostulaciones() {
-        List<Postulacion> todasLasPostulaciones = new ArrayList<>();
-        // Itera sobre cada usuario en el mapa de usuarios
-        for (Usuario user : usuarios.values()) {
-            // Si el usuario es un Estudiante, obtiene sus postulaciones
-            if (user instanceof Estudiante) {
-                Estudiante estudiante = (Estudiante) user;
-                todasLasPostulaciones.addAll(estudiante.getPostulaciones());
-            }
-        }
-        return todasLasPostulaciones;
+    public void actualizarEstadoPostulacion(String idPostulacion, EstadoPostulacion nuevoEstado) {
+        dataStore.actualizarEstadoPostulacion(idPostulacion, nuevoEstado);
     }
 
     /**
-     * Obtiene una lista de postulaciones filtradas por estado.
-     * @param estado El estado por el que se desea filtrar.
-     * @return Una lista de postulaciones que coinciden con el estado.
+     * Busca el estudiante asociado a una postulacion.
+     *
+     * @param idPostulacion ID de la postulacion
+     * @return Estudiante asociado o null si no existe
      */
-    public List<Postulacion> getPostulacionesPorEstado(EstadoPostulacion estado) {
-        return getTodasLasPostulaciones().stream()
-                .filter(p -> p.getEstado().equals(estado))
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Obtiene una lista de postulaciones asociadas a un convenio específico.
-     * @param convenioId El ID del convenio.
-     * @return Una lista de postulaciones asociadas a ese convenio.
-     */
-    public List<Postulacion> getPostulacionesPorConvenio(String convenioId) {
-        return getTodasLasPostulaciones().stream()
-                .filter(p -> p.getConvenioSeleccionado().getId().equalsIgnoreCase(convenioId))
-                .collect(Collectors.toList());
-    }
-
-    public Programa getProgramaDeConvenio(Convenio convenio) {
-        for (Programa programa : programas.values()) {
-            if (programa.getConveniosVigentes().contains(convenio)) {
-                return programa;
-            }
-        }
-        return null;
-    }
-
     public Estudiante buscarEstudiantePorPostulacion(String idPostulacion) {
-        for (Usuario user : usuarios.values()) {
-            if (user instanceof Estudiante) {
-                Estudiante estudiante = (Estudiante) user;
-                boolean postulacionEncontrada = estudiante.getPostulaciones().stream()
-                        .anyMatch(p -> p.getId().equals(idPostulacion));
-                if (postulacionEncontrada) {
-                    return estudiante;
-                }
-            }
+        Postulacion p = dataStore.getPostulacionPorId(idPostulacion);
+        if (p == null) return null;
+        Usuario u = dataStore.getUsuarioPorRut(p.getRutEstudiante());
+        return u instanceof Estudiante ? (Estudiante) u : null;
+    }
+
+    /**
+     * Descarta otras postulaciones de un estudiante, dejando solo la excepción.
+     *
+     * @param rutEstudiante RUT del estudiante
+     * @param idPostulacionAExcluir ID de la postulacion que no se debe descartar
+     */
+    public void descartarOtrasPostulaciones(String rutEstudiante, String idPostulacionAExcluir) {
+        dataStore.actualizarEstadosPostulaciones(rutEstudiante, idPostulacionAExcluir, EstadoPostulacion.RECHAZADA);
+    }
+
+    /**
+     * Registra un nuevo estudiante en el sistema.
+     *
+     * @param rut RUT del estudiante
+     * @param nombre Nombre completo
+     * @param email Correo electrónico
+     * @param pass Contraseña
+     * @param carrera Carrera del estudiante
+     * @param semestres Semestres cursados
+     * @param promedio Promedio académico
+     */
+    public void registrarEstudiante(String rut, String nombre, String email, String pass, String carrera, int semestres, double promedio) {
+        if (dataStore.getUsuarioPorRut(rut) != null) {
+            System.out.println("El RUT ya se encuentra registrado.");
+            return;
         }
-        return null;
+        Estudiante nuevoEstudiante = new Estudiante(rut, nombre, email, pass, carrera, promedio, semestres);
+        dataStore.addUsuario(nuevoEstudiante);
+        System.out.println("Estudiante " + nombre + " registrado exitosamente.");
     }
 
-    public void descartarOtrasPostulaciones(Estudiante estudiante, String idPostulacionAceptada) {
-        estudiante.getPostulaciones().stream()
-                .filter(p -> !p.getId().equals(idPostulacionAceptada))
-                .forEach(p -> p.setEstado(EstadoPostulacion.ABANDONADA));
+    /**
+     * Devuelve la lista de programas vigentes.
+     *
+     * @return Lista de programas
+     */
+    public List<Programa> getProgramasVigentes() {
+        return dataStore.getProgramas();
     }
 
-    public Usuario getUsuarioActual() { return usuarioActual; }
-    public Map<String, Programa> getProgramas() { return programas; }
+    /**
+     * Busca un convenio por su ID.
+     *
+     * @param idConvenio ID del convenio
+     * @return Optional de Convenio
+     */
+    public Optional<Convenio> buscarConvenio(String idConvenio) {
+        return Optional.ofNullable(dataStore.getConvenioPorId(idConvenio));
+    }
+
+    /**
+     * Obtiene el programa asociado a un convenio.
+     *
+     * @param convenio Convenio
+     * @return Programa asociado
+     */
+    public Programa getProgramaDeConvenio(Convenio convenio) {
+        return dataStore.getProgramaPorId(convenio.getIdPrograma());
+    }
+
+    /**
+     * Realiza la postulación de un estudiante a un convenio.
+     * Evita duplicar postulaciones.
+     *
+     * @param estudiante Estudiante
+     * @param convenio Convenio
+     * @return true si la postulación se realizó, false si ya existía
+     */
+    public boolean postular(Estudiante estudiante, Convenio convenio) {
+        if (dataStore.getPostulaciones().stream().anyMatch(p -> p.getRutEstudiante().equals(estudiante.getRut()) && p.getIdConvenio().equals(convenio.getId()))) {
+            return false;
+        }
+        String nuevoId = "P" + (dataStore.getPostulaciones().size() + 1);
+        Postulacion nuevaPostulacion = new Postulacion(nuevoId, estudiante.getRut(), convenio.getId(), LocalDate.now(), EstadoPostulacion.POR_REVISAR);
+        nuevaPostulacion.setConvenioSeleccionado(convenio);
+        dataStore.addPostulacion(nuevaPostulacion);
+        estudiante.agregarPostulacion(nuevaPostulacion);
+        return true;
+    }
+
+    /**
+     * Obtiene postulaciones filtradas por rut, estado o convenio.
+     *
+     * @param tipoFiltro Tipo de filtro ("rut", "estado", "convenio")
+     * @param valorFiltro Valor a filtrar
+     * @return Lista de postulaciones filtradas
+     */
+    public List<Postulacion> getPostulaciones(String tipoFiltro, String valorFiltro) {
+        Stream<Postulacion> postulacionesStream = dataStore.getPostulaciones().stream();
+        switch (tipoFiltro) {
+            case "rut":
+                return postulacionesStream
+                        .filter(p -> p.getRutEstudiante().equals(valorFiltro))
+                        .sorted(Comparator.comparing(Postulacion::getFechaPostulacion).reversed())
+                        .collect(Collectors.toList());
+            case "estado":
+                EstadoPostulacion estado = EstadoPostulacion.valueOf(valorFiltro.toUpperCase());
+                if (estado == EstadoPostulacion.POR_REVISAR) {
+                    return postulacionesStream
+                            .filter(p -> p.getEstado() == estado)
+                            .sorted(Comparator.comparing(Postulacion::getFechaPostulacion))
+                            .collect(Collectors.toList());
+                }
+                return postulacionesStream
+                        .filter(p -> p.getEstado() == estado)
+                        .sorted(Comparator.comparing(p -> Integer.parseInt(p.getId().substring(1))))
+                        .collect(Collectors.toList());
+            case "convenio":
+                return postulacionesStream
+                        .filter(p -> p.getIdConvenio().equals(valorFiltro))
+                        .sorted(Comparator.comparing(p -> Integer.parseInt(p.getId().substring(1))))
+                        .collect(Collectors.toList());
+            default:
+                return dataStore.getPostulaciones();
+        }
+    }
+
+    /**
+     * Verifica si un usuario existe en el sistema por su RUT.
+     *
+     * @param rut RUT del usuario
+     * @return true si existe, false en caso contrario
+     */
+    public boolean existeUsuario(String rut) {
+        return dataStore.getUsuarioPorRut(rut) != null;
+    }
+
+    /**
+     * Cierra sesión del usuario activo.
+     * Actualmente no realiza ninguna acción.
+     */
+    public void cerrarSesion() {
+
+    }
 }
