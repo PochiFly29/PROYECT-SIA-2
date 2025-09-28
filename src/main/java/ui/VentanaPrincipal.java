@@ -11,7 +11,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 public class VentanaPrincipal extends JFrame {
 
@@ -34,9 +33,22 @@ public class VentanaPrincipal extends JFrame {
         setLocationRelativeTo(null);
         setContentPane(cards);
 
-        // Los LoginPanel y RegistroPanel ahora manejan objetos Usuario/Estudiante
+        // Icono de la aplicación (logo)
+        java.net.URL urlIcon = getClass().getResource("/Logo SGIE.png");
+        if (urlIcon != null) {
+            Image appImg = new ImageIcon(urlIcon).getImage();
+            setIconImage(appImg);
+            try {
+                if (Taskbar.isTaskbarSupported()) {
+                    Taskbar.getTaskbar().setIconImage(appImg);
+                }
+            } catch (Throwable ignore) {}
+        } else {
+            System.err.println("No se encontró el recurso Logo");
+        }
+
+        // Login / Registro
         RegistroPanel registroPanel = new RegistroPanel(gestor, () -> show("login"));
-        // El Consumer<Usuario> aquí es this::onLoginOk
         LoginPanel loginPanel = new LoginPanel(gestor, this::onLoginOk, () -> show("registro"));
 
         paneles.put("login", loginPanel);
@@ -57,15 +69,13 @@ public class VentanaPrincipal extends JFrame {
         });
     }
 
-    // Método corregido: recibe objeto Usuario y lo maneja por rol.
     private void onLoginOk(Usuario usuario) {
         Rol rol = usuario.getRol();
 
         switch (rol) {
-            case ESTUDIANTE:
+            case ESTUDIANTE: {
                 String keyEstu = "estudiante" + usuario.getRut();
                 if (!paneles.containsKey(keyEstu)) {
-                    // Casteo explícito a Estudiante para el panel específico
                     Estudiante estudiante = (Estudiante) usuario;
                     EstudiantePanel estudiantePanel = new EstudiantePanel(gestor, estudiante, this::logout);
                     paneles.put(keyEstu, estudiantePanel);
@@ -73,29 +83,29 @@ public class VentanaPrincipal extends JFrame {
                 }
                 show(keyEstu);
                 break;
-            case FUNCIONARIO:
+            }
+            case FUNCIONARIO: {
                 String keyFunc = "funcionario" + usuario.getRut();
                 if (!paneles.containsKey(keyFunc)) {
-                    // Nuevo panel para funcionario. No requiere castear ya que Usuario base es suficiente
                     FuncionarioPanel funcionarioPanel = new FuncionarioPanel(gestor, usuario, this::logout);
                     paneles.put(keyFunc, funcionarioPanel);
                     cards.add(funcionarioPanel, keyFunc);
                 }
                 show(keyFunc);
                 break;
-            case AUDITOR:
+            }
+            case AUDITOR: {
                 String keyAud = "auditor" + usuario.getRut();
                 if (!paneles.containsKey(keyAud)) {
-                    // Placeholder simple, ya que el auditor es complejo
                     JPanel auditorPanel = new AuditorPanel(gestor, usuario, this::logout);
                     paneles.put(keyAud, auditorPanel);
                     cards.add(auditorPanel, keyAud);
                 }
                 show(keyAud);
                 break;
+            }
             default:
                 JOptionPane.showMessageDialog(this, "Rol de usuario no reconocido.", "Error de inicio de sesión", JOptionPane.ERROR_MESSAGE);
-                break;
         }
     }
 
@@ -113,7 +123,6 @@ public class VentanaPrincipal extends JFrame {
         repaint();
     }
 
-    // Panel de prueba para roles no implementados
     private JPanel placeholder(String text) {
         JPanel p = new JPanel(new BorderLayout());
         p.add(new JLabel(text, SwingConstants.CENTER), BorderLayout.CENTER);

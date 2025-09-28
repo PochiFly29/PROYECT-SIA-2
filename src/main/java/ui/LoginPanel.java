@@ -4,6 +4,7 @@ import com.formdev.flatlaf.FlatClientProperties;
 import gestores.GestorIntercambio;
 import modelo.ResultadoLogin;
 import modelo.Usuario;
+import servicios.ManagerTemas;
 
 import javax.swing.*;
 import java.awt.*;
@@ -42,7 +43,11 @@ public class LoginPanel extends JPanel {
 
         // Estilos para los componentes internos
         pass.putClientProperty(FlatClientProperties.STYLE, "showRevealButton:true");
-        login.putClientProperty(FlatClientProperties.STYLE, "background:lighten(@background,10%); borderWidth:0; focusWidth:0; innerFocusWidth:0");
+        // Evita claves FlatLaf conflictivas en algunas versiones
+        login.putClientProperty(FlatClientProperties.STYLE, "background:lighten(@background,10%)");
+        login.setFocusPainted(false);
+        login.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
+
         rut.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "(ej: 11111111K)");
         pass.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "(al menos 3 caracteres)");
 
@@ -103,8 +108,10 @@ public class LoginPanel extends JPanel {
         gbc.insets = new Insets(0, 20, 20, 20);
         formPanel.add(crearSeccionRegistro(), gbc);
 
-        // Agregar el panel del formulario al panel principal (para centrar)
-        add(formPanel);
+        boolean darkInitial = UIManager.getLookAndFeel().getName().toLowerCase().contains("dark");
+        JLayeredPane themed = ManagerTemas.wrapWithFloatingThemeButton(formPanel, darkInitial);
+        setLayout(new BorderLayout());
+        add(themed, BorderLayout.CENTER);
 
         // Agregamos el ActionListener y KeyStroke para el login
         login.addActionListener(e -> doLogin());
@@ -119,8 +126,9 @@ public class LoginPanel extends JPanel {
         panel.putClientProperty(FlatClientProperties.STYLE, "background:null");
 
         JButton registrar = new JButton("<html><a href=\"#\">Registrar</a></html>");
-        registrar.putClientProperty(FlatClientProperties.STYLE, "border:3,3,3,3");
+        // Evita estilos FlatLaf no soportados; dejamos el link-like minimalista
         registrar.setContentAreaFilled(false);
+        registrar.setBorder(BorderFactory.createEmptyBorder(0, 3, 0, 3));
         registrar.setCursor(new Cursor(Cursor.HAND_CURSOR));
         registrar.addActionListener(e -> onRegisterRequest.run());
 

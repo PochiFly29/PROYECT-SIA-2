@@ -7,7 +7,6 @@ import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.function.Consumer;
 
 public class FuncionarioPanel extends JPanel {
 
@@ -20,15 +19,17 @@ public class FuncionarioPanel extends JPanel {
     private final CardLayout centerCardsLayout = new CardLayout();
     private final JPanel centerCards = new JPanel(centerCardsLayout);
 
-    // Nombres de las tarjetas
     private static final String CARD_PERFIL = "perfil";
     private static final String CARD_GESTION_POSTULACIONES = "gestionPostulaciones";
     private static final String CARD_VER_CONVENIOS = "verConvenios";
 
-    // Paneles de contenido
     private PerfilPanel perfilPanel;
     private PostulacionesFuncionarioPanel postulacionesPanel;
     private ConveniosPanel conveniosPanel;
+
+    private JToggleButton btnPerfil;
+    private JToggleButton btnGestionPost;
+    private JToggleButton btnVerConvenios;
 
     public FuncionarioPanel(GestorIntercambio gestor, Usuario funcionario, Runnable onLogout) {
         this.gestor = gestor;
@@ -38,71 +39,175 @@ public class FuncionarioPanel extends JPanel {
         refreshSidebar();
     }
 
-    private void init() {
-        // ===== Barra izquierda (Sidebar) =====
-        JPanel panelIzquierdo = new JPanel(new BorderLayout());
-        panelIzquierdo.putClientProperty(FlatClientProperties.STYLE, "background:lighten(@background,3%)");
-        panelIzquierdo.setPreferredSize(new Dimension(280, 0));
+    private JToggleButton botonNavegacion(String text) {
+        JToggleButton b = new JToggleButton(text);
+        b.setHorizontalAlignment(SwingConstants.CENTER);
+        b.setFocusPainted(false);
+        b.setOpaque(true);
 
-        // CÓDIGO AÑADIDO: Panel superior para el logo y título (copiado de EstudiantePanel)
-        JPanel topPanel = new JPanel(new MigLayout("wrap, fillx, insets 16 24 16 24", "fill"));
+        Insets padding = new Insets(20, 28, 20, 28);
+        b.setMargin(padding);
+        b.setBorder(BorderFactory.createEmptyBorder(padding.top, padding.left, padding.bottom, padding.right));
+
+        b.setMinimumSize(new Dimension(0, 88));
+        b.setPreferredSize(new Dimension(0, 88));
+        b.setMaximumSize(new Dimension(Integer.MAX_VALUE, 88));
+        b.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        b.setFont(b.getFont().deriveFont(Font.BOLD, b.getFont().getSize2D() + 3f));
+        b.setForeground(UIManager.getColor("Label.foreground"));
+
+        wireToggleBehavior(b);
+        addHoverEffect(b);
+        return b;
+    }
+
+    /** Selección: fondo azul + franja derecha */
+    private void wireToggleBehavior(JToggleButton b) {
+        final Color selectedBg = new Color(0x2E86FF);
+        final Color selectedFg = Color.WHITE;
+        final Color unselectedFg = UIManager.getColor("Label.foreground");
+        final Color rightStripe = new Color(0x1F5FCC);
+
+        b.setContentAreaFilled(false);
+
+        b.addChangeListener(e -> {
+            boolean sel = b.isSelected();
+            if (sel) {
+                b.setContentAreaFilled(true);
+                b.setBackground(selectedBg);
+                b.setForeground(selectedFg);
+                b.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(0, 0, 0, 6, rightStripe),
+                        BorderFactory.createEmptyBorder(20, 28, 20, 22) // compensa franja
+                ));
+            } else {
+                b.setContentAreaFilled(false);
+                b.setForeground(unselectedFg);
+                b.setBorder(BorderFactory.createEmptyBorder(20, 28, 20, 28));
+            }
+        });
+    }
+
+    /** Hover: sombrea la opción si NO está seleccionada */
+    private void addHoverEffect(JToggleButton b) {
+        final Color hoverBg = new Color(0x2F2F2F); // un poco más claro que #262626
+        b.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
+                if (!b.isSelected()) {
+                    b.setContentAreaFilled(true);
+                    b.setBackground(hoverBg);
+                }
+            }
+            @Override public void mouseExited(java.awt.event.MouseEvent e) {
+                if (!b.isSelected()) {
+                    b.setContentAreaFilled(false);
+                    b.setBackground(null);
+                }
+            }
+        });
+    }
+
+    /** Botón rectangular (footer) */
+    private static void styleRectButtonPrimary(JButton b, Color bg) {
+        b.setFocusPainted(false);
+        b.setOpaque(true);
+        b.setBackground(bg);
+        b.setForeground(Color.WHITE);
+        b.setFont(b.getFont().deriveFont(Font.BOLD, b.getFont().getSize2D() + 2f));
+        b.setMargin(new Insets(16, 20, 16, 20));
+        b.setBorder(BorderFactory.createLineBorder(bg.darker(), 1, false));
+    }
+
+    private void init() {
+        // ===== Sidebar =====
+        JPanel panelIzquierdo = new JPanel(new BorderLayout());
+        panelIzquierdo.setBackground(new Color(0x262626));
+        panelIzquierdo.setOpaque(true);
+        panelIzquierdo.setPreferredSize(new Dimension(360, 0));
+
+        // Top: logo grande + separador
+        JPanel topPanel = new JPanel(new MigLayout("wrap, fillx, insets 24 24 8 24", "[fill]"));
         topPanel.setOpaque(false);
+
+        JLabel logo = new JLabel("", SwingConstants.CENTER);
         try {
-            ImageIcon logoIcon = new ImageIcon(getClass().getResource("/logo.png"));
-            Image scaledImage = logoIcon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
-            JLabel lblLogo = new JLabel(new ImageIcon(scaledImage));
-            lblLogo.setHorizontalAlignment(SwingConstants.CENTER);
-            topPanel.add(lblLogo, "growx, center, wrap, gaptop 8");
-        } catch (Exception e) {
-            System.err.println("No se pudo cargar el logo. Asegúrate de que 'logo.png' esté en 'src/main/resources'.");
+            ImageIcon icon = new ImageIcon(getClass().getResource("/Logo SGIE.png"));
+            Image img = icon.getImage();
+
+            int maxW = 330, maxH = 280;
+            int iw = img.getWidth(null), ih = img.getHeight(null);
+            double s = Math.min(maxW / (double) iw, maxH / (double) ih);
+            int nw = Math.max(1, (int) Math.round(iw * s));
+            int nh = Math.max(1, (int) Math.round(ih * s));
+
+            Image scaled = img.getScaledInstance(nw, nh, Image.SCALE_SMOOTH);
+            logo.setIcon(new ImageIcon(scaled));
+            logo.setPreferredSize(new Dimension(maxW, maxH));
+        } catch (Exception ignore) {
+            logo.setText("Logo");
+            logo.setForeground(Color.WHITE);
+            logo.setFont(logo.getFont().deriveFont(Font.BOLD, logo.getFont().getSize2D() + 6f));
         }
-        JLabel lblTitulo = new JLabel("Gestiones de Intercambio");
-        lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
-        lblTitulo.putClientProperty(FlatClientProperties.STYLE, "font:bold +1");
-        topPanel.add(lblTitulo, "growx, center");
+        topPanel.add(logo, "growx, gaptop 4");
+
         JPanel separator = new JPanel();
         separator.setPreferredSize(new Dimension(0, 1));
-        separator.setBackground(UIManager.getColor("Component.borderColor"));
-        topPanel.add(separator, "growx, gaptop 8");
+        separator.setBackground(new Color(0x3A3A3A));
+        topPanel.add(separator, "growx, gaptop 12");
 
-        // Panel de botones de navegación (CENTER)
-        JPanel navButtonsPanel = new JPanel(new GridLayout(0, 1, 0, 12));
+        // Centro: botones
+        JPanel navButtonsPanel = new JPanel();
         navButtonsPanel.setOpaque(false);
-        navButtonsPanel.setBorder(BorderFactory.createEmptyBorder(50, 16, 12, 16));
+        navButtonsPanel.setLayout(new BoxLayout(navButtonsPanel, BoxLayout.Y_AXIS));
+        navButtonsPanel.setBorder(BorderFactory.createEmptyBorder(8, 0, 8, 0));
 
-        JButton btnPerfil = new JButton("Mi Perfil");
-        JButton btnGestionPost = new JButton("Gestionar Postulaciones");
-        JButton btnVerConvenios = new JButton("Ver Convenios");
+        btnPerfil       = botonNavegacion("Mi Perfil");
+        btnGestionPost  = botonNavegacion("Gestionar Postulaciones");
+        btnVerConvenios = botonNavegacion("Ver Convenios");
 
-        String buttonStyle = "background:#2E86FF; foreground:#FFFFFF; font:bold +1; borderWidth:0; focusWidth:0; innerFocusWidth:0";
-        btnPerfil.putClientProperty(FlatClientProperties.STYLE, buttonStyle);
-        btnGestionPost.putClientProperty(FlatClientProperties.STYLE, buttonStyle);
-        btnVerConvenios.putClientProperty(FlatClientProperties.STYLE, buttonStyle);
+        ButtonGroup grp = new ButtonGroup();
+        grp.add(btnPerfil);
+        grp.add(btnGestionPost);
+        grp.add(btnVerConvenios);
+        btnPerfil.setSelected(true);
 
-        // CÓDIGO AÑADIDO: Se establece el mismo tamaño de botón que en EstudiantePanel
-        Dimension buttonSize = new Dimension(180, 40);
-        btnPerfil.setPreferredSize(buttonSize);
-        btnGestionPost.setPreferredSize(buttonSize);
-        btnVerConvenios.setPreferredSize(buttonSize);
-
+        navButtonsPanel.add(Box.createVerticalGlue());
         navButtonsPanel.add(btnPerfil);
+        navButtonsPanel.add(Box.createVerticalStrut(12));
         navButtonsPanel.add(btnGestionPost);
+        navButtonsPanel.add(Box.createVerticalStrut(12));
         navButtonsPanel.add(btnVerConvenios);
+        navButtonsPanel.add(Box.createVerticalGlue());
 
-        // Panel inferior para info de usuario y botón de logout (SOUTH)
-        JPanel bottomPanel = new JPanel(new MigLayout("wrap, fillx, insets 16 24 16 24", "fill"));
-        bottomPanel.setOpaque(false);
-        lblSidebarNombre = new JLabel();
-        lblSidebarNombre.setHorizontalAlignment(SwingConstants.CENTER);
-        lblSidebarNombre.putClientProperty(FlatClientProperties.STYLE, "font:bold; foreground:lighten(@foreground,20%)");
-        JButton btnCerrar = new JButton("Cerrar Sesion");
-        btnCerrar.putClientProperty(FlatClientProperties.STYLE, "background:#E42828; foreground:#FFFFFF; arc:999");
-        bottomPanel.add(lblSidebarNombre, "growx, gaptop 16");
-        bottomPanel.add(btnCerrar, "growx, height 40, gaptop 16");
-
-        // Añade los paneles al sidebar
         panelIzquierdo.add(topPanel, BorderLayout.NORTH);
         panelIzquierdo.add(navButtonsPanel, BorderLayout.CENTER);
+
+        // Bottom: saludo + dos botones (Cerrar sesión / Salir)
+        JPanel bottomPanel = new JPanel(new MigLayout("wrap, fillx, insets 24 24 32 24", "[fill]"));
+        bottomPanel.setOpaque(false);
+
+        lblSidebarNombre = new JLabel();
+        lblSidebarNombre.setHorizontalAlignment(SwingConstants.CENTER);
+        lblSidebarNombre.putClientProperty(FlatClientProperties.STYLE, "font:bold +3; foreground:lighten(@foreground,25%)");
+
+        JPanel actions = new JPanel(new GridLayout(1, 2, 14, 0));
+        actions.setOpaque(false);
+
+        JButton btnCerrar = new JButton("Cerrar Sesión");
+        styleRectButtonPrimary(btnCerrar, new Color(0x2E86FF));
+        btnCerrar.setPreferredSize(new Dimension(0, 72));
+
+        JButton btnSalir = new JButton("Salir");
+        styleRectButtonPrimary(btnSalir, new Color(0xE42828));
+        btnSalir.setPreferredSize(new Dimension(0, 72));
+
+        actions.add(btnCerrar);
+        actions.add(btnSalir);
+
+        bottomPanel.add(lblSidebarNombre, "growx, gaptop 12");
+        bottomPanel.add(actions, "growx, height 72, gaptop 18");
+
         panelIzquierdo.add(bottomPanel, BorderLayout.SOUTH);
 
         // ===== Centro (cards) =====
@@ -120,34 +225,37 @@ public class FuncionarioPanel extends JPanel {
         add(panelIzquierdo, BorderLayout.WEST);
         add(centerCards, BorderLayout.CENTER);
 
-        // ===== Listeners de Navegación =====
+        // ===== Listeners (misma lógica) =====
         btnPerfil.addActionListener(e -> {
             perfilPanel.refreshData();
             centerCardsLayout.show(centerCards, CARD_PERFIL);
+            btnPerfil.setSelected(true);
         });
         btnGestionPost.addActionListener(e -> {
             postulacionesPanel.refreshTodasLasPostulaciones();
             centerCardsLayout.show(centerCards, CARD_GESTION_POSTULACIONES);
+            btnGestionPost.setSelected(true);
         });
         btnVerConvenios.addActionListener(e -> {
             conveniosPanel.refresh();
             centerCardsLayout.show(centerCards, CARD_VER_CONVENIOS);
+            btnVerConvenios.setSelected(true);
         });
         btnCerrar.addActionListener(e -> onLogout.run());
+        btnSalir.addActionListener(e -> System.exit(0));
     }
-    /**
-     * Callback llamado por ConveniosPanel al seleccionar un convenio.
-     * Cambia a la vista de postulaciones y aplica el filtro.
-     */
+
+    /** Callback desde ConveniosPanel para cambiar con filtro aplicado */
     private void onConvenioSeleccionado(String idConvenio) {
         postulacionesPanel.filtrarPorConvenio(idConvenio);
         centerCardsLayout.show(centerCards, CARD_GESTION_POSTULACIONES);
+        btnGestionPost.setSelected(true);
     }
 
     private void refreshSidebar() {
         if (funcionario == null) return;
         String nombre = safe(funcionario.getNombreCompleto());
-        lblSidebarNombre.setText("Hola, Funcionario " + nombre.split(" ")[0] + "!");
+        lblSidebarNombre.setText("Hola, Funcionario " + (nombre.isEmpty() ? "" : nombre.split(" ")[0]) + "!");
     }
 
     private static String safe(String s) {
