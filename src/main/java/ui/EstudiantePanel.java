@@ -3,17 +3,15 @@ package ui;
 import com.formdev.flatlaf.FlatClientProperties;
 import gestores.GestorIntercambio;
 import modelo.Estudiante;
-import modelo.Usuario; // Necesario para el contexto de roles
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
-import javax.swing.border.MatteBorder;
 
 public class EstudiantePanel extends JPanel {
 
     private final GestorIntercambio gestor;
-    private Estudiante estudiante; // ¡CORREGIDO: Ahora es el objeto Estudiante!
+    private Estudiante estudiante;
     private final Runnable onLogout;
 
     private JLabel lblSidebarNombre;
@@ -28,7 +26,10 @@ public class EstudiantePanel extends JPanel {
     private PostularPanel postularPanel;
     private PostulacionesPanel postulacionesPanel;
 
-    // ¡CORREGIDO: Recibe Estudiante!
+    private JToggleButton btnPerfil;
+    private JToggleButton btnVerPost;
+    private JToggleButton btnPostular;
+
     public EstudiantePanel(GestorIntercambio gestor, Estudiante estudiante, Runnable onLogout) {
         this.gestor = gestor;
         this.estudiante = estudiante;
@@ -37,97 +38,148 @@ public class EstudiantePanel extends JPanel {
         refreshSidebar();
     }
 
-    // Método de soporte si la instancia cambia (aunque el objeto es el mismo, es útil)
     public void setEstudiante(Estudiante e) {
         this.estudiante = e;
         refreshSidebar();
-        if (perfilPanel != null) perfilPanel.setUsuario(e); // Asumiendo que PerfilPanel acepta Usuario/Estudiante
+        if (perfilPanel != null) perfilPanel.setUsuario(e);
     }
 
-    // Método que permite refrescar el panel desde fuera si hay un cambio de datos
     public void refreshData() {
         if (perfilPanel != null) perfilPanel.refreshData();
         if (postulacionesPanel != null) postulacionesPanel.refresh();
     }
 
+    private JToggleButton botonNavegacion(String text) {
+        JToggleButton b = new JToggleButton(text);
+        b.setHorizontalAlignment(SwingConstants.CENTER);
+        b.setFocusPainted(false);
+        b.setOpaque(true);
+        Insets padding = new Insets(20, 28, 20, 28);
+        b.setMargin(padding);
+        b.setBorder(BorderFactory.createEmptyBorder(padding.top, padding.left, padding.bottom, padding.right));
+        b.setMinimumSize(new Dimension(0, 88));
+        b.setPreferredSize(new Dimension(0, 88));
+        b.setMaximumSize(new Dimension(Integer.MAX_VALUE, 88));
+        b.setAlignmentX(Component.LEFT_ALIGNMENT);
+        b.setFont(b.getFont().deriveFont(Font.BOLD, b.getFont().getSize2D() + 3f));
+        b.setForeground(UIManager.getColor("Label.foreground"));
+        wireToggleBehavior(b);
+        return b;
+    }
+
+    private void wireToggleBehavior(JToggleButton b) {
+        final Color selectedBg = new Color(0x2E86FF);
+        final Color selectedFg = Color.WHITE;
+        final Color unselectedFg = UIManager.getColor("Label.foreground");
+        final Color rightStripe = new Color(0x1F5FCC);
+        b.setContentAreaFilled(false);
+        b.addChangeListener(e -> {
+            boolean sel = b.isSelected();
+            if (sel) {
+                b.setContentAreaFilled(true);
+                b.setBackground(selectedBg);
+                b.setForeground(selectedFg);
+                b.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(0, 0, 0, 6, rightStripe),
+                        BorderFactory.createEmptyBorder(20, 28, 20, 22)
+                ));
+            } else {
+                b.setContentAreaFilled(false);
+                b.setForeground(unselectedFg);
+                b.setBorder(BorderFactory.createEmptyBorder(20, 28, 20, 28));
+            }
+        });
+    }
 
     private void init() {
-        // ===== Barra izquierda =====
         JPanel panelIzquierdo = new JPanel(new BorderLayout());
-        panelIzquierdo.putClientProperty(FlatClientProperties.STYLE, "background:lighten(@background,3%)");
-        panelIzquierdo.setPreferredSize(new Dimension(280, 0));
+        panelIzquierdo.setBackground(new Color(0x262626));
+        panelIzquierdo.setOpaque(true);
+        panelIzquierdo.setPreferredSize(new Dimension(360, 0));
 
-        // ... (Configuración del panelIzquierdo igual) ...
-
-        // Panel superior para el logo y título
-        JPanel topPanel = new JPanel(new MigLayout("wrap, fillx, insets 16 24 16 24", "fill"));
+        JPanel topPanel = new JPanel(new MigLayout("wrap, fillx, insets 24 24 8 24", "[fill]"));
         topPanel.setOpaque(false);
-        //
+
+        JLabel logo = new JLabel("", SwingConstants.CENTER);
         try {
-            ImageIcon logoIcon = new ImageIcon(getClass().getResource("/logo.png"));
-            Image scaledImage = logoIcon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
-            JLabel lblLogo = new JLabel(new ImageIcon(scaledImage));
-            lblLogo.setHorizontalAlignment(SwingConstants.CENTER);
-            topPanel.add(lblLogo, "growx, center, wrap, gaptop 8");
-        } catch (Exception e) {
-            System.err.println("No se pudo cargar el logo. Asegúrate de que el archivo 'logo.png' esté en la carpeta 'src/main/resources'.");
+            ImageIcon icon = new ImageIcon(getClass().getResource("/Logo SGIE.png"));
+            Image img = icon.getImage();
+
+            // Aumentar el tamaño del logo
+            int maxW = 330, maxH = 280;
+
+            int iw = img.getWidth(null), ih = img.getHeight(null);
+            double s = Math.min(maxW / (double) iw, maxH / (double) ih);
+            int nw = Math.max(1, (int) Math.round(iw * s));
+            int nh = Math.max(1, (int) Math.round(ih * s));
+
+            Image scaled = img.getScaledInstance(nw, nh, Image.SCALE_SMOOTH);
+            logo.setIcon(new ImageIcon(scaled));
+
+            logo.setPreferredSize(new Dimension(maxW, maxH));
+        } catch (Exception ignore) {
+            logo.setText("Logo");
+            logo.setForeground(Color.WHITE);
+            logo.setFont(logo.getFont().deriveFont(Font.BOLD, logo.getFont().getSize2D() + 6f));
         }
+        topPanel.add(logo, "growx, gaptop 4");
 
-        // Título
-        JLabel lblTitulo = new JLabel("Gestiones de Intercambio");
-        lblTitulo.setHorizontalAlignment(SwingConstants.CENTER);
-        lblTitulo.putClientProperty(FlatClientProperties.STYLE, "font:bold +1");
-        topPanel.add(lblTitulo, "growx, center");
-
-        // Separador
         JPanel separator = new JPanel();
         separator.setPreferredSize(new Dimension(0, 1));
-        separator.setBackground(UIManager.getColor("Component.borderColor"));
-        topPanel.add(separator, "growx, gaptop 8");
+        separator.setBackground(new Color(0x3A3A3A));
+        topPanel.add(separator, "growx, gaptop 12");
 
-        // Panel de botones de navegación (CENTER)
-        JPanel navButtonsPanel = new JPanel(new GridLayout(0, 1, 0, 12));
+        JPanel navButtonsPanel = new JPanel();
         navButtonsPanel.setOpaque(false);
-        navButtonsPanel.setBorder(BorderFactory.createEmptyBorder(50, 16, 12, 16));
+        navButtonsPanel.setLayout(new BoxLayout(navButtonsPanel, BoxLayout.Y_AXIS));
+        navButtonsPanel.setBorder(BorderFactory.createEmptyBorder(8, 0, 8, 0));
 
-        JButton btnPerfil = new JButton("Perfil");
-        JButton btnVerPost = new JButton("Ver Postulaciones");
-        JButton btnPostular = new JButton("Postular a un convenio");
+        btnPerfil   = botonNavegacion("Perfil");
+        btnPostular = botonNavegacion("Postular a un convenio");
+        btnVerPost  = botonNavegacion("Ver postulaciones");
 
-        String buttonStyle = "background:#2E86FF; foreground:#FFFFFF; font:bold +1; borderWidth:0; focusWidth:0; innerFocusWidth:0";
-        btnPerfil.putClientProperty(FlatClientProperties.STYLE, buttonStyle);
-        btnVerPost.putClientProperty(FlatClientProperties.STYLE, buttonStyle);
-        btnPostular.putClientProperty(FlatClientProperties.STYLE, buttonStyle);
+        ButtonGroup grp = new ButtonGroup();
+        grp.add(btnPerfil);
+        grp.add(btnPostular);
+        grp.add(btnVerPost);
+        btnPerfil.setSelected(true);
 
-        btnPerfil.setPreferredSize(new Dimension(180, 40));
-        btnVerPost.setPreferredSize(new Dimension(180, 40));
-        btnPostular.setPreferredSize(new Dimension(180, 40));
-
+        navButtonsPanel.add(Box.createVerticalGlue());
         navButtonsPanel.add(btnPerfil);
-        navButtonsPanel.add(btnVerPost);
+        navButtonsPanel.add(Box.createVerticalStrut(12));
         navButtonsPanel.add(btnPostular);
+        navButtonsPanel.add(Box.createVerticalStrut(12));
+        navButtonsPanel.add(btnVerPost);
+        navButtonsPanel.add(Box.createVerticalGlue());
 
-        // Panel inferior para la info del usuario y el botón de cerrar sesión (SOUTH)
-        JPanel bottomPanel = new JPanel(new MigLayout("wrap, fillx, insets 16 24 16 24", "fill"));
+        panelIzquierdo.add(topPanel, BorderLayout.NORTH);
+        panelIzquierdo.add(navButtonsPanel, BorderLayout.CENTER);
+
+        JPanel bottomPanel = new JPanel(new MigLayout("wrap, fillx, insets 24 24 32 24", "[fill]"));
         bottomPanel.setOpaque(false);
         lblSidebarNombre = new JLabel();
         lblSidebarNombre.setHorizontalAlignment(SwingConstants.CENTER);
-        lblSidebarNombre.putClientProperty(FlatClientProperties.STYLE, "font:bold; foreground:lighten(@foreground,20%)");
+        lblSidebarNombre.putClientProperty(FlatClientProperties.STYLE, "font:bold +3; foreground:lighten(@foreground,25%)");
 
-        JButton btnCerrar = new JButton("Cerrar Sesion");
-        btnCerrar.putClientProperty(FlatClientProperties.STYLE, "background:#E42828; foreground:#FFFFFF; arc:999");
-        btnCerrar.putClientProperty(FlatClientProperties.BUTTON_TYPE, "destructive");
+        JPanel actions = new JPanel(new GridLayout(1, 2, 14, 0));
+        actions.setOpaque(false);
 
-        bottomPanel.add(lblSidebarNombre, "growx, gaptop 16");
-        bottomPanel.add(btnCerrar, "growx, height 40, gaptop 16");
+        JButton btnCerrar = new JButton("Cerrar Sesión");
+        styleRectButtonPrimary(btnCerrar, new Color(0x2E86FF));
+        btnCerrar.setPreferredSize(new Dimension(0, 72));
 
-        // Añade los paneles al panel principal izquierdo
-        panelIzquierdo.add(topPanel, BorderLayout.NORTH);
-        panelIzquierdo.add(navButtonsPanel, BorderLayout.CENTER);
+        JButton btnSalir = new JButton("Salir");
+        styleRectButtonPrimary(btnSalir, new Color(0xE42828));
+        btnSalir.setPreferredSize(new Dimension(0, 72));
+
+        actions.add(btnCerrar);
+        actions.add(btnSalir);
+
+        bottomPanel.add(lblSidebarNombre, "growx, gaptop 12");
+        bottomPanel.add(actions, "growx, height 72, gaptop 18");
+
         panelIzquierdo.add(bottomPanel, BorderLayout.SOUTH);
 
-        // ===== Centro (cards) =====
-        // ¡CORREGIDO: Se pasan los objetos Estudiante correspondientes!
         perfilPanel = new PerfilPanel(gestor, estudiante);
         postulacionesPanel = new PostulacionesPanel(gestor, estudiante);
         postularPanel = new PostularPanel(gestor, estudiante);
@@ -137,26 +189,41 @@ public class EstudiantePanel extends JPanel {
         centerCards.add(postularPanel, CARD_POSTULAR);
         centerCardsLayout.show(centerCards, CARD_PERFIL);
 
-        // ===== Layout exterior =====
         setLayout(new BorderLayout());
         add(panelIzquierdo, BorderLayout.WEST);
         add(centerCards, BorderLayout.CENTER);
 
-        // Nav
-        btnPerfil.addActionListener(e -> centerCardsLayout.show(centerCards, CARD_PERFIL));
+        btnPerfil.addActionListener(e -> {
+            centerCardsLayout.show(centerCards, CARD_PERFIL);
+            btnPerfil.setSelected(true);
+        });
         btnVerPost.addActionListener(e -> {
-            // postulacionesPanel.setUsuario(estudiante); // Ya no es necesario si se usa el campo de instancia
             postulacionesPanel.refresh();
             centerCardsLayout.show(centerCards, CARD_POSTULACIONES);
+            btnVerPost.setSelected(true);
         });
-        btnPostular.addActionListener(e -> centerCardsLayout.show(centerCards, CARD_POSTULAR));
+        btnPostular.addActionListener(e -> {
+            centerCardsLayout.show(centerCards, CARD_POSTULAR);
+            btnPostular.setSelected(true);
+        });
         btnCerrar.addActionListener(e -> onLogout.run());
+        btnSalir.addActionListener(e -> System.exit(0));
+    }
+
+    private static void styleRectButtonPrimary(JButton b, Color bg) {
+        b.setFocusPainted(false);
+        b.setOpaque(true);
+        b.setBackground(bg);
+        b.setForeground(Color.WHITE);
+        b.setFont(b.getFont().deriveFont(Font.BOLD, b.getFont().getSize2D() + 2f));
+        b.setMargin(new Insets(16, 20, 16, 20));
+        b.setBorder(BorderFactory.createLineBorder(bg.darker(), 1, false));
     }
 
     private void refreshSidebar() {
         if (estudiante == null) return;
         String nombre = safe(estudiante.getNombreCompleto());
-        lblSidebarNombre.setText("Hola, " + nombre.split(" ")[0] + "!");
+        lblSidebarNombre.setText("Hola, " + (nombre.isEmpty() ? "" : nombre.split(" ")[0]) + "!");
     }
 
     private static String safe(String s) {

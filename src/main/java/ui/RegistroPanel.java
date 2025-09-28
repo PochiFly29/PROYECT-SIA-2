@@ -43,7 +43,6 @@ public class RegistroPanel extends JPanel {
         semestresF = new JSpinner(new SpinnerNumberModel(1, 1, 15, 1));
 
         passF.putClientProperty(FlatClientProperties.STYLE, "showRevealButton:true");
-        // CORREGIDO: El placeholder ahora pide el formato sin guion, que es el que se va a guardar
         rutF.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "11111111K");
 
         JSpinner.NumberEditor promEditor = new JSpinner.NumberEditor(promedioF, "0.0");
