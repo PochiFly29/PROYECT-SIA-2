@@ -9,9 +9,11 @@ import java.util.List;
 
 public class ServicioPostulacion {
     private final DataStore dataStore;
+    private final ServicioConsulta servicioConsulta;
 
-    public ServicioPostulacion(DataStore dataStore) {
+    public ServicioPostulacion(DataStore dataStore,ServicioConsulta servicioConsulta) {
         this.dataStore = dataStore;
+        this.servicioConsulta = servicioConsulta;
     }
 
     public boolean crearPostulacion(Programa programa, Estudiante estudiante, Convenio convenio) throws SQLException {
@@ -67,20 +69,21 @@ public class ServicioPostulacion {
         }
     }
 
-    public void aceptarPostulacionYRechazarResto(Programa programa, Postulacion postulacionAceptada) throws SQLException {
-        // 1. Aceptar la postulación principal
+    public void aceptarPostulacionYRechazarResto(Postulacion postulacionAceptada) throws SQLException {
+        // CAMBIO: Llama a su dependencia directa, no al gestor.
+        Programa programaActivo = servicioConsulta.getProgramaActivo()
+                .orElseThrow(() -> new IllegalStateException("No se encontró un programa activo."));
+
         actualizarEstadoPostulacion(postulacionAceptada, EstadoPostulacion.ACEPTADA);
 
-        // 2. Buscar y rechazar las demás postulaciones del mismo estudiante EN EL MISMO PROGRAMA
         String rutEstudiante = postulacionAceptada.getRutEstudiante();
-        programa.getPostulaciones().stream()
+        programaActivo.getPostulaciones().stream()
                 .filter(p -> p.getRutEstudiante().equals(rutEstudiante) && p.getId() != postulacionAceptada.getId())
                 .forEach(p -> {
                     try {
                         actualizarEstadoPostulacion(p, EstadoPostulacion.RECHAZADA);
                     } catch (SQLException e) {
-                        // Manejar el error, quizás loggearlo o acumular fallos
-                        System.err.println("Error al rechazar postulación " + p.getId() + ": " + e.getMessage());
+                        e.printStackTrace();
                     }
                 });
     }

@@ -10,7 +10,6 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -35,7 +34,7 @@ public class PostulacionesPanel extends JPanel {
     public void refresh() {
         // CAMBIO: La lógica se simplifica enormemente. Ya no hay que verificar roles.
         // Obtenemos las postulaciones del programa 1 que correspondan al RUT del estudiante.
-        Programa programa = gestor.getServicioConsulta().getProgramaPorId(1).orElse(null);
+        Programa programa = gestor.getServicioConsulta().getProgramaActivo().orElse(null);
         List<Postulacion> postulaciones;
 
         if (programa != null) {

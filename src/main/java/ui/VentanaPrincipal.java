@@ -87,7 +87,7 @@ public class VentanaPrincipal extends JFrame {
                 String keyAud = "auditor" + usuario.getRut();
                 if (!paneles.containsKey(keyAud)) {
                     // Placeholder simple, ya que el auditor es complejo
-                    JPanel auditorPanel = placeholder("Panel Auditor (próximamente)");
+                    JPanel auditorPanel = new AuditorPanel(gestor, usuario, this::logout);
                     paneles.put(keyAud, auditorPanel);
                     cards.add(auditorPanel, keyAud);
                 }

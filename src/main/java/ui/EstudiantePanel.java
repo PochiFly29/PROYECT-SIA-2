@@ -143,13 +143,18 @@ public class EstudiantePanel extends JPanel {
         add(centerCards, BorderLayout.CENTER);
 
         // Nav
-        btnPerfil.addActionListener(e -> centerCardsLayout.show(centerCards, CARD_PERFIL));
+        btnPerfil.addActionListener(e -> {
+            postulacionesPanel.refresh();
+            centerCardsLayout.show(centerCards, CARD_PERFIL);
+        });
         btnVerPost.addActionListener(e -> {
-            // postulacionesPanel.setUsuario(estudiante); // Ya no es necesario si se usa el campo de instancia
             postulacionesPanel.refresh();
             centerCardsLayout.show(centerCards, CARD_POSTULACIONES);
         });
-        btnPostular.addActionListener(e -> centerCardsLayout.show(centerCards, CARD_POSTULAR));
+        btnPostular.addActionListener(e -> {
+            postularPanel.refresh();
+            centerCardsLayout.show(centerCards, CARD_POSTULAR);
+        });
         btnCerrar.addActionListener(e -> onLogout.run());
     }
 

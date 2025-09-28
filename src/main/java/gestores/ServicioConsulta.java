@@ -66,4 +66,11 @@ public class ServicioConsulta {
         }
     }
 
+    public Optional<Programa> getProgramaActivo() {
+        // Busca en la caché de DataStore el único programa con estado "ACTIVO"
+        return dataStore.getProgramas().stream()
+                .filter(p -> "ACTIVO".equals(p.getEstado()))
+                .findFirst();
+    }
+
 }

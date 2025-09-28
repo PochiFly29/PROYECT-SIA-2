@@ -1,44 +1,58 @@
 package modelo;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Programa {
-    private final int id; // CAMBIO: Inmutable
-    private final String nombre; // CAMBIO: Inmutable
-    private final LocalDate fechaInicio; // CAMBIO: Inmutable
-    private final LocalDate fechaFin; // CAMBIO: Inmutable
+    private int id;
+    private final String nombre;
+    private final LocalDate fechaInicio;
+    private LocalDate fechaFin;
+    private String estado;
     private final List<Postulacion> postulaciones;
 
-    public Programa(int id, String nombre, LocalDate fechaInicio, LocalDate fechaFin) {
+    /**
+     * Constructor para crear un NUEVO programa (antes de tener ID de la BD).
+     */
+    public Programa(String nombre, LocalDate fechaInicio, LocalDate fechaFin) {
+        this.id = 0; // ID temporal hasta que la BD lo asigne
+        this.nombre = nombre;
+        this.fechaInicio = fechaInicio;
+        this.fechaFin = fechaFin;
+        this.estado = "ACTIVO"; // Los nuevos programas siempre nacen activos
+        this.postulaciones = new ArrayList<>();
+    }
+
+    /**
+     * Constructor para cargar un programa existente DESDE la BD.
+     */
+    public Programa(int id, String nombre, LocalDate fechaInicio, LocalDate fechaFin, String estado) {
         this.id = id;
         this.nombre = nombre;
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
+        this.estado = estado;
         this.postulaciones = new ArrayList<>();
     }
 
-    // Getters
+    // --- Getters ---
     public int getId() { return id; }
     public String getNombre() { return nombre; }
     public LocalDate getFechaInicio() { return fechaInicio; }
     public LocalDate getFechaFin() { return fechaFin; }
-    public List<Postulacion> getPostulaciones() {
-        return Collections.unmodifiableList(postulaciones); // CAMBIO: Se retorna una vista de solo lectura
-    }
+    public String getEstado() { return estado; }
+    public List<Postulacion> getPostulaciones() { return postulaciones; }
 
-    // Métodos de gestión
-    public void agregarPostulacion(Postulacion post) {
-        this.postulaciones.add(post);
-    }
-
+    // --- Setters para campos mutables ---
+    public void setId(int id) { this.id = id; }
+    public void setFechaFin(LocalDate fechaFin) { this.fechaFin = fechaFin; }
+    public void setEstado(String estado) { this.estado = estado; }
     public void setPostulaciones(List<Postulacion> postulaciones) {
         this.postulaciones.clear();
         this.postulaciones.addAll(postulaciones);
     }
-
-    public boolean estaVigente() {
-        LocalDate hoy = LocalDate.now();
-        return !hoy.isBefore(this.fechaInicio) && !hoy.isAfter(this.fechaFin);
+    public void agregarPostulacion(Postulacion p) {
+        this.postulaciones.add(p);
     }
 }

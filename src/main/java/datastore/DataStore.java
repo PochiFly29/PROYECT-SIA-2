@@ -94,11 +94,13 @@ public class DataStore {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
+                // CAMBIO: Se usa el constructor completo para cargar desde la BD.
                 Programa p = new Programa(
                         rs.getInt("id_programa"),
                         rs.getString("nombre"),
                         LocalDate.parse(rs.getString("fecha_inicio")),
-                        LocalDate.parse(rs.getString("fecha_fin"))
+                        LocalDate.parse(rs.getString("fecha_fin")),
+                        rs.getString("estado")
                 );
                 programasPorId.put(p.getId(), p);
             }
@@ -224,6 +226,40 @@ public class DataStore {
                     .findFirst()
                     .ifPresent(post -> post.setEstado(nuevoEstado));
         }
+    }
+
+    public void crearUsuario(Usuario nuevoUsuario) throws SQLException {
+        // 1. Persistir en la base de datos
+        String sql = "INSERT INTO usuarios (rut, nombre, email, pass, rol, bloqueado, intentos_fallidos) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, nuevoUsuario.getRut());
+            pstmt.setString(2, nuevoUsuario.getNombreCompleto());
+            pstmt.setString(3, nuevoUsuario.getEmail());
+            pstmt.setString(4, nuevoUsuario.getPass());
+            pstmt.setString(5, nuevoUsuario.getRol().name());
+            pstmt.setBoolean(6, nuevoUsuario.isBloqueado());
+            pstmt.setInt(7, nuevoUsuario.getIntentosFallidos());
+            pstmt.executeUpdate();
+        }
+
+        // 2. Sincronizar la caché en memoria
+        usuariosPorRut.put(nuevoUsuario.getRut(), nuevoUsuario);
+    }
+
+    public void actualizarUsuario(Usuario usuario) throws SQLException {
+        // 1. Persistir en la base de datos
+        String sql = "UPDATE usuarios SET nombre = ?, email = ?, pass = ?, bloqueado = ?, intentos_fallidos = ? WHERE rut = ?";
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, usuario.getNombreCompleto());
+            pstmt.setString(2, usuario.getEmail());
+            pstmt.setString(3, usuario.getPass());
+            pstmt.setBoolean(4, usuario.isBloqueado());
+            pstmt.setInt(5, usuario.getIntentosFallidos());
+            pstmt.setString(6, usuario.getRut());
+            pstmt.executeUpdate();
+        }
+        // 2. No es necesario actualizar la caché, porque el objeto en la caché
+        // es el mismo que se modificó en la capa de servicio (se actualiza por referencia).
     }
 
     public void persistirTodosLosUsuarios() throws SQLException {
@@ -354,6 +390,78 @@ public class DataStore {
                 e.setSemestresCursados(semestres);
                 e.setPromedio(promedio);
             }
+        }
+    }
+
+    public void crearPrograma(Programa programa) throws SQLException {
+        // NOTA IMPORTANTE: Para que esto funcione, asegúrate de que en ConfiguradorBD la tabla
+        // se cree con AUTOINCREMENT. Ej: "id_programa INTEGER PRIMARY KEY AUTOINCREMENT"
+        String sql = "INSERT INTO programas (nombre, fecha_inicio, fecha_fin, estado) VALUES (?, ?, ?, ?)";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            pstmt.setString(1, programa.getNombre());
+            pstmt.setString(2, programa.getFechaInicio().toString());
+            pstmt.setString(3, programa.getFechaFin().toString());
+            pstmt.setString(4, programa.getEstado()); // El estado por defecto es "ACTIVO"
+            pstmt.executeUpdate();
+
+            // Proceso de inyección del ID generado por la BD
+            ResultSet keys = pstmt.getGeneratedKeys();
+            if (keys.next()) {
+                programa.setId(keys.getInt(1));
+            }
+
+            // Se añade a la caché con su ID definitivo
+            programasPorId.put(programa.getId(), programa);
+        }
+    }
+
+    public void crearConvenio(Convenio convenio) throws SQLException {
+        // 1. Persistir en la base de datos
+        String sql = "INSERT INTO convenios (id_convenio, universidad, pais, area, requisitos_academicos, requisitos_economicos) VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, convenio.getId());
+            pstmt.setString(2, convenio.getUniversidad());
+            pstmt.setString(3, convenio.getPais());
+            pstmt.setString(4, convenio.getArea());
+            pstmt.setString(5, convenio.getRequisitosAcademicos());
+            pstmt.setString(6, convenio.getRequisitosEconomicos());
+            pstmt.executeUpdate();
+        }
+
+        // 2. Sincronizar la caché en memoria
+        conveniosPorId.put(convenio.getId(), convenio);
+    }
+
+    public void eliminarConvenio(String idConvenio) throws SQLException {
+        String sql = "DELETE FROM convenios WHERE id_convenio = ?";
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, idConvenio);
+            pstmt.executeUpdate();
+            conveniosPorId.remove(idConvenio); // Elimina de la caché
+        }
+    }
+
+    public void actualizarPrograma(Programa programa) throws SQLException {
+        String sql = "UPDATE programas SET nombre = ?, fecha_fin = ?, estado = ? WHERE id_programa = ?";
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, programa.getNombre());
+            pstmt.setString(2, programa.getFechaFin().toString());
+            pstmt.setString(3, programa.getEstado()); // El estado se pasa como String
+            pstmt.setInt(4, programa.getId());
+            pstmt.executeUpdate();
+            // La caché se actualiza por referencia, no necesitamos hacer nada más.
+        }
+    }
+
+    public void eliminarPrograma(int idPrograma) throws SQLException {
+        // La BD se encargará de borrar en cascada las postulaciones e interacciones gracias al FOREIGN KEY.
+        String sql = "DELETE FROM programas WHERE id_programa = ?";
+        try (Connection conn = DatabaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, idPrograma);
+            pstmt.executeUpdate();
+            programasPorId.remove(idPrograma); // Elimina de la caché
         }
     }
 }

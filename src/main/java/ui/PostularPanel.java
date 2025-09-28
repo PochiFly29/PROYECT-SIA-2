@@ -198,7 +198,7 @@ public class PostularPanel extends JPanel {
                 // CAMBIO CLAVE: Obtenemos el programa activo y llamamos al servicio de postulación.
                 // En nuestro diseño simple, asumimos que siempre trabajamos con el programa ID 1.
                 Programa programaActivo = gestor.getServicioConsulta()
-                        .getProgramaPorId(1)
+                        .getProgramaActivo()
                         .orElseThrow(() -> new IllegalStateException("El programa de intercambio principal no fue encontrado."));
 
                 boolean ok = gestor.getServicioPostulacion().crearPostulacion(programaActivo, estudiante, c);

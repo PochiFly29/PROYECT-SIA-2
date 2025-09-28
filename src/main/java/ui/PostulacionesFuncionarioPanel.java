@@ -14,7 +14,6 @@ import java.awt.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class PostulacionesFuncionarioPanel extends JPanel {
@@ -38,7 +37,7 @@ public class PostulacionesFuncionarioPanel extends JPanel {
 
     public void refreshTodasLasPostulaciones() {
         // CAMBIO: Se obtiene la lista de postulaciones del programa 1 desde el servicio de consulta.
-        this.todasLasPostulaciones = gestor.getServicioConsulta().getProgramaPorId(1)
+        this.todasLasPostulaciones = gestor.getServicioConsulta().getProgramaActivo()
                 .map(Programa::getPostulaciones)
                 .orElse(Collections.emptyList());
         title.setText("GESTIÓN DE POSTULACIONES");

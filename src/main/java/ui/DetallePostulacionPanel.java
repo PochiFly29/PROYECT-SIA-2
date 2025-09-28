@@ -137,9 +137,9 @@ public class DetallePostulacionPanel extends JPanel {
 
         if (nuevoEstado != null && nuevoEstado != postulacion.getEstado()) {
             try {
-                Programa programa = gestor.getServicioConsulta().getProgramaPorId(1).orElseThrow();
+                Programa programa = gestor.getServicioConsulta().getProgramaActivo().orElseThrow();
                 if (nuevoEstado == EstadoPostulacion.ACEPTADA) {
-                    gestor.getServicioPostulacion().aceptarPostulacionYRechazarResto(programa, postulacion);
+                    gestor.getServicioPostulacion().aceptarPostulacionYRechazarResto(postulacion);
                     info("Estado actualizado a ACEPTADA. Las demás postulaciones del estudiante han sido rechazadas.");
                 } else {
                     gestor.getServicioPostulacion().actualizarEstadoPostulacion(postulacion, nuevoEstado);
