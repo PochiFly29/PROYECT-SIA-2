@@ -16,6 +16,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+/**
+ * **Panel de Interfaz de Usuario para la Gestión Administrativa de Convenios.**
+ * <p>Este panel implementa las operaciones **CRUD (Crear, Consultar, Eliminar)** * para el rol de Auditor, permitiendo la administración directa del catálogo de
+ * {@link Convenio}s. La funcionalidad de "Eliminar" está acoplada a la lógica
+ * de negocio que rechaza las postulaciones asociadas.</p>
+ */
 public class GestionConveniosAuditorPanel extends JPanel {
     private final GestorIntercambio gestor;
     private final Usuario auditor;
@@ -24,6 +30,11 @@ public class GestionConveniosAuditorPanel extends JPanel {
     private JTextField searchField;
     private JTable table;
 
+    /**
+     * Crea e inicializa el panel de gestión de convenios.
+     * @param gestor El gestor central de la aplicación.
+     * @param auditor El usuario Auditor autenticado.
+     */
     public GestionConveniosAuditorPanel(GestorIntercambio gestor, Usuario auditor) {
         this.gestor = gestor;
         this.auditor = auditor;

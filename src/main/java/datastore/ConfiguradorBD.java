@@ -11,12 +11,22 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
- * Herramienta para inicializar la base de datos.
- * LIMPIA tablas antiguas, CREA la nueva estructura y CARGA datos desde CSV.
- * EJECUTAR ESTA CLASE UNA SOLA VEZ para preparar la base de datos.
+ * **Herramienta de inicialización de la Base de Datos (BD) para el sistema de intercambio.**
+ * <p>Esta clase se encarga de:</p>
+ * <ul>
+ * <li>Limpiar (eliminar) tablas antiguas existentes.</li>
+ * <li>Crear la nueva estructura de tablas (esquema).</li>
+ * <li>Cargar datos iniciales desde archivos CSV (Convenios, Usuarios, Postulaciones).</li>
+ * </ul>
+ * <p><strong>NOTA:</strong> Ejecutar esta clase una única vez para preparar la BD SQLite.</p>
  */
 public class ConfiguradorBD {
 
+    /**
+     * Punto de entrada principal para ejecutar la configuración de la base de datos.
+     * Gestiona el flujo de limpieza, creación y carga de datos, manejando excepciones generales.
+     * @param args Argumentos de la línea de comandos (no utilizados).
+     */
     public static void main(String[] args) {
         try {
             System.out.println("Iniciando configuración de la base de datos...");
@@ -30,6 +40,12 @@ public class ConfiguradorBD {
         }
     }
 
+    /**
+     * Elimina las tablas existentes para asegurar un estado limpio y luego
+     * recrea toda la estructura de la base de datos con sus respectivas claves
+     * primarias (PK) y foráneas (FK).
+     * @throws SQLException Si ocurre un error al conectar o ejecutar las sentencias SQL.
+     */
     public static void crearTablasConLimpieza() throws SQLException {
         final String[] TABLAS = {"interacciones", "postulaciones", "estudiantes", "convenios", "programas", "usuarios"};
         try (Connection conn = DatabaseManager.getConnection(); Statement stmt = conn.createStatement()) {
@@ -50,6 +66,11 @@ public class ConfiguradorBD {
         }
     }
 
+    /**
+     * Asegura la existencia de un programa de intercambio inicial con ID 1.
+     * Esto es crucial para la referencia de las postulaciones.
+     * @throws SQLException Si ocurre un error de conexión o en la manipulación de la BD.
+     */
     public static void cargarProgramasIniciales() throws SQLException {
         String sqlCheck = "SELECT COUNT(*) FROM programas WHERE id_programa = 1;";
         String sqlInsert = "INSERT INTO programas(id_programa, nombre, fecha_inicio, fecha_fin) VALUES(1, 'Ciclo Intercambio 2025', '2025-01-01', '2025-12-31');";
@@ -71,6 +92,10 @@ public class ConfiguradorBD {
         } // Todos los recursos (conn, stmt, rs) se cierran aquí automáticamente.
     }
 
+    /**
+     * Orquesta la carga de datos iniciales para convenios, usuarios y postulaciones
+     * llamando a las funciones privadas de carga de CSV.
+     */
     public static void cargarDatosDesdeCSV() {
         System.out.println("Iniciando carga de datos desde archivos CSV...");
         cargarCSVConvenios("convenios.csv");
@@ -78,6 +103,10 @@ public class ConfiguradorBD {
         cargarCSVPostulaciones("postulaciones.csv");
     }
 
+    /**
+     * Carga los datos de convenios desde un archivo CSV.
+     * @param rutaArchivo Ruta del archivo CSV de convenios (ej. "convenios.csv").
+     */
     private static void cargarCSVConvenios(String rutaArchivo) {
         String sql = "INSERT INTO convenios (id_convenio, universidad, pais, area, requisitos_academicos, requisitos_economicos) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
@@ -99,6 +128,10 @@ public class ConfiguradorBD {
         }
     }
 
+    /**
+     * Carga los datos de usuarios (y estudiantes si corresponde) desde un archivo CSV.
+     * @param rutaArchivo Ruta del archivo CSV de usuarios (ej. "usuarios.csv").
+     */
     private static void cargarCSVUsuarios(String rutaArchivo) {
         String sqlUsuario = "INSERT INTO usuarios (rol, rut, nombre, email, pass) VALUES (?, ?, ?, ?, ?)";
         String sqlEstudiante = "INSERT INTO estudiantes (rut_estudiante, carrera, semestres_cursados, promedio) VALUES (?, ?, ?, ?)";
@@ -135,6 +168,11 @@ public class ConfiguradorBD {
         }
     }
 
+    /**
+     * Carga las postulaciones iniciales desde un archivo CSV.
+     * Asigna el estado 'PENDIENTE' y el ID de programa fijo (1) a todas.
+     * @param rutaArchivo Ruta del archivo CSV de postulaciones (ej. "postulaciones.csv").
+     */
     private static void cargarCSVPostulaciones(String rutaArchivo) {
         String sql = "INSERT INTO postulaciones (rut_estudiante, id_convenio, fecha_postulacion, estado, id_programa) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();

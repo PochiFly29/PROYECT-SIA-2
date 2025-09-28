@@ -23,6 +23,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+/**
+ * **Panel de Interfaz de Usuario para la Visualización y Postulación a Convenios (Rol Estudiante).**
+ * <p>Actúa como un catálogo que muestra todos los {@link Convenio}s activos. Permite
+ * al {@link Estudiante} buscar, ver los detalles de un convenio y, finalmente,
+ * iniciar el proceso de postulación a un convenio seleccionado mediante el
+ * {@link gestores.ServicioPostulacion}.</p>
+ */
 public class PostularPanel extends JPanel {
 
     private final GestorIntercambio gestor;
@@ -37,6 +44,11 @@ public class PostularPanel extends JPanel {
 
     private static final int COL_ID = 0;
 
+    /**
+     * Crea e inicializa el panel de catálogo de convenios.
+     * @param gestor El gestor central de la aplicación.
+     * @param estudiante El estudiante que utilizará este panel.
+     */
     public PostularPanel(GestorIntercambio gestor, Estudiante estudiante) {
         this.gestor = Objects.requireNonNull(gestor);
         this.estudiante = estudiante;

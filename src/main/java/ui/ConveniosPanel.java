@@ -21,6 +21,14 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
+/**
+ * **Panel de Interfaz de Usuario para la Visualización y Gestión del Catálogo de Convenios.**
+ * <p>Muestra una tabla interactiva de todos los {@link Convenio}s vigentes.
+ * Incluye funcionalidad de búsqueda, filtrado y una vista de detalle modal.</p>
+ * <p>Esta clase es **reutilizable**: su comportamiento final (botón de acción y modal)
+ * se define por el callback {@code onConvenioSelected}, permitiendo que sirva como
+ * simple visor (para Estudiantes/Auditores) o como selector (para Funcionarios).</p>
+ */
 public class ConveniosPanel extends JPanel {
 
     private final GestorIntercambio gestor;
@@ -35,6 +43,11 @@ public class ConveniosPanel extends JPanel {
 
     private static final int COL_ID = 0;
 
+    /**
+     * Crea e inicializa el panel de convenios.
+     * @param gestor El gestor central de la aplicación.
+     * @param onConvenioSelected Callback que recibe el ID del convenio seleccionado, o {@code null} si es solo un visor.
+     */
     public ConveniosPanel(GestorIntercambio gestor, Consumer<String> onConvenioSelected) {
         this.gestor = Objects.requireNonNull(gestor);
         this.onConvenioSelected = onConvenioSelected;

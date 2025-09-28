@@ -5,12 +5,18 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
- * Herramienta de un solo uso para actualizar el esquema de la base de datos
- * sin borrar los datos existentes.
- * EJECUTAR ESTA CLASE UNA SOLA VEZ.
+ * **Herramienta de Migración de Esquema de la Base de Datos (BD).**
+ * <p>Esta clase se utiliza para aplicar cambios incrementales al esquema de la BD
+ * (ej. añadir nuevas columnas o tablas) sin eliminar los datos existentes.</p>
+ * <p><strong>NOTA DE USO:</strong> Está diseñada para ser ejecutada una sola vez
+ * por cada cambio de esquema. Debe actualizarse para futuras migraciones.</p>
  */
 public class MigracionBD {
 
+    /**
+     * Punto de entrada principal para ejecutar las operaciones de migración.
+     * @param args Argumentos de la línea de comandos (no utilizados).
+     */
     public static void main(String[] args) {
         System.out.println("Iniciando migración de la base de datos...");
         try (Connection conn = DatabaseManager.getConnection(); Statement stmt = conn.createStatement()) {

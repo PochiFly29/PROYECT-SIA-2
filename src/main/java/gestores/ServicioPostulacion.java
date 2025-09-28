@@ -7,15 +7,38 @@ import modelo.*;
 import java.sql.SQLException;
 import java.util.List;
 
+/**
+ * **Servicio de Dominio para la Gestión del Ciclo de Vida de las Postulaciones.**
+ * <p>Implementa la lógica de negocio relacionada con la creación, la actualización
+ * de estado, la gestión de interacciones/logs, y las reglas complejas de
+ * aceptación/rechazo de {@link Postulacion}es.</p>
+ */
 public class ServicioPostulacion {
     private final DataStore dataStore;
     private final ServicioConsulta servicioConsulta;
 
+    /**
+     * Constructor que inicializa el servicio inyectando las dependencias.
+     * @param dataStore La instancia única de {@link DataStore}.
+     * @param servicioConsulta El {@link ServicioConsulta} para operaciones de lectura.
+     */
     public ServicioPostulacion(DataStore dataStore,ServicioConsulta servicioConsulta) {
         this.dataStore = dataStore;
         this.servicioConsulta = servicioConsulta;
     }
 
+    /**
+     * Intenta crear una nueva postulación para un estudiante y convenio específicos
+     * en el programa dado.
+     * <p>Regla de Negocio: Evita que el mismo estudiante postule dos veces al mismo
+     * convenio dentro del mismo programa.</p>
+     * @param programa El {@link Programa} activo al cual se postula.
+     * @param estudiante El {@link Estudiante} que realiza la postulación.
+     * @param convenio El {@link Convenio} al que se postula.
+     * @return {@code true} si la postulación fue creada y persistida exitosamente,
+     * {@code false} si ya existía una postulación idéntica.
+     * @throws SQLException Si ocurre un error al persistir la nueva postulación.
+     */
     public boolean crearPostulacion(Programa programa, Estudiante estudiante, Convenio convenio) throws SQLException {
         // Validación para evitar duplicados en el mismo programa
         boolean yaPostulo = programa.getPostulaciones().stream()
@@ -38,11 +61,31 @@ public class ServicioPostulacion {
         return true;
     }
 
+    /**
+     * Actualiza el estado de una postulación en la base de datos y en la caché.
+     * <p>Este método es la vía principal para cambiar el estado de la postulación
+     * por parte de un Funcionario o un proceso automático.</p>
+     * @param postulacion La {@link Postulacion} cuyo estado debe cambiar (objeto en caché).
+     * @param nuevoEstado El nuevo estado a asignar (debe ser un estado válido).
+     * @throws SQLException Si ocurre un error al actualizar el registro en la base de datos.
+     */
     public void actualizarEstadoPostulacion(Postulacion postulacion, EstadoPostulacion nuevoEstado) throws SQLException {
         dataStore.actualizarEstadoPostulacion(postulacion.getId(), nuevoEstado);
         postulacion.setEstado(nuevoEstado); // Actualiza el estado en memoria
     }
 
+    /**
+     * Agrega una nueva interacción (comentario, log) a una postulación.
+     * <p>Regla de Negocio: Dispara un cambio de estado automático basado en el rol del autor.</p>
+     * <ul>
+     * <li>Si el autor es un **Funcionario**, el estado cambia a {@code REVISADA}.</li>
+     * <li>Si el autor es un **Estudiante**, el estado cambia a {@code PENDIENTE}.</li>
+     * <li>Si el estado actual es terminal (ACEPTADA o RECHAZADA), el estado no cambia.</li>
+     * </ul>
+     * @param postulacion La {@link Postulacion} a la cual agregar la interacción.
+     * @param interaccion El objeto {@link Interaccion} a registrar.
+     * @throws SQLException Si ocurre un error al persistir la interacción o el cambio de estado.
+     */
     public void agregarInteraccion(Postulacion postulacion, Interaccion interaccion) throws SQLException {
         // 1. Persiste la nueva interacción en la base de datos y la caché.
         dataStore.agregarInteraccionAPostulacion(postulacion.getId(), interaccion);
@@ -69,6 +112,13 @@ public class ServicioPostulacion {
         }
     }
 
+    /**
+     * Implementa la regla de negocio crítica: Aceptar una postulación y
+     * **rechazar automáticamente todas las demás postulaciones del mismo estudiante** * en el programa activo.
+     * @param postulacionAceptada La {@link Postulacion} que ha sido seleccionada.
+     * @throws SQLException Si ocurre un error de persistencia.
+     * @throws IllegalStateException Si no se encuentra un programa activo para buscar las postulaciones.
+     */
     public void aceptarPostulacionYRechazarResto(Postulacion postulacionAceptada) throws SQLException {
         // CAMBIO: Llama a su dependencia directa, no al gestor.
         Programa programaActivo = servicioConsulta.getProgramaActivo()

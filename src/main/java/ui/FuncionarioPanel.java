@@ -8,6 +8,15 @@ import net.miginfocom.swing.MigLayout;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * **Panel de Interfaz de Usuario (Dashboard) para el Rol de Funcionario.**
+ * <p>Centraliza las herramientas administrativas clave para el Funcionario (Perfil,
+ * Gestión de Postulaciones, y Consulta/Selección de Convenios). Utiliza un diseño
+ * de barra lateral y {@link CardLayout} para la navegación.</p>
+ * <p>Implementa lógica de flujo de trabajo que permite seleccionar un convenio
+ * desde la vista de convenios y redirigir el foco a la gestión de postulaciones,
+ * aplicando automáticamente un filtro sobre las postulaciones asociadas.</p>
+ */
 public class FuncionarioPanel extends JPanel {
 
     private final GestorIntercambio gestor;
@@ -31,6 +40,12 @@ public class FuncionarioPanel extends JPanel {
     private JToggleButton btnGestionPost;
     private JToggleButton btnVerConvenios;
 
+    /**
+     * Crea e inicializa el panel principal del Funcionario.
+     * @param gestor El gestor central de la aplicación.
+     * @param funcionario El usuario Funcionario autenticado.
+     * @param onLogout El {@code Runnable} que maneja la transición a la pantalla de login.
+     */
     public FuncionarioPanel(GestorIntercambio gestor, Usuario funcionario, Runnable onLogout) {
         this.gestor = gestor;
         this.funcionario = funcionario;

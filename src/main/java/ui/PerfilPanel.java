@@ -11,6 +11,13 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
 
+/**
+ * **Panel de Interfaz de Usuario Polivalente para la Gestión del Perfil de Usuario.**
+ * <p>Muestra los datos de un {@link Usuario} y permite su edición. Su diseño es
+ * dinámico: los campos específicos de datos académicos (carrera, promedio, semestres)
+ * solo son visibles y editables si el usuario actual es una instancia de {@link Estudiante}.</p>
+ * <p>Delega todas las operaciones de actualización de datos a {@link gestores.ServicioAutenticacion}.</p>
+ */
 public class PerfilPanel extends JPanel {
 
     private final GestorIntercambio gestor;
@@ -36,6 +43,11 @@ public class PerfilPanel extends JPanel {
     private JLabel avatarImage;
     private JScrollPane sp;
 
+    /**
+     * Crea e inicializa el panel de perfil.
+     * @param gestor El gestor central de la aplicación.
+     * @param usuario El {@link Usuario} (Estudiante, Funcionario o Auditor) cuyos datos se mostrarán.
+     */
     public PerfilPanel(GestorIntercambio gestor, Usuario usuario) {
         this.gestor = gestor;
         this.usuario = usuario;

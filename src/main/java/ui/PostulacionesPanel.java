@@ -16,6 +16,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+/**
+ * **Panel de Interfaz de Usuario para la Visualización de Postulaciones (Rol Estudiante).**
+ * <p>Muestra un listado de **todas las {@link Postulacion}es** creadas por el
+ * {@link Estudiante} actualmente logueado. Permite al estudiante ver el estado de
+ * sus solicitudes y acceder al detalle para adjuntar documentos (CV, Notas, etc.).</p>
+ */
 public class PostulacionesPanel extends JPanel {
 
     private final GestorIntercambio gestor;
@@ -29,6 +35,12 @@ public class PostulacionesPanel extends JPanel {
     private JLabel titulo;
     private JButton btnDetalle;
 
+    // CAMBIO: El constructor ahora espera un Estudiante, no un Usuario genérico.
+    /**
+     * Crea e inicializa el panel de postulaciones del estudiante.
+     * @param gestor El gestor central de la aplicación.
+     * @param estudiante El estudiante cuyos datos se consultarán.
+     */
     private static final int COL_ID    = 0;
     private static final int COL_OBJET = 6; // columna oculta _OBJ
 
