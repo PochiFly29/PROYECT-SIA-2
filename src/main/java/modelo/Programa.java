@@ -4,16 +4,32 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Representa un programa de intercambio académico.
+ * <p>
+ * Cada programa tiene un identificador, nombre, fechas de inicio y fin,
+ * y mantiene una lista de convenios asociados.
+ */
 public class Programa {
+    /** Identificador único del programa */
     private int id;
+    /** Nombre del programa */
     private final String nombre;
+    /** Fecha de inicio del programa */
     private final LocalDate fechaInicio;
+    /** Fecha de finalización del programa */
     private LocalDate fechaFin;
+    /** Estado del programa */
     private String estado;
+    /** Lista de postulaciones de estudiantes asociados al programa */
     private final List<Postulacion> postulaciones;
 
     /**
      * Constructor para crear un NUEVO programa (antes de tener ID de la BD).
+     *
+     * @param nombre Nombre del programa
+     * @param fechaInicio Fecha de inicio del programa
+     * @param fechaFin Fecha de finalización del programa
      */
     public Programa(String nombre, LocalDate fechaInicio, LocalDate fechaFin) {
         this.id = 0; // ID temporal hasta que la BD lo asigne

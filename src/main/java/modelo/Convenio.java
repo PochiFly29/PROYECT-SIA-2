@@ -2,14 +2,42 @@ package modelo;
 
 import java.util.Objects;
 
+/**
+ * Representa un convenio de intercambio académico.
+ * <p>
+ * Contiene información sobre la universidad asociada, país, área de estudios,
+ * requisitos académicos y económicos, y el programa al que pertenece.
+ */
 public class Convenio {
-    private final String id; // CAMBIO: Inmutable
-    private final String universidad; // CAMBIO: Inmutable
-    private final String pais; // CAMBIO: Inmutable
-    private final String area; // CAMBIO: Inmutable
-    private final String requisitosAcademicos; // CAMBIO: Inmutable
-    private final String requisitosEconomicos; // CAMBIO: Inmutable
 
+    /** Identificador único del convenio */
+    private String id;
+
+    /** Nombre de la universidad asociada al convenio */
+    private String universidad;
+
+    /** País de la universidad */
+    private String pais;
+
+    /** Área de estudios del convenio */
+    private String area; // Atributo 'area' agregado!
+
+    /** Requisitos académicos del convenio */
+    private String requisitosAcademicos;
+
+    /** Requisitos económicos del convenio */
+    private String requisitosEconomicos;
+
+    /**
+     * Constructor de un convenio.
+     *
+     * @param id identificador único
+     * @param universidad nombre de la universidad
+     * @param pais país de la universidad
+     * @param area área de estudios
+     * @param requisitosAcademicos requisitos académicos
+     * @param requisitosEconomicos requisitos económicos
+     */
     public Convenio(String id, String universidad, String pais, String area, String requisitosAcademicos, String requisitosEconomicos) {
         this.id = id;
         this.universidad = universidad;
@@ -19,7 +47,7 @@ public class Convenio {
         this.requisitosEconomicos = requisitosEconomicos;
     }
 
-    // Getters (sin cambios)
+    // Sin setters para garantizar la inmutabilidad
     public String getId() { return id; }
     public String getUniversidad() { return universidad; }
     public String getPais() { return pais; }
