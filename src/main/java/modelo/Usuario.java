@@ -5,6 +5,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Representa un usuario del sistema.
+ * <p>
+ * Contiene información básica de autenticación, rol, estado de bloqueo
+ * y número de intentos fallidos.
+ * </p>
+ */
 public class Usuario {
     protected String rut;
     protected String nombreCompleto;
@@ -14,6 +21,15 @@ public class Usuario {
     protected int intentosFallidos;
     protected Rol rol;
 
+    /**
+     * Constructor principal de Usuario.
+     *
+     * @param rut           RUT del usuario (identificador único)
+     * @param nombreCompleto Nombre completo del usuario
+     * @param email         Correo electrónico
+     * @param pass          Contraseña
+     * @param rol           Rol del usuario (ESTUDIANTE, FUNCIONARIO, etc.)
+     */
     public Usuario(String rut, String nombreCompleto, String email, String pass, Rol rol) {
         this.rut = rut;
         this.nombreCompleto = nombreCompleto;
@@ -39,6 +55,11 @@ public class Usuario {
     }
 
     // --- Método de Lógica de Negocio (Polimórfico) ---
+    /**
+     * Convierte los atributos del usuario en un mapa para uso genérico.
+     *
+     * @return mapa con clave-valor de los atributos principales
+     */
     public Map<String, Object> toMap() {
         Map<String, Object> data = new HashMap<>();
         data.put("rut", rut);
@@ -50,6 +71,12 @@ public class Usuario {
         return data;
     }
 
+    /**
+     * Valida si la contraseña ingresada coincide con la del usuario.
+     *
+     * @param pass contraseña a validar
+     * @return true si coincide, false en caso contrario
+     */
     public boolean validarCredenciales(String pass) { return pass.equals(this.pass); }
 
     public String getRut() { return rut; }

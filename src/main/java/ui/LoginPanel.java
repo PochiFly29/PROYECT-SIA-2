@@ -10,6 +10,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.function.Consumer;
 
+
+/**
+ * Panel de inicio de sesión.
+ * Permite al usuario ingresar su RUT y contraseña para autenticarse.
+ * Incluye enlace a registro y soporta login mediante Enter.
+ */
 public class LoginPanel extends JPanel {
 
     private final GestorIntercambio gestor;
@@ -20,6 +26,13 @@ public class LoginPanel extends JPanel {
     private JPasswordField pass;
     private JButton login;
 
+    /**
+     * Crea el panel de login.
+     *
+     * @param gestor            Gestor de servicios de la aplicación.
+     * @param onSuccess         Callback ejecutado al login exitoso.
+     * @param onRegisterRequest Callback ejecutado al solicitar registro.
+     */
     public LoginPanel(GestorIntercambio gestor, Consumer<Usuario> onSuccess, Runnable onRegisterRequest) {
         this.gestor = gestor;
         this.onSuccess = onSuccess;

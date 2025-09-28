@@ -16,6 +16,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+/**
+ * Panel destinado a mostrar y gestionar las postulaciones de un estudiante.
+ * Permite visualizar las postulaciones del programa, filtrarlas por texto,
+ * y abrir un detalle editable de cada postulación (para adjuntar documentos, etc.).
+ */
 public class PostulacionesPanel extends JPanel {
 
     private final GestorIntercambio gestor;
@@ -26,6 +31,12 @@ public class PostulacionesPanel extends JPanel {
     private boolean estructuraConstruida = false;
 
     // CAMBIO: El constructor ahora espera un Estudiante, no un Usuario genérico.
+    /**
+     * Constructor.
+     *
+     * @param gestor     Gestor de servicios de la aplicación.
+     * @param estudiante Estudiante cuyo historial de postulaciones se mostrará.
+     */
     public PostulacionesPanel(GestorIntercambio gestor, Estudiante estudiante) {
         this.gestor = Objects.requireNonNull(gestor);
         this.estudiante = estudiante;

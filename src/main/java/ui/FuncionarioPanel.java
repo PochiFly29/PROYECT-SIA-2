@@ -9,6 +9,20 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.function.Consumer;
 
+/**
+ * Panel principal para la vista de un funcionario.
+ * Permite:
+ *  - Navegar entre Perfil, Gestión de Postulaciones y Ver Convenios.
+ *  - Mostrar nombre en la barra lateral.
+ *  - Cerrar sesión.
+ *
+ * Internamente usa un CardLayout para cambiar entre subpaneles:
+ *  - PerfilPanel
+ *  - PostulacionesFuncionarioPanel
+ *  - ConveniosPanel
+ *
+ * Recibe un GestorIntercambio para manejar datos, un Usuario (funcionario) y un callback de logout.
+ */
 public class FuncionarioPanel extends JPanel {
 
     private final GestorIntercambio gestor;
@@ -30,6 +44,13 @@ public class FuncionarioPanel extends JPanel {
     private PostulacionesFuncionarioPanel postulacionesPanel;
     private ConveniosPanel conveniosPanel;
 
+    /**
+     * Crea la interfaz principal del funcionario con barra lateral y panel central.
+     *
+     * @param gestor GestorIntercambio para acceder a servicios y datos.
+     * @param funcionario Usuario activo con rol de funcionario.
+     * @param onLogout Runnable que se ejecuta al cerrar sesión.
+     */
     public FuncionarioPanel(GestorIntercambio gestor, Usuario funcionario, Runnable onLogout) {
         this.gestor = gestor;
         this.funcionario = funcionario;

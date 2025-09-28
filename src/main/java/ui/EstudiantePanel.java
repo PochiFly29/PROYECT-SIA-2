@@ -8,6 +8,20 @@ import net.miginfocom.swing.MigLayout;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * Panel principal para la vista de un estudiante.
+ * Permite:
+ *  - Navegar entre Perfil, Postulaciones y Postular a un convenio.
+ *  - Mostrar nombre en la barra lateral.
+ *  - Cerrar sesión o salir de la aplicación.
+ *
+ * Internamente usa un CardLayout para cambiar entre subpaneles:
+ *  - PerfilPanel
+ *  - PostulacionesPanel
+ *  - PostularPanel
+ *
+ * Recibe un GestorIntercambio para manejar datos, un objeto Estudiante y un callback de logout.
+ */
 public class EstudiantePanel extends JPanel {
 
     private final GestorIntercambio gestor;
@@ -30,6 +44,13 @@ public class EstudiantePanel extends JPanel {
     private JToggleButton btnVerPost;
     private JToggleButton btnPostular;
 
+    /**
+     * Crea la interfaz principal del estudiante con la barra lateral y panel central.
+     *
+     * @param gestor GestorIntercambio para acceso a servicios.
+     * @param estudiante Estudiante activo.
+     * @param onLogout Runnable que se ejecuta al cerrar sesión.
+     */
     public EstudiantePanel(GestorIntercambio gestor, Estudiante estudiante, Runnable onLogout) {
         this.gestor = gestor;
         this.estudiante = estudiante;

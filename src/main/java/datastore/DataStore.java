@@ -11,14 +11,35 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Clase principal de acceso a datos en memoria y persistencia en base de datos.
+ * <p>
+ * {@code DataStore} se encarga de:
+ * <ul>
+ *   <li>Cargar y mantener en memoria entidades del sistema (usuarios, programas, convenios, postulaciones e interacciones).</li>
+ *   <li>Sincronizar datos entre la memoria y la base de datos SQLite.</li>
+ *   <li>Proveer métodos de acceso y modificación para las diferentes entidades.</li>
+ * </ul>
+ * </p>
+ */
 public class DataStore {
 
+    /** Mapa de usuarios indexados por su RUT. */
     private final Map<String, Usuario> usuariosPorRut = new HashMap<>();
+
+    /** Mapa de programas indexados por su ID. */
     private final Map<Integer, Programa> programasPorId = new HashMap<>();
+
+    /** Mapa de convenios indexados por su ID. */
     private final Map<String, Convenio> conveniosPorId = new HashMap<>();
     // NOTA: No necesitamos un mapa de postulaciones aquí, ya que cada postulación
     // vivirá dentro de la lista de su programa correspondiente.
 
+    /**
+     * Constructor que inicializa el {@code DataStore}, orquestando la carga inicial de datos desde la base de datos.
+     *
+     * @throws SQLException si ocurre un error en la conexión o consulta a la base de datos.
+     */
     public DataStore() throws SQLException {
         // El constructor orquesta toda la carga inicial.
         System.out.println("Iniciando carga de datos...");
@@ -33,6 +54,11 @@ public class DataStore {
     //         PASO 1: MÉTODOS DE CARGA INICIAL (PRIVADOS)
     // =========================================================================
 
+    /**
+     * Carga todos los usuarios desde la base de datos, incluyendo estudiantes con sus datos académicos.
+     *
+     * @throws SQLException si ocurre un error al acceder a la base de datos.
+     */
     private void cargarUsuarios() throws SQLException {
         String sql = "SELECT u.*, e.carrera, e.promedio, e.semestres_cursados " +
                 "FROM usuarios u LEFT JOIN estudiantes e ON u.rut = e.rut_estudiante";
@@ -65,6 +91,11 @@ public class DataStore {
         System.out.println(" > Usuarios cargados: " + usuariosPorRut.size());
     }
 
+    /**
+     * Carga todos los convenios desde la base de datos.
+     *
+     * @throws SQLException si ocurre un error al acceder a la base de datos.
+     */
     private void cargarConvenios() throws SQLException {
         String sql = "SELECT * FROM convenios";
         try (Connection conn = DatabaseManager.getConnection();
@@ -87,6 +118,11 @@ public class DataStore {
         System.out.println(" > Convenios cargados: " + conveniosPorId.size());
     }
 
+    /**
+     * Carga todos los programas desde la base de datos.
+     *
+     * @throws SQLException si ocurre un error al acceder a la base de datos.
+     */
     private void cargarProgramas() throws SQLException {
         String sql = "SELECT * FROM programas";
         try (Connection conn = DatabaseManager.getConnection();
@@ -107,6 +143,13 @@ public class DataStore {
     }
 
     // CAMBIO ESTRUCTURAL: Este método ahora carga y enlaza las postulaciones y sus interacciones.
+
+    /**
+     * Carga las postulaciones desde la base de datos y las enlaza a sus respectivos programas y convenios.
+     * Además, carga y asigna las interacciones correspondientes.
+     *
+     * @throws SQLException si ocurre un error al acceder a la base de datos.
+     */
     private void cargarPostulacionesEInteracciones() throws SQLException {
         String sql = "SELECT * FROM postulaciones";
         int count = 0;
@@ -146,6 +189,13 @@ public class DataStore {
         System.out.println(" > Postulaciones cargadas y enlazadas: " + count);
     }
 
+    /**
+     * Obtiene todas las interacciones asociadas a una postulación específica.
+     *
+     * @param idPostulacion identificador único de la postulación.
+     * @return lista de interacciones vinculadas a la postulación.
+     * @throws SQLException si ocurre un error al acceder a la base de datos.
+     */
     private List<Interaccion> getInteraccionesDePostulacion(int idPostulacion) throws SQLException {
         List<Interaccion> interacciones = new ArrayList<>();
         String sql = "SELECT * FROM interacciones WHERE id_postulacion = ?";
@@ -182,6 +232,13 @@ public class DataStore {
     public List<Programa> getProgramas() { return new ArrayList<>(programasPorId.values()); }
     public List<Convenio> getConvenios() { return new ArrayList<>(conveniosPorId.values()); }
 
+    /**
+     * Registra una nueva postulación en la base de datos y la enlaza en memoria a su programa.
+     *
+     * @param idPrograma identificador del programa al que pertenece la postulación.
+     * @param p instancia de {@link Postulacion} a registrar.
+     * @throws SQLException si ocurre un error al persistir la postulación.
+     */
     public void addPostulacion(int idPrograma, Postulacion p) throws SQLException {
         // RECOMENDACIÓN: Usa AUTOINCREMENT en tu tabla de postulaciones.
         String sql = "INSERT INTO postulaciones (rut_estudiante, id_convenio, fecha_postulacion, estado, id_programa) VALUES (?, ?, ?, ?, ?)";
@@ -210,6 +267,13 @@ public class DataStore {
         }
     }
 
+    /**
+     * Actualiza el estado de una postulación tanto en la base de datos como en memoria.
+     *
+     * @param idPostulacion identificador de la postulación.
+     * @param nuevoEstado nuevo estado de la postulación.
+     * @throws SQLException si ocurre un error al actualizar la base de datos.
+     */
     public void actualizarEstadoPostulacion(int idPostulacion, EstadoPostulacion nuevoEstado) throws SQLException {
         String sql = "UPDATE postulaciones SET estado = ? WHERE id_postulacion = ?";
         try (Connection conn = DatabaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -226,6 +290,11 @@ public class DataStore {
         }
     }
 
+    /**
+     * Persiste todos los usuarios de la caché en la base de datos.
+     *
+     * @throws SQLException si ocurre un error al guardar los datos.
+     */
     public void persistirTodosLosUsuarios() throws SQLException {
         // Esta lógica de guardar todos los usuarios al final puede mantenerse
         // si se hacen cambios como el estado de bloqueo o los intentos fallidos.
@@ -245,6 +314,12 @@ public class DataStore {
         }
     }
 
+    /**
+     * Registra un nuevo estudiante en la base de datos y lo añade a la caché en memoria.
+     *
+     * @param estudiante objeto {@link Estudiante} a registrar.
+     * @throws SQLException si ocurre un error al insertar en la base de datos.
+     */
     public void registrarEstudiante(Estudiante estudiante) throws SQLException {
         // 1. Persistir en la tabla de usuarios
         String sqlUsuario = "INSERT INTO usuarios (rut, nombre, email, pass, rol) VALUES (?, ?, ?, ?, ?)";
@@ -271,6 +346,13 @@ public class DataStore {
         usuariosPorRut.put(estudiante.getRut(), estudiante);
     }
 
+    /**
+     * Actualiza el nombre de un usuario en la base de datos y en memoria.
+     *
+     * @param rut RUT del usuario.
+     * @param nuevoNombre nuevo nombre a asignar.
+     * @throws SQLException si ocurre un error al actualizar la base de datos.
+     */
     public void actualizarNombreUsuario(String rut, String nuevoNombre) throws SQLException {
         String sql = "UPDATE usuarios SET nombre = ? WHERE rut = ?";
         try (Connection conn = DatabaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -284,6 +366,13 @@ public class DataStore {
         }
     }
 
+    /**
+     * Actualiza el email de un usuario en la base de datos y en memoria.
+     *
+     * @param rut RUT del usuario.
+     * @param nuevoEmail nuevo email a asignar.
+     * @throws SQLException si ocurre un error al actualizar la base de datos.
+     */
     public void actualizarEmailUsuario(String rut, String nuevoEmail) throws SQLException {
         String sql = "UPDATE usuarios SET email = ? WHERE rut = ?";
         try (Connection conn = DatabaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -297,6 +386,13 @@ public class DataStore {
         }
     }
 
+    /**
+     * Actualiza la contraseña de un usuario en la base de datos y en memoria.
+     *
+     * @param rut RUT del usuario.
+     * @param nuevaPassword nueva contraseña a asignar.
+     * @throws SQLException si ocurre un error al actualizar la base de datos.
+     */
     public void actualizarPasswordUsuario(String rut, String nuevaPassword) throws SQLException {
         String sql = "UPDATE usuarios SET pass = ? WHERE rut = ?";
         try (Connection conn = DatabaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -310,6 +406,13 @@ public class DataStore {
         }
     }
 
+    /**
+     * Registra una nueva interacción asociada a una postulación y la enlaza en memoria.
+     *
+     * @param idPostulacion identificador de la postulación.
+     * @param interaccion objeto {@link Interaccion} a registrar.
+     * @throws SQLException si ocurre un error al insertar la interacción en la base de datos.
+     */
     public void agregarInteraccionAPostulacion(int idPostulacion, Interaccion interaccion) throws SQLException {
         String sql = "INSERT INTO interacciones (id_postulacion, rut_autor, tipo, titulo, fecha_hora) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
@@ -337,6 +440,15 @@ public class DataStore {
         }
     }
 
+    /**
+     * Actualiza los datos académicos de un estudiante en la base de datos y en memoria.
+     *
+     * @param rut RUT del estudiante.
+     * @param carrera nueva carrera.
+     * @param semestres cantidad de semestres cursados.
+     * @param promedio promedio académico actualizado.
+     * @throws SQLException si ocurre un error al actualizar la base de datos.
+     */
     public void actualizarDatosAcademicosEstudiante(String rut, String carrera, int semestres, double promedio) throws SQLException {
         String sql = "UPDATE estudiantes SET carrera = ?, semestres_cursados = ?, promedio = ? WHERE rut_estudiante = ?";
         try (Connection conn = DatabaseManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {

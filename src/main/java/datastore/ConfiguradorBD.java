@@ -11,12 +11,26 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
- * Herramienta para inicializar la base de datos.
- * LIMPIA tablas antiguas, CREA la nueva estructura y CARGA datos desde CSV.
- * EJECUTAR ESTA CLASE UNA SOLA VEZ para preparar la base de datos.
+ * Clase encargada de la configuración inicial de la base de datos del sistema.
+ * <p>
+ * Sus responsabilidades principales son:
+ * <ul>
+ *     <li>Eliminar tablas antiguas.</li>
+ *     <li>Crear la nueva estructura de tablas.</li>
+ *     <li>Cargar datos iniciales desde archivos CSV.</li>
+ *     <li>Insertar programas iniciales por defecto.</li>
+ * </ul>
+ *
+ * <b>Nota:</b> Esta clase debe ejecutarse una sola vez al inicio
+ * para preparar correctamente la base de datos.
  */
 public class ConfiguradorBD {
 
+    /**
+     * Método principal que inicia la configuración de la base de datos.
+     *
+     * @param args argumentos de la línea de comandos (no utilizados).
+     */
     public static void main(String[] args) {
         try {
             System.out.println("Iniciando configuración de la base de datos...");
@@ -30,6 +44,11 @@ public class ConfiguradorBD {
         }
     }
 
+    /**
+     * Elimina las tablas antiguas y crea la estructura de tablas necesarias para el sistema.
+     *
+     * @throws SQLException si ocurre un error en la ejecución de las sentencias SQL.
+     */
     public static void crearTablasConLimpieza() throws SQLException {
         final String[] TABLAS = {"interacciones", "postulaciones", "estudiantes", "convenios", "programas", "usuarios"};
         try (Connection conn = DatabaseManager.getConnection(); Statement stmt = conn.createStatement()) {
@@ -50,6 +69,11 @@ public class ConfiguradorBD {
         }
     }
 
+    /**
+     * Inserta un programa inicial en la base de datos si no existe previamente.
+     *
+     * @throws SQLException si ocurre un error en la consulta o inserción.
+     */
     public static void cargarProgramasIniciales() throws SQLException {
         String sqlCheck = "SELECT COUNT(*) FROM programas WHERE id_programa = 1;";
         String sqlInsert = "INSERT INTO programas(id_programa, nombre, fecha_inicio, fecha_fin) VALUES(1, 'Ciclo Intercambio 2025', '2025-01-01', '2025-12-31');";
@@ -71,6 +95,9 @@ public class ConfiguradorBD {
         } // Todos los recursos (conn, stmt, rs) se cierran aquí automáticamente.
     }
 
+    /**
+     * Llama a los métodos que cargan los datos iniciales desde archivos CSV.
+     */
     public static void cargarDatosDesdeCSV() {
         System.out.println("Iniciando carga de datos desde archivos CSV...");
         cargarCSVConvenios("convenios.csv");
@@ -78,6 +105,11 @@ public class ConfiguradorBD {
         cargarCSVPostulaciones("postulaciones.csv");
     }
 
+    /**
+     * Carga convenios desde un archivo CSV en la base de datos.
+     *
+     * @param rutaArchivo ruta del archivo CSV con los convenios.
+     */
     private static void cargarCSVConvenios(String rutaArchivo) {
         String sql = "INSERT INTO convenios (id_convenio, universidad, pais, area, requisitos_academicos, requisitos_economicos) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
@@ -99,6 +131,12 @@ public class ConfiguradorBD {
         }
     }
 
+    /**
+     * Carga usuarios desde un archivo CSV en la base de datos.
+     * También inserta registros en la tabla de estudiantes cuando corresponda.
+     *
+     * @param rutaArchivo ruta del archivo CSV con los usuarios.
+     */
     private static void cargarCSVUsuarios(String rutaArchivo) {
         String sqlUsuario = "INSERT INTO usuarios (rol, rut, nombre, email, pass) VALUES (?, ?, ?, ?, ?)";
         String sqlEstudiante = "INSERT INTO estudiantes (rut_estudiante, carrera, semestres_cursados, promedio) VALUES (?, ?, ?, ?)";
@@ -135,6 +173,11 @@ public class ConfiguradorBD {
         }
     }
 
+    /**
+     * Carga postulaciones desde un archivo CSV en la base de datos.
+     *
+     * @param rutaArchivo ruta del archivo CSV con las postulaciones.
+     */
     private static void cargarCSVPostulaciones(String rutaArchivo) {
         String sql = "INSERT INTO postulaciones (rut_estudiante, id_convenio, fecha_postulacion, estado, id_programa) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();

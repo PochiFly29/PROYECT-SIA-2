@@ -17,6 +17,11 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * Panel destinado a la gestión de postulaciones por parte de un funcionario.
+ * Permite visualizar todas las postulaciones, filtrar por convenio o estado,
+ * buscar por texto, y acceder a un detalle editable de cada postulación.
+ */
 public class PostulacionesFuncionarioPanel extends JPanel {
 
     private final GestorIntercambio gestor;
@@ -29,6 +34,12 @@ public class PostulacionesFuncionarioPanel extends JPanel {
     private JCheckBox chkFiltro;
     private JLabel title;
 
+    /**
+     * Constructor.
+     *
+     * @param gestor     Gestor de servicios de la aplicación.
+     * @param funcionario Usuario con rol de funcionario.
+     */
     public PostulacionesFuncionarioPanel(GestorIntercambio gestor, Usuario funcionario) {
         this.gestor = Objects.requireNonNull(gestor);
         this.funcionario = funcionario;

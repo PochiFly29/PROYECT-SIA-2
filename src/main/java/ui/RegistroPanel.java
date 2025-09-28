@@ -10,6 +10,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.function.Consumer;
 
+/**
+ * Panel para el registro de estudiantes.
+ * Contiene campos para RUT, nombre, email, contraseña, carrera,
+ * promedio y semestres cursados.
+ * Valida los datos y registra el estudiante en el sistema.
+ */
 public class RegistroPanel extends JPanel {
     private final GestorIntercambio gestor;
     private final Runnable onRegisterSuccess;
@@ -19,6 +25,12 @@ public class RegistroPanel extends JPanel {
     private JSpinner promedioF, semestresF;
     private JButton registrarBtn, volverBtn;
 
+    /**
+     * Constructor.
+     *
+     * @param gestor            Gestor de servicios de la aplicación.
+     * @param onRegisterSuccess Callback que se ejecuta tras un registro exitoso (ej: volver al login).
+     */
     public RegistroPanel(GestorIntercambio gestor, Runnable onRegisterSuccess) {
         this.gestor = gestor;
         this.onRegisterSuccess = onRegisterSuccess;

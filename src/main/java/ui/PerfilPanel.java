@@ -11,6 +11,11 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
 
+/**
+ * Panel que muestra y permite editar los datos del perfil de un usuario.
+ * Incluye campos generales para todos los usuarios y campos académicos
+ * específicos para estudiantes.
+ */
 public class PerfilPanel extends JPanel {
 
     private final GestorIntercambio gestor;
@@ -36,6 +41,12 @@ public class PerfilPanel extends JPanel {
 
     private JScrollPane sp;
 
+    /**
+     * Constructor.
+     *
+     * @param gestor  Gestor de servicios de la aplicación.
+     * @param usuario Usuario cuyo perfil se mostrará.
+     */
     public PerfilPanel(GestorIntercambio gestor, Usuario usuario) {
         this.gestor = gestor;
         this.usuario = usuario;

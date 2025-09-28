@@ -5,6 +5,13 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Representa una postulación de un estudiante a un convenio dentro de un programa.
+ * <p>
+ * Cada postulación tiene un {@link Convenio} seleccionado, un {@code rutEstudiante} y una lista de interacciones.
+ * El {@code id} es asignado por la base de datos al persistir la postulación.
+ * </p>
+ */
 public class Postulacion {
     private int id;
     private final String rutEstudiante; // CAMBIO: Inmutable
@@ -14,8 +21,13 @@ public class Postulacion {
     private final List<Interaccion> interacciones;
 
     /**
-     * Constructor único para cargar o crear postulaciones.
-     * Si el ID es 0, es una nueva postulación. Si es > 0, viene de la BD.
+     * Constructor principal para cargar o crear postulaciones desde la base de datos.
+     *
+     * @param id identificador de la postulación (0 si es nueva)
+     * @param rutEstudiante RUT del estudiante que realiza la postulación
+     * @param convenio convenio seleccionado por el estudiante
+     * @param fecha fecha de la postulación
+     * @param estado estado actual de la postulación
      */
     public Postulacion(int id, String rutEstudiante, Convenio convenio, LocalDate fecha, EstadoPostulacion estado) {
         this.id = id;
@@ -28,6 +40,10 @@ public class Postulacion {
 
     /**
      * Constructor de conveniencia para crear una NUEVA postulación.
+     * La fecha se establece como la fecha actual y el estado inicial como {@link EstadoPostulacion#PENDIENTE}.
+     *
+     * @param rutEstudiante RUT del estudiante
+     * @param convenio convenio seleccionado
      */
     public Postulacion(String rutEstudiante, Convenio convenio) {
         this(0, rutEstudiante, convenio, LocalDate.now(), EstadoPostulacion.PENDIENTE);
@@ -42,6 +58,11 @@ public class Postulacion {
     public List<Interaccion> getInteracciones() { return interacciones; }
 
     // Setters y métodos
+    /**
+     * Añade una interacción a la postulación.
+     *
+     * @param interaccion interacción a agregar
+     */
     public void agregarInteraccion(Interaccion interaccion) { this.interacciones.add(interaccion); }
     public void setId(int id) { this.id = id; }
     public void setEstado(EstadoPostulacion estadoPostulacion) { this.estado = estadoPostulacion; }

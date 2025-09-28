@@ -21,6 +21,16 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
+/**
+ * Panel para mostrar y gestionar los convenios disponibles.
+ * Permite:
+ *  - Filtrar convenios por texto.
+ *  - Ver detalle de cada convenio.
+ *  - Seleccionar un convenio para acciones externas (si se proporciona un callback).
+ * Depende de:
+ *  - GestorIntercambio: para obtener datos de convenios.
+ *  - onConvenioSelected: callback opcional al seleccionar un convenio.
+ */
 public class ConveniosPanel extends JPanel {
 
     private final GestorIntercambio gestor;
@@ -35,6 +45,12 @@ public class ConveniosPanel extends JPanel {
 
     private static final int COL_ID = 0;
 
+    /**
+     * Crea el panel con la referencia al gestor y un callback opcional.
+     *
+     * @param gestor GestorIntercambio para acceder a los servicios de consulta.
+     * @param onConvenioSelected Callback para ejecutar cuando se selecciona un convenio. Puede ser null.
+     */
     public ConveniosPanel(GestorIntercambio gestor, Consumer<String> onConvenioSelected) {
         this.gestor = Objects.requireNonNull(gestor);
         this.onConvenioSelected = onConvenioSelected;
