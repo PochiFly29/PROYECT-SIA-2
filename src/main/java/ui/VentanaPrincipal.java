@@ -12,12 +12,23 @@ import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * **Contenedor Principal de la Aplicación (JFrame).**
+ * <p>Actúa como el orquestador de vistas, utilizando un {@link CardLayout} para
+ * gestionar la navegación entre las diferentes interfaces (Login, Registro, y los
+ * paneles de Estudiante, Funcionario y Auditor). Es responsable de manejar el
+ * flujo de autenticación y cierre de sesión.</p>
+ */
 public class VentanaPrincipal extends JFrame {
 
     private final JPanel cards = new JPanel(new CardLayout());
     private final GestorIntercambio gestor;
     private final Map<String, JPanel> paneles = new HashMap<>();
 
+    /**
+     * Crea e inicializa la ventana principal de la aplicación.
+     * @param gestor El gestor de intercambio central de la aplicación.
+     */
     public VentanaPrincipal(GestorIntercambio gestor) {
         this.gestor = gestor;
         init();

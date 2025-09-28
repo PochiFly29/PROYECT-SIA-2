@@ -20,6 +20,13 @@ public class DetallePostulacionPanel extends JPanel {
     private final Usuario usuarioActivo; // Quien está viendo el panel
     private final JDialog parentDialog;  // Para poder cerrar el diálogo desde los botones
 
+    /**
+     * Crea e inicializa el panel de detalle de postulación.
+     * @param gestor El gestor central de la aplicación.
+     * @param postulacion La {@link Postulacion} a mostrar.
+     * @param usuarioActivo El {@link Usuario} que está viendo el panel.
+     * @param parentDialog La instancia del {@link JDialog} que contiene este panel.
+     */
     public DetallePostulacionPanel(GestorIntercambio gestor, Postulacion postulacion, Usuario usuarioActivo, JDialog parentDialog) {
         this.gestor = gestor;
         this.postulacion = postulacion;

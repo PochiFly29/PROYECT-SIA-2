@@ -16,6 +16,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * **Panel de Interfaz de Usuario para la Gestión de Postulaciones (Rol Funcionario).**
+ * <p>Muestra un listado de todas las {@link Postulacion}es del programa activo,
+ * permitiendo al Funcionario filtrarlas (por estado y por texto) y acceder a un
+ * diálogo modal para modificar su estado y ver detalles. Implementa el flujo de
+ * trabajo de **filtrado por convenio**.</p>
+ */
 public class PostulacionesFuncionarioPanel extends JPanel {
 
     private final GestorIntercambio gestor;
@@ -28,6 +35,11 @@ public class PostulacionesFuncionarioPanel extends JPanel {
     private JCheckBox chkFiltro;
     private JLabel title;
 
+    /**
+     * Crea e inicializa el panel de gestión de postulaciones.
+     * @param gestor El gestor central de la aplicación.
+     * @param funcionario El {@link Usuario} Funcionario autenticado.
+     */
     public PostulacionesFuncionarioPanel(GestorIntercambio gestor, Usuario funcionario) {
         this.gestor = Objects.requireNonNull(gestor);
         this.funcionario = funcionario;

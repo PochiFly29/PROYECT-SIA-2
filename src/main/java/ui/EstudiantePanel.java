@@ -8,6 +8,14 @@ import net.miginfocom.swing.MigLayout;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * **Panel de Interfaz de Usuario (Dashboard) para el Rol de Estudiante.**
+ * <p>Actúa como el contenedor principal para las funcionalidades de un estudiante
+ * (Ver perfil, Postular a convenios, Revisar postulaciones). Utiliza un diseño de
+ * {@link CardLayout} para la navegación central y una barra lateral fija.</p>
+ * <p>Es capaz de reconfigurarse a sí mismo (y a sus subpaneles) si el objeto
+ * {@link Estudiante} cambia (`setEstudiante`).</p>
+ */
 public class EstudiantePanel extends JPanel {
 
     private final GestorIntercambio gestor;
@@ -30,6 +38,12 @@ public class EstudiantePanel extends JPanel {
     private JToggleButton btnVerPost;
     private JToggleButton btnPostular;
 
+    /**
+     * Crea e inicializa el panel principal del Estudiante.
+     * @param gestor El gestor central de la aplicación.
+     * @param estudiante El usuario Estudiante autenticado.
+     * @param onLogout El {@code Runnable} que maneja la transición a la pantalla de login.
+     */
     public EstudiantePanel(GestorIntercambio gestor, Estudiante estudiante, Runnable onLogout) {
         this.gestor = gestor;
         this.estudiante = estudiante;

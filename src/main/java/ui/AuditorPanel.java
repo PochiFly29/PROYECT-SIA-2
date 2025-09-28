@@ -9,6 +9,14 @@ import net.miginfocom.swing.MigLayout;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * **Panel de Interfaz de Usuario (Dashboard) para el Rol de Auditor.**
+ * <p>Actúa como la ventana principal que centraliza la navegación y las funcionalidades
+ * disponibles para el rol {@link Rol#AUDITOR}. Utiliza un diseño de
+ * {@link CardLayout} para cambiar las vistas del contenido principal (centro).</p>
+ * <p>Incluye una barra lateral (`JPanel` en {@link BorderLayout#WEST}) con los botones
+ * de navegación (Perfil, Gestión de Programas, etc.).</p>
+ */
 public class AuditorPanel extends JPanel {
 
     private final GestorIntercambio gestor;
@@ -38,6 +46,12 @@ public class AuditorPanel extends JPanel {
     private JToggleButton btnGestionConvenios;
     private JToggleButton btnAnalisis;
 
+    /**
+     * Crea e inicializa el panel principal del Auditor.
+     * @param gestor El gestor central de la aplicación.
+     * @param auditor El usuario Auditor autenticado.
+     * @param onLogout El {@code Runnable} que maneja la transición a la pantalla de login.
+     */
     public AuditorPanel(GestorIntercambio gestor, Usuario auditor, Runnable onLogout) {
         this.gestor = gestor;
         this.auditor = auditor;

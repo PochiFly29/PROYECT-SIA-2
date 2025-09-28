@@ -10,9 +10,19 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * **Servicio de Dominio para Consultas y Filtrado (Lectura de Datos).**
+ * <p>Implementa las operaciones de negocio relacionadas con la búsqueda, recuperación
+ * y filtrado de entidades (Programas, Convenios, Postulaciones, etc.).</p>
+ * <p>Este servicio solo realiza operaciones de lectura y no modifica el estado de los datos.</p>
+ */
 public class ServicioConsulta {
     private final DataStore dataStore;
 
+    /**
+     * Constructor que inicializa el servicio inyectando la dependencia del {@code DataStore}.
+     * @param dataStore La instancia única de {@link DataStore} que contiene la caché de datos.
+     */
     public ServicioConsulta(DataStore dataStore) {
         this.dataStore = dataStore;
     }
@@ -29,10 +39,20 @@ public class ServicioConsulta {
         return dataStore.getConvenios();
     }
 
+    /**
+     * Busca un convenio específico por su ID.
+     * @param idConvenio El ID alfanumérico del convenio.
+     * @return Un {@link Optional} que contiene el {@link Convenio} si se encuentra, o vacío si no existe.
+     */
     public Optional<Convenio> buscarConvenioPorId(String idConvenio) {
         return Optional.ofNullable(dataStore.getConvenioPorId(idConvenio));
     }
 
+    /**
+     * Busca un usuario por RUT y verifica si es una instancia de {@link Estudiante}.
+     * @param rut El RUT del usuario.
+     * @return Un {@link Optional} que contiene el objeto {@link Estudiante} si existe y su rol lo permite, o vacío.
+     */
     public Optional<Estudiante> buscarEstudiantePorRut(String rut) {
         Usuario u = dataStore.getUsuarioPorRut(rut);
         if (u instanceof Estudiante) {

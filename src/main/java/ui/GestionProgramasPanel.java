@@ -8,12 +8,23 @@ import java.awt.*;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * **Panel de Interfaz de Usuario para la Administración del Ciclo de Vida de los Programas.**
+ * <p>Este panel proporciona la interfaz necesaria para que el Auditor realice la gestión
+ * completa de los {@link Programa}s de intercambio: **Crear**, **Consultar**,
+ * **Finalizar** y **Eliminar**. Implementa las reglas de negocio críticas relacionadas
+ * con la finalización de un programa activo.</p>
+ */
 public class GestionProgramasPanel extends JPanel {
     private final GestorIntercambio gestor;
     private DefaultTableModel model;
     private JTable table;
     private JButton btnCrear, btnFinalizar, btnEliminar;
 
+    /**
+     * Crea e inicializa el panel de gestión de programas.
+     * @param gestor El gestor central de la aplicación.
+     */
     public GestionProgramasPanel(GestorIntercambio gestor) {
         this.gestor = gestor;
         init();

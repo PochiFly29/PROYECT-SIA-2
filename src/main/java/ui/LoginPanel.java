@@ -10,6 +10,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.function.Consumer;
 
+/**
+ * **Panel de Interfaz de Usuario para el Inicio de Sesión.**
+ * <p>Recopila las credenciales (RUT y Contraseña) del usuario, valida el acceso
+ * a través del {@link gestores.ServicioAutenticacion} y, en caso de éxito,
+ * notifica al contenedor principal ({@link VentanaPrincipal}) para iniciar el dashboard
+ * correspondiente al {@link Usuario} autenticado.</p>
+ */
 public class LoginPanel extends JPanel {
 
     private final GestorIntercambio gestor;
@@ -20,6 +27,12 @@ public class LoginPanel extends JPanel {
     private JPasswordField pass;
     private JButton login;
 
+    /**
+     * Crea e inicializa el panel de inicio de sesión.
+     * @param gestor El gestor central de la aplicación.
+     * @param onSuccess La acción a realizar con el usuario autenticado.
+     * @param onRegisterRequest La acción a realizar para cambiar a la vista de registro.
+     */
     public LoginPanel(GestorIntercambio gestor, Consumer<Usuario> onSuccess, Runnable onRegisterRequest) {
         this.gestor = gestor;
         this.onSuccess = onSuccess;

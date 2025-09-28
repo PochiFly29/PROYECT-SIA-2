@@ -10,6 +10,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.function.Consumer;
 
+/**
+ * **Panel de Interfaz de Usuario para el Registro de Nuevos Estudiantes.**
+ * <p>Este panel permite a un nuevo usuario registrarse en el sistema con el rol
+ * de {@link Estudiante}. Recopila sus datos personales y académicos, realiza
+ * validaciones de formato y negocio, y delega la creación de la cuenta al
+ * {@link gestores.ServicioAutenticacion}.</p>
+ */
 public class RegistroPanel extends JPanel {
     private final GestorIntercambio gestor;
     private final Runnable onRegisterSuccess;
@@ -19,6 +26,11 @@ public class RegistroPanel extends JPanel {
     private JSpinner promedioF, semestresF;
     private JButton registrarBtn, volverBtn;
 
+    /**
+     * Crea e inicializa el panel de registro.
+     * @param gestor El gestor central de la aplicación.
+     * @param onRegisterSuccess La acción a ejecutar al completar el registro.
+     */
     public RegistroPanel(GestorIntercambio gestor, Runnable onRegisterSuccess) {
         this.gestor = gestor;
         this.onRegisterSuccess = onRegisterSuccess;
