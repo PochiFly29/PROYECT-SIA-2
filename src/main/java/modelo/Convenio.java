@@ -55,8 +55,6 @@ public class Convenio {
     public String getRequisitosAcademicos() { return requisitosAcademicos; }
     public String getRequisitosEconomicos() { return requisitosEconomicos; }
 
-    // CAMBIO: Se eliminaron todos los setters para garantizar la inmutabilidad
-
     // --- Métodos de Infraestructura (AÑADIDOS) ---
     // Útiles para que el Convenio funcione correctamente en colecciones como HashMaps y ArrayLists.
     @Override

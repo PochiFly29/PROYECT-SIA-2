@@ -10,6 +10,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableRowSorter;
+import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,37 +39,61 @@ public class GestionConveniosAuditorPanel extends JPanel {
     }
 
     private void init() {
-        setLayout(new BorderLayout(10, 10));
-        setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        setLayout(new BorderLayout());
 
-        // --- Header con Título y Buscador ---
-        JPanel headerPanel = new JPanel(new BorderLayout(10, 10));
+        // ===== Header (alineado con PostularPanel) =====
+        JPanel header = new JPanel();
+        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
+        header.setBorder(BorderFactory.createEmptyBorder(16, 24, 8, 24));
+        header.setOpaque(false);
+
         JLabel title = new JLabel("GESTIÓN DE CONVENIOS", SwingConstants.CENTER);
-        title.putClientProperty(FlatClientProperties.STYLE, "font:bold +4");
+        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+        title.putClientProperty(FlatClientProperties.STYLE, "font:bold +6");
+        header.add(title);
+
+        header.add(Box.createVerticalStrut(10));
+
+        JPanel searchRow = new JPanel(new BorderLayout());
+        searchRow.setOpaque(false);
+        searchRow.setBorder(BorderFactory.createEmptyBorder(0, 240, 0, 240));
 
         searchField = new JTextField();
         searchField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Buscar por ID, Universidad, País o Área...");
+        searchField.putClientProperty(FlatClientProperties.STYLE, "arc:999; margin:6,14,6,14");
+        searchRow.add(searchField, BorderLayout.CENTER);
 
-        headerPanel.add(title, BorderLayout.NORTH);
-        headerPanel.add(searchField, BorderLayout.CENTER);
-        add(headerPanel, BorderLayout.NORTH);
+        header.add(searchRow);
+        add(header, BorderLayout.NORTH);
 
-        // --- Tabla ---
+        // ===== Tabla (mismo estilo que PostularPanel) =====
         table = new JTable(model);
-        table.setRowSorter(sorter); // Habilita el ordenamiento por columnas
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setFont(table.getFont().deriveFont(14f));
+        table.getTableHeader().setFont(table.getTableHeader().getFont().deriveFont(Font.BOLD, 14f));
         table.setFillsViewportHeight(true);
+        table.setRowHeight(28);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setFocusable(false);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        table.setRowSorter(sorter);
+
+        // Columna ID más angosta
+        TableColumn idCol = table.getColumnModel().getColumn(0);
+        idCol.setPreferredWidth(60);
+        idCol.setMaxWidth(60);
+
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // --- Footer con Botones de Acción ---
-        JPanel actionsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 5));
+        // ===== Footer (alineado a la derecha) =====
+        JPanel actionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 10));
+        actionsPanel.setOpaque(false);
         JButton btnCrear = new JButton("Crear Nuevo Convenio");
         JButton btnEliminar = new JButton("Eliminar Seleccionado");
         actionsPanel.add(btnCrear);
         actionsPanel.add(btnEliminar);
         add(actionsPanel, BorderLayout.SOUTH);
 
-        // --- Listeners ---
+        // ===== Listeners (misma lógica) =====
         searchField.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) { applyFilter(); }
             public void removeUpdate(DocumentEvent e) { applyFilter(); }
@@ -105,16 +130,20 @@ public class GestionConveniosAuditorPanel extends JPanel {
         panel.add(new JLabel("Requisitos Económicos:"));
         panel.add(reqEconField);
 
-        int result = JOptionPane.showConfirmDialog(this, panel, "Crear Nuevo Convenio", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int result = JOptionPane.showConfirmDialog(this, panel, "Crear Nuevo Convenio",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
             try {
-                // Aquí irían validaciones para campos no vacíos
-                Convenio nuevo = new Convenio(idField.getText(), uniField.getText(), paisField.getText(), areaField.getText(), reqAcadField.getText(), reqEconField.getText());
+                Convenio nuevo = new Convenio(
+                        idField.getText(), uniField.getText(), paisField.getText(),
+                        areaField.getText(), reqAcadField.getText(), reqEconField.getText()
+                );
                 gestor.getServicioConvenio().crearConvenio(nuevo);
                 JOptionPane.showMessageDialog(this, "Convenio creado exitosamente.");
                 refresh();
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error al crear el convenio: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Error al crear el convenio: " + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -122,7 +151,8 @@ public class GestionConveniosAuditorPanel extends JPanel {
     private void eliminarConvenio() {
         int viewRow = table.getSelectedRow();
         if (viewRow < 0) {
-            JOptionPane.showMessageDialog(this, "Por favor, seleccione un convenio de la tabla para eliminar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Por favor, seleccione un convenio de la tabla para eliminar.",
+                    "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -130,7 +160,8 @@ public class GestionConveniosAuditorPanel extends JPanel {
         Convenio convenio = model.getConvenioAt(modelRow);
 
         int r = JOptionPane.showConfirmDialog(this,
-                "¿Está seguro de que desea eliminar el convenio con " + convenio.getUniversidad() + "?\nCualquier postulación pendiente asociada será rechazada.",
+                "¿Está seguro de que desea eliminar el convenio con " + convenio.getUniversidad() + "?\n" +
+                        "Cualquier postulación pendiente asociada será rechazada.",
                 "Confirmar Eliminación", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
         if (r == JOptionPane.YES_OPTION) {
@@ -139,27 +170,25 @@ public class GestionConveniosAuditorPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Convenio eliminado exitosamente.");
                 refresh();
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error al eliminar el convenio: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Error al eliminar el convenio: " + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
-    // --- Modelo de Tabla Personalizado ---
+    // --- Modelo de Tabla (sin cambios de lógica) ---
     private static class ConveniosAuditorTableModel extends AbstractTableModel {
         private final String[] cols = {"ID", "Universidad", "País", "Área", "Requisitos Académicos"};
         private List<Convenio> data = new ArrayList<>();
 
         public void setData(List<Convenio> data) {
-            this.data = data;
+            this.data = data != null ? data : new ArrayList<>();
             fireTableDataChanged();
         }
 
-        @Override
-        public int getRowCount() { return data.size(); }
-        @Override
-        public int getColumnCount() { return cols.length; }
-        @Override
-        public String getColumnName(int column) { return cols[column]; }
+        @Override public int getRowCount() { return data.size(); }
+        @Override public int getColumnCount() { return cols.length; }
+        @Override public String getColumnName(int column) { return cols[column]; }
 
         @Override
         public Object getValueAt(int rowIndex, int columnIndex) {
@@ -174,15 +203,8 @@ public class GestionConveniosAuditorPanel extends JPanel {
             }
         }
 
-        // Este método hace que la tabla NO sea editable.
-        @Override
-        public boolean isCellEditable(int rowIndex, int columnIndex) {
-            return false;
-        }
+        @Override public boolean isCellEditable(int rowIndex, int columnIndex) { return false; }
 
-        // Método útil para obtener el objeto completo de una fila.
-        public Convenio getConvenioAt(int rowIndex) {
-            return data.get(rowIndex);
-        }
+        public Convenio getConvenioAt(int rowIndex) { return data.get(rowIndex); }
     }
 }

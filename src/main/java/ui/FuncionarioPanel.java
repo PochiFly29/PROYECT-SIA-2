@@ -39,22 +39,23 @@ public class FuncionarioPanel extends JPanel {
         refreshSidebar();
     }
 
+    // ==== helpers ====
+
     private JToggleButton botonNavegacion(String text) {
         JToggleButton b = new JToggleButton(text);
         b.setHorizontalAlignment(SwingConstants.CENTER);
         b.setFocusPainted(false);
         b.setOpaque(true);
 
-        Insets padding = new Insets(20, 28, 20, 28);
+        Insets padding = new Insets(14, 24, 14, 24);
         b.setMargin(padding);
         b.setBorder(BorderFactory.createEmptyBorder(padding.top, padding.left, padding.bottom, padding.right));
 
-        b.setMinimumSize(new Dimension(0, 88));
-        b.setPreferredSize(new Dimension(0, 88));
-        b.setMaximumSize(new Dimension(Integer.MAX_VALUE, 88));
-        b.setAlignmentX(Component.LEFT_ALIGNMENT);
+        b.setMinimumSize(new Dimension(0, 72));
+        b.setPreferredSize(new Dimension(0, 72));
+        b.setMaximumSize(new Dimension(Integer.MAX_VALUE, 72));
 
-        b.setFont(b.getFont().deriveFont(Font.BOLD, b.getFont().getSize2D() + 3f));
+        b.setFont(b.getFont().deriveFont(Font.BOLD, b.getFont().getSize2D() + 2f));
         b.setForeground(UIManager.getColor("Label.foreground"));
 
         wireToggleBehavior(b);
@@ -62,36 +63,51 @@ public class FuncionarioPanel extends JPanel {
         return b;
     }
 
-    /** Selección: fondo azul + franja derecha */
+    private JPanel makeNavItem(JToggleButton b) {
+        JPanel row = new JPanel(new MigLayout("insets 0, gap 0, fill", "[grow,fill][6!]", "[fill]"));
+        row.setOpaque(false);
+        row.setMinimumSize(new Dimension(0, 72));
+        row.setPreferredSize(new Dimension(0, 72));
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 72));
+        row.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JPanel stripe = new JPanel();
+        stripe.setOpaque(true);
+        stripe.setBackground(new Color(0x4A95FF));
+        stripe.setVisible(b.isSelected());
+        b.putClientProperty("stripe", stripe);
+
+        row.add(b, "cell 0 0, grow");
+        row.add(stripe, "cell 1 0, growy");
+        return row;
+    }
+
     private void wireToggleBehavior(JToggleButton b) {
         final Color selectedBg = new Color(0x2E86FF);
         final Color selectedFg = Color.WHITE;
         final Color unselectedFg = UIManager.getColor("Label.foreground");
-        final Color rightStripe = new Color(0x1F5FCC);
 
         b.setContentAreaFilled(false);
-
         b.addChangeListener(e -> {
             boolean sel = b.isSelected();
+            JPanel stripe = (JPanel) b.getClientProperty("stripe");
             if (sel) {
                 b.setContentAreaFilled(true);
                 b.setBackground(selectedBg);
                 b.setForeground(selectedFg);
-                b.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createMatteBorder(0, 0, 0, 6, rightStripe),
-                        BorderFactory.createEmptyBorder(20, 28, 20, 22) // compensa franja
-                ));
+                if (stripe != null) stripe.setVisible(true);
             } else {
                 b.setContentAreaFilled(false);
                 b.setForeground(unselectedFg);
-                b.setBorder(BorderFactory.createEmptyBorder(20, 28, 20, 28));
+                if (stripe != null) stripe.setVisible(false);
             }
+            b.revalidate(); b.repaint();
+            if (stripe != null) { stripe.revalidate(); stripe.repaint(); }
         });
     }
 
-    /** Hover: sombrea la opción si NO está seleccionada */
     private void addHoverEffect(JToggleButton b) {
-        final Color hoverBg = new Color(0x2F2F2F); // un poco más claro que #262626
+        final Color hoverBg = new Color(0x2F2F2F);
         b.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override public void mouseEntered(java.awt.event.MouseEvent e) {
                 if (!b.isSelected()) {
@@ -108,7 +124,6 @@ public class FuncionarioPanel extends JPanel {
         });
     }
 
-    /** Botón rectangular (footer) */
     private static void styleRectButtonPrimary(JButton b, Color bg) {
         b.setFocusPainted(false);
         b.setOpaque(true);
@@ -119,14 +134,17 @@ public class FuncionarioPanel extends JPanel {
         b.setBorder(BorderFactory.createLineBorder(bg.darker(), 1, false));
     }
 
+    // ==== init ====
+
     private void init() {
-        // ===== Sidebar =====
+        // Sidebar fijo
         JPanel panelIzquierdo = new JPanel(new BorderLayout());
         panelIzquierdo.setBackground(new Color(0x262626));
         panelIzquierdo.setOpaque(true);
         panelIzquierdo.setPreferredSize(new Dimension(360, 0));
+        panelIzquierdo.setMinimumSize(new Dimension(320, 0));
 
-        // Top: logo grande + separador
+        // Top: logo + separador
         JPanel topPanel = new JPanel(new MigLayout("wrap, fillx, insets 24 24 8 24", "[fill]"));
         topPanel.setOpaque(false);
 
@@ -153,7 +171,7 @@ public class FuncionarioPanel extends JPanel {
 
         JPanel separator = new JPanel();
         separator.setPreferredSize(new Dimension(0, 1));
-        separator.setBackground(new Color(0x3A3A3A));
+        separator.setBackground(new Color(0x333333));
         topPanel.add(separator, "growx, gaptop 12");
 
         // Centro: botones
@@ -172,16 +190,46 @@ public class FuncionarioPanel extends JPanel {
         grp.add(btnVerConvenios);
         btnPerfil.setSelected(true);
 
-        navButtonsPanel.add(Box.createVerticalGlue());
-        navButtonsPanel.add(btnPerfil);
-        navButtonsPanel.add(Box.createVerticalStrut(12));
-        navButtonsPanel.add(btnGestionPost);
-        navButtonsPanel.add(Box.createVerticalStrut(12));
-        navButtonsPanel.add(btnVerConvenios);
-        navButtonsPanel.add(Box.createVerticalGlue());
+        // separador suave entre perfil y el resto
+        JSeparator sep = new JSeparator();
+        sep.setForeground(new Color(0x333333));
+        sep.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        panelIzquierdo.add(topPanel, BorderLayout.NORTH);
-        panelIzquierdo.add(navButtonsPanel, BorderLayout.CENTER);
+        navButtonsPanel.add(makeNavItem(btnPerfil));
+        navButtonsPanel.add(Box.createVerticalStrut(12));
+        navButtonsPanel.add(sep);
+        navButtonsPanel.add(Box.createVerticalStrut(12));
+        navButtonsPanel.add(makeNavItem(btnGestionPost));
+        navButtonsPanel.add(Box.createVerticalStrut(12));
+        navButtonsPanel.add(makeNavItem(btnVerConvenios));
+
+        // Sidebar scrolleable
+        JPanel scrollContent = new JPanel(new BorderLayout());
+        scrollContent.setOpaque(false);
+        scrollContent.add(topPanel, BorderLayout.NORTH);
+
+        JPanel navCenter = new JPanel();
+        navCenter.setOpaque(false);
+        navCenter.setLayout(new BoxLayout(navCenter, BoxLayout.Y_AXIS));
+        navCenter.add(Box.createVerticalGlue());
+        navButtonsPanel.setAlignmentX(0.5f);
+        navCenter.add(navButtonsPanel);
+        navCenter.add(Box.createVerticalGlue());
+
+        scrollContent.add(navCenter, BorderLayout.CENTER);
+
+        JScrollPane sideScroll = new JScrollPane(
+                scrollContent,
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+        );
+        sideScroll.setBorder(null);
+        sideScroll.setViewportBorder(null);
+        sideScroll.setOpaque(false);
+        if (sideScroll.getViewport() != null) sideScroll.getViewport().setOpaque(false);
+        sideScroll.getVerticalScrollBar().setUnitIncrement(18);
+
+        panelIzquierdo.add(sideScroll, BorderLayout.CENTER);
 
         // Bottom: saludo + dos botones (Cerrar sesión / Salir)
         JPanel bottomPanel = new JPanel(new MigLayout("wrap, fillx, insets 24 24 32 24", "[fill]"));
@@ -225,7 +273,7 @@ public class FuncionarioPanel extends JPanel {
         add(panelIzquierdo, BorderLayout.WEST);
         add(centerCards, BorderLayout.CENTER);
 
-        // ===== Listeners (misma lógica) =====
+        // ===== Listeners =====
         btnPerfil.addActionListener(e -> {
             perfilPanel.refreshData();
             centerCardsLayout.show(centerCards, CARD_PERFIL);

@@ -46,6 +46,7 @@ public class EstudiantePanel extends JPanel {
             perfilPanel.setUsuario(e);
         }
 
+        // Re-construir paneles dependientes del estudiante
         PostulacionesPanel nuevoPostulaciones = new PostulacionesPanel(gestor, e);
         replaceCard(CARD_POSTULACIONES, postulacionesPanel, nuevoPostulaciones);
         postulacionesPanel = nuevoPostulaciones;
@@ -68,46 +69,65 @@ public class EstudiantePanel extends JPanel {
         b.setFocusPainted(false);
         b.setOpaque(true);
 
-        Insets padding = new Insets(20, 28, 20, 28);
+        Insets padding = new Insets(14, 24, 14, 24);
         b.setMargin(padding);
         b.setBorder(BorderFactory.createEmptyBorder(padding.top, padding.left, padding.bottom, padding.right));
 
-        b.setMinimumSize(new Dimension(0, 88));
-        b.setPreferredSize(new Dimension(0, 88));
-        b.setMaximumSize(new Dimension(Integer.MAX_VALUE, 88));
-        b.setAlignmentX(Component.LEFT_ALIGNMENT);
+        b.setMinimumSize(new Dimension(0, 72));
+        b.setPreferredSize(new Dimension(0, 72));
+        b.setMaximumSize(new Dimension(Integer.MAX_VALUE, 72));
 
-        b.setFont(b.getFont().deriveFont(Font.BOLD, b.getFont().getSize2D() + 3f));
+        b.setFont(b.getFont().deriveFont(Font.BOLD, b.getFont().getSize2D() + 2f));
         b.setForeground(UIManager.getColor("Label.foreground"));
 
         wireToggleBehavior(b);
-        addHoverEffect(b);   // ← efecto hover como en FuncionarioPanel
+        addHoverEffect(b);   // hover visual
         return b;
     }
 
-    /** Selección: fondo azul + franja derecha */
+    /** Fila: [botón][franja derecha 6px] para garantizar la franja de selección */
+    private JPanel makeNavItem(JToggleButton b) {
+        JPanel row = new JPanel(new MigLayout("insets 0, gap 0, fill", "[grow,fill][6!]", "[fill]"));
+        row.setOpaque(false);
+        row.setMinimumSize(new Dimension(0, 72));
+        row.setPreferredSize(new Dimension(0, 72));
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 72));
+        row.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JPanel stripe = new JPanel();
+        stripe.setOpaque(true);
+        stripe.setBackground(new Color(0x4A95FF)); // azul claro
+        stripe.setVisible(b.isSelected());
+
+        b.putClientProperty("stripe", stripe);
+
+        row.add(b, "cell 0 0, grow");
+        row.add(stripe, "cell 1 0, growy");
+        return row;
+    }
+
+    /** Selección: fondo azul + controla visibilidad de la franja */
     private void wireToggleBehavior(JToggleButton b) {
         final Color selectedBg = new Color(0x2E86FF);
         final Color selectedFg = Color.WHITE;
         final Color unselectedFg = UIManager.getColor("Label.foreground");
-        final Color rightStripe = new Color(0x1F5FCC);
 
         b.setContentAreaFilled(false);
         b.addChangeListener(e -> {
             boolean sel = b.isSelected();
+            JPanel stripe = (JPanel) b.getClientProperty("stripe");
             if (sel) {
                 b.setContentAreaFilled(true);
                 b.setBackground(selectedBg);
                 b.setForeground(selectedFg);
-                b.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createMatteBorder(0, 0, 0, 6, rightStripe),
-                        BorderFactory.createEmptyBorder(20, 28, 20, 22)
-                ));
+                if (stripe != null) stripe.setVisible(true);
             } else {
                 b.setContentAreaFilled(false);
                 b.setForeground(unselectedFg);
-                b.setBorder(BorderFactory.createEmptyBorder(20, 28, 20, 28));
+                if (stripe != null) stripe.setVisible(false);
             }
+            b.revalidate(); b.repaint();
+            if (stripe != null) { stripe.revalidate(); stripe.repaint(); }
         });
     }
 
@@ -150,11 +170,12 @@ public class EstudiantePanel extends JPanel {
     // ---------- Init ----------
 
     private void init() {
-        // Sidebar
+        // Sidebar fijo
         JPanel panelIzquierdo = new JPanel(new BorderLayout());
         panelIzquierdo.setBackground(new Color(0x262626));
         panelIzquierdo.setOpaque(true);
         panelIzquierdo.setPreferredSize(new Dimension(360, 0));
+        panelIzquierdo.setMinimumSize(new Dimension(320, 0));
 
         // Header con logo
         JPanel topPanel = new JPanel(new MigLayout("wrap, fillx, insets 24 24 8 24", "[fill]"));
@@ -183,7 +204,7 @@ public class EstudiantePanel extends JPanel {
 
         JPanel separator = new JPanel();
         separator.setPreferredSize(new Dimension(0, 1));
-        separator.setBackground(new Color(0x3A3A3A));
+        separator.setBackground(new Color(0x333333));
         topPanel.add(separator, "growx, gaptop 12");
 
         // Navegación
@@ -202,16 +223,46 @@ public class EstudiantePanel extends JPanel {
         grp.add(btnVerPost);
         btnPerfil.setSelected(true);
 
-        navButtonsPanel.add(Box.createVerticalGlue());
-        navButtonsPanel.add(btnPerfil);
-        navButtonsPanel.add(Box.createVerticalStrut(12));
-        navButtonsPanel.add(btnPostular);
-        navButtonsPanel.add(Box.createVerticalStrut(12));
-        navButtonsPanel.add(btnVerPost);
-        navButtonsPanel.add(Box.createVerticalGlue());
+        // Separador suave entre grupos (opcional)
+        JSeparator sep = new JSeparator();
+        sep.setForeground(new Color(0x333333));
+        sep.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        panelIzquierdo.add(topPanel, BorderLayout.NORTH);
-        panelIzquierdo.add(navButtonsPanel, BorderLayout.CENTER);
+        navButtonsPanel.add(makeNavItem(btnPerfil));
+        navButtonsPanel.add(Box.createVerticalStrut(12));
+        navButtonsPanel.add(makeNavItem(btnPostular));
+        navButtonsPanel.add(Box.createVerticalStrut(12));
+        navButtonsPanel.add(sep);
+        navButtonsPanel.add(Box.createVerticalStrut(12));
+        navButtonsPanel.add(makeNavItem(btnVerPost));
+
+        // Contenido scrolleable del sidebar
+        JPanel scrollContent = new JPanel(new BorderLayout());
+        scrollContent.setOpaque(false);
+        scrollContent.add(topPanel, BorderLayout.NORTH);
+
+        JPanel navCenter = new JPanel();
+        navCenter.setOpaque(false);
+        navCenter.setLayout(new BoxLayout(navCenter, BoxLayout.Y_AXIS));
+        navCenter.add(Box.createVerticalGlue());
+        navButtonsPanel.setAlignmentX(0.5f);
+        navCenter.add(navButtonsPanel);
+        navCenter.add(Box.createVerticalGlue());
+
+        scrollContent.add(navCenter, BorderLayout.CENTER);
+
+        JScrollPane sideScroll = new JScrollPane(
+                scrollContent,
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+        );
+        sideScroll.setBorder(null);
+        sideScroll.setViewportBorder(null);
+        sideScroll.setOpaque(false);
+        if (sideScroll.getViewport() != null) sideScroll.getViewport().setOpaque(false);
+        sideScroll.getVerticalScrollBar().setUnitIncrement(18);
+
+        panelIzquierdo.add(sideScroll, BorderLayout.CENTER);
 
         // Footer
         JPanel bottomPanel = new JPanel(new MigLayout("wrap, fillx, insets 24 24 32 24", "[fill]"));
@@ -249,11 +300,12 @@ public class EstudiantePanel extends JPanel {
         centerCards.add(postularPanel, CARD_POSTULAR);
         centerCardsLayout.show(centerCards, CARD_PERFIL);
 
+        // Layout principal (sidebar fijo)
         setLayout(new BorderLayout());
         add(panelIzquierdo, BorderLayout.WEST);
         add(centerCards, BorderLayout.CENTER);
 
-        // Navegación
+        // Navegación (misma lógica)
         btnPerfil.addActionListener(e -> {
             centerCardsLayout.show(centerCards, CARD_PERFIL);
             btnPerfil.setSelected(true);

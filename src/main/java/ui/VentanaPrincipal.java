@@ -122,10 +122,4 @@ public class VentanaPrincipal extends JFrame {
         revalidate();
         repaint();
     }
-
-    private JPanel placeholder(String text) {
-        JPanel p = new JPanel(new BorderLayout());
-        p.add(new JLabel(text, SwingConstants.CENTER), BorderLayout.CENTER);
-        return p;
-    }
 }

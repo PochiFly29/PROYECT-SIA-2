@@ -2,8 +2,10 @@ package ui;
 
 import gestores.GestorIntercambio;
 import modelo.Programa;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.time.LocalDate;
 import java.util.List;
@@ -23,7 +25,9 @@ public class GestionProgramasPanel extends JPanel {
     public void refresh() {
         List<Programa> programas = gestor.getServicioConsulta().getTodosLosProgramas();
         model.setRowCount(0);
-        programas.forEach(p -> model.addRow(new Object[]{p.getId(), p.getNombre(), p.getEstado(), p.getFechaInicio(), p.getFechaFin(), p}));
+        programas.forEach(p -> model.addRow(new Object[]{
+                p.getId(), p.getNombre(), p.getEstado(), p.getFechaInicio(), p.getFechaFin(), p
+        }));
 
         // Habilita/deshabilita el botón de finalizar según si hay un programa activo
         boolean hayActivo = gestor.getServicioConsulta().getProgramaActivo().isPresent();
@@ -31,26 +35,53 @@ public class GestionProgramasPanel extends JPanel {
     }
 
     private void init() {
-        setLayout(new BorderLayout(10, 10));
-        setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        setLayout(new BorderLayout());
 
-        // Título
+        // ===== Header (alineado con PostularPanel) =====
+        JPanel header = new JPanel();
+        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
+        header.setBorder(BorderFactory.createEmptyBorder(16, 24, 8, 24));
+        header.setOpaque(false);
+
         JLabel title = new JLabel("GESTIÓN DE PROGRAMAS DE INTERCAMBIO", SwingConstants.CENTER);
-        title.setFont(title.getFont().deriveFont(Font.BOLD, 18f));
-        add(title, BorderLayout.NORTH);
+        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+        // Misma jerarquía visual que PostularPanel
+        title.setFont(title.getFont().deriveFont(Font.BOLD, 20f));
+        header.add(title);
 
-        // Tabla
+        header.add(Box.createVerticalStrut(10));
+        add(header, BorderLayout.NORTH);
+
+        // ===== Tabla (mismo look & feel que PostularPanel) =====
         String[] cols = {"ID", "Nombre", "Estado", "Inicio", "Fin", "_OBJ"};
         model = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int row, int col) { return false; }
         };
+
         table = new JTable(model);
-        table.getColumn("_OBJ").setMinWidth(0);
-        table.getColumn("_OBJ").setMaxWidth(0);
+        table.setFont(table.getFont().deriveFont(14f));
+        table.getTableHeader().setFont(table.getTableHeader().getFont().deriveFont(Font.BOLD, 14f));
+        table.setFillsViewportHeight(true);
+        table.setRowHeight(28);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setFocusable(false);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+
+        // ID angosta (como en PostularPanel)
+        TableColumn idCol = table.getColumnModel().getColumn(0);
+        idCol.setPreferredWidth(60);
+        idCol.setMaxWidth(60);
+
+        // Ocultar columna de objeto
+        TableColumn objCol = table.getColumnModel().getColumn(5);
+        objCol.setMinWidth(0);
+        objCol.setMaxWidth(0);
+
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // Panel de botones de acción
-        JPanel actionsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 5));
+        // ===== Footer (alineado a la derecha como PostularPanel) =====
+        JPanel actionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 10));
+        actionsPanel.setOpaque(false);
         btnCrear = new JButton("Crear Nuevo Programa");
         btnFinalizar = new JButton("Finalizar Programa Activo");
         btnEliminar = new JButton("Eliminar Seleccionado");
@@ -59,7 +90,7 @@ public class GestionProgramasPanel extends JPanel {
         actionsPanel.add(btnEliminar);
         add(actionsPanel, BorderLayout.SOUTH);
 
-        // Action Listeners
+        // ===== Listeners existentes (sin cambios de lógica) =====
         btnCrear.addActionListener(e -> crearPrograma());
         btnFinalizar.addActionListener(e -> finalizarPrograma());
         btnEliminar.addActionListener(e -> eliminarPrograma());
@@ -79,7 +110,8 @@ public class GestionProgramasPanel extends JPanel {
         panel.add(new JLabel("Fecha Fin (YYYY-MM-DD):"));
         panel.add(finField);
 
-        int result = JOptionPane.showConfirmDialog(this, panel, "Crear Programa", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int result = JOptionPane.showConfirmDialog(this, panel, "Crear Programa",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
             try {
                 gestor.getServicioPrograma().crearPrograma(
@@ -90,14 +122,16 @@ public class GestionProgramasPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Programa creado exitosamente.");
                 refresh();
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error al Crear", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(),
+                        "Error al Crear", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
     private void finalizarPrograma() {
         int r = JOptionPane.showConfirmDialog(this,
-                "¿Está seguro de que desea finalizar el programa activo?\nTodas las postulaciones PENDIENTES o REVISADAS serán RECHAZADAS.",
+                "¿Está seguro de que desea finalizar el programa activo?\n" +
+                        "Todas las postulaciones PENDIENTES o REVISADAS serán RECHAZADAS.",
                 "Confirmar Finalización", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
         if (r == JOptionPane.YES_OPTION) {
@@ -107,7 +141,8 @@ public class GestionProgramasPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Programa finalizado exitosamente.");
                 refresh();
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error al Finalizar", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(),
+                        "Error al Finalizar", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -115,14 +150,17 @@ public class GestionProgramasPanel extends JPanel {
     private void eliminarPrograma() {
         int selectedRow = table.getSelectedRow();
         if (selectedRow < 0) {
-            JOptionPane.showMessageDialog(this, "Por favor, seleccione un programa de la tabla para eliminar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Por favor, seleccione un programa de la tabla para eliminar.",
+                    "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         Programa programa = (Programa) model.getValueAt(table.convertRowIndexToModel(selectedRow), 5);
         int r = JOptionPane.showConfirmDialog(this,
                 "¡ADVERTENCIA! Está a punto de eliminar el programa '" + programa.getNombre() + "'.\n" +
-                        "Esto borrará permanentemente TODAS sus postulaciones e interacciones asociadas.\n¿Está absolutamente seguro?",
+                        "Esto borrará permanentemente TODAS sus postulaciones e interacciones asociadas.\n" +
+                        "¿Está absolutamente seguro?",
                 "Confirmar Eliminación Permanente", JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE);
 
         if (r == JOptionPane.YES_OPTION) {
@@ -131,7 +169,8 @@ public class GestionProgramasPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, "Programa eliminado exitosamente.");
                 refresh();
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error al Eliminar", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(),
+                        "Error al Eliminar", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
