@@ -4,6 +4,7 @@ import com.formdev.flatlaf.FlatClientProperties;
 import gestores.GestorIntercambio;
 import modelo.ResultadoLogin;
 import modelo.Usuario;
+import servicios.ManagerTemas;
 
 import javax.swing.*;
 import java.awt.*;
@@ -27,14 +28,12 @@ public class LoginPanel extends JPanel {
     }
 
     private void init(){
-        // Contenedor principal para centrar el formulario en la ventana
-        setLayout(new GridBagLayout());
+        setLayout(new BorderLayout());
 
         rut = new JTextField();
         pass = new JPasswordField();
         login = new JButton("Ingresar");
 
-        // --- Panel del Formulario (Contiene todos los campos y el recuadro de estilo) ---
         JPanel formPanel = new JPanel(new GridBagLayout());
 
         // Estilo del Recuadro Central (FlatLaf)
@@ -49,15 +48,12 @@ public class LoginPanel extends JPanel {
         JLabel titulo = new JLabel("¡Bienvenido!");
         JLabel descripcion = new JLabel("Inicie sesión para ingresar a su cuenta");
 
-        // CORRECCIÓN CLAVE: Aplicar el centrado de texto de Swing directamente
         titulo.setHorizontalAlignment(SwingConstants.CENTER);
         descripcion.setHorizontalAlignment(SwingConstants.CENTER);
 
-        // Aplicar estilos FlatLaf restantes (SIN la propiedad horizontalAlignment:center)
         titulo.putClientProperty(FlatClientProperties.STYLE, "font:bold +10");
         descripcion.putClientProperty(FlatClientProperties.STYLE, "foreground:darken(@foreground,30%)");
 
-        // Definición del tamaño de los campos: 300px de ancho y 32px de alto
         Dimension fieldPrefSize = new Dimension(300, 32);
         rut.setPreferredSize(fieldPrefSize);
         pass.setPreferredSize(fieldPrefSize);
@@ -69,17 +65,17 @@ public class LoginPanel extends JPanel {
 
         // --- GridBagLayout para la disposición interna del formulario ---
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(4, 20, 4, 20); // Padding interno del recuadro
+        gbc.insets = new Insets(4, 20, 4, 20);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.gridwidth = GridBagConstraints.REMAINDER; // Cada componente ocupa toda la fila
+        gbc.gridwidth = GridBagConstraints.REMAINDER;
 
-        // 1. Título y Descripción
+        // 1) Título + descripción
         gbc.insets = new Insets(20, 20, 5, 20);
         formPanel.add(titulo, gbc);
         gbc.insets = new Insets(0, 20, 30, 20);
         formPanel.add(descripcion, gbc);
 
-        // 2. Campo RUT
+        // 2) RUT
         gbc.insets = new Insets(0, 20, 3, 20);
         gbc.anchor = GridBagConstraints.WEST;
         formPanel.add(new JLabel("RUT"), gbc);
@@ -87,7 +83,7 @@ public class LoginPanel extends JPanel {
         gbc.anchor = GridBagConstraints.CENTER;
         formPanel.add(rut, gbc);
 
-        // 3. Campo Contraseña
+        // 3) Contraseña
         gbc.insets = new Insets(5, 20, 3, 20);
         gbc.anchor = GridBagConstraints.WEST;
         formPanel.add(new JLabel("Contraseña"), gbc);
@@ -95,18 +91,24 @@ public class LoginPanel extends JPanel {
         gbc.anchor = GridBagConstraints.CENTER;
         formPanel.add(pass, gbc);
 
-        // 4. Botón Ingresar
+        // 4) Ingresar
         gbc.insets = new Insets(0, 20, 15, 20);
         formPanel.add(login, gbc);
 
-        // 5. Sección de Registro
+        // 5) Registro
         gbc.insets = new Insets(0, 20, 20, 20);
         formPanel.add(crearSeccionRegistro(), gbc);
 
-        // Agregar el panel del formulario al panel principal (para centrar)
-        add(formPanel);
+        JPanel centerWrapper = new JPanel(new GridBagLayout());
+        GridBagConstraints cwc = new GridBagConstraints();
+        cwc.gridx = 0; cwc.gridy = 0;
+        cwc.weightx = 1.0; cwc.weighty = 1.0;
+        cwc.anchor = GridBagConstraints.CENTER;
+        centerWrapper.add(formPanel, cwc);
 
-        // Agregamos el ActionListener y KeyStroke para el login
+        JLayeredPane layered = ManagerTemas.wrapWithFloatingThemeButton(centerWrapper, false);
+        add(layered, BorderLayout.CENTER);
+
         login.addActionListener(e -> doLogin());
         getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke("ENTER"), "enterLogin");
         getActionMap().put("enterLogin", new AbstractAction() {
