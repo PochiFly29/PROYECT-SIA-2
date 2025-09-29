@@ -82,7 +82,18 @@ public class AnalisisPanel extends JPanel {
 
         // Boton Exportar
         btnExportar = new JButton("Exportar a Excel");
-        btnExportar.addActionListener(e -> exportarAExcel());
+
+        btnExportar.setMargin(new Insets(12, 24, 12, 24));
+        btnExportar.setFont(btnExportar.getFont().deriveFont(Font.BOLD, 14f));
+        btnExportar.setPreferredSize(new Dimension(200, 48));
+
+        Color excelGreen = new Color(0x217346);
+        btnExportar.setBackground(excelGreen);
+        btnExportar.setForeground(Color.WHITE);
+        btnExportar.setFocusPainted(false);
+        btnExportar.setOpaque(true);
+        btnExportar.setBorder(BorderFactory.createLineBorder(excelGreen.darker(), 1));
+
         JPanel headerActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         headerActions.setOpaque(false);
         headerActions.add(btnExportar);

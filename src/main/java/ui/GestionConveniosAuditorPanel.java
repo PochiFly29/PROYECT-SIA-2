@@ -77,7 +77,7 @@ public class GestionConveniosAuditorPanel extends JPanel {
         header.add(searchRow);
         add(header, BorderLayout.NORTH);
 
-        // ===== Tabla (mismo estilo que PostularPanel) =====
+        // Tabla
         table = new JTable(model);
         table.setFont(table.getFont().deriveFont(14f));
         table.getTableHeader().setFont(table.getTableHeader().getFont().deriveFont(Font.BOLD, 14f));
@@ -88,14 +88,13 @@ public class GestionConveniosAuditorPanel extends JPanel {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         table.setRowSorter(sorter);
 
-        // Columna ID más angosta
         TableColumn idCol = table.getColumnModel().getColumn(0);
         idCol.setPreferredWidth(60);
         idCol.setMaxWidth(60);
 
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // ===== Footer (alineado a la derecha) =====
+        // Footer
         JPanel actionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 10));
         actionsPanel.setOpaque(false);
         JButton btnCrear = new JButton("Crear Nuevo Convenio");
@@ -104,7 +103,6 @@ public class GestionConveniosAuditorPanel extends JPanel {
         actionsPanel.add(btnEliminar);
         add(actionsPanel, BorderLayout.SOUTH);
 
-        // ===== Listeners (misma lógica) =====
         searchField.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) { applyFilter(); }
             public void removeUpdate(DocumentEvent e) { applyFilter(); }
@@ -170,8 +168,7 @@ public class GestionConveniosAuditorPanel extends JPanel {
         int modelRow = table.convertRowIndexToModel(viewRow);
         Convenio convenio = model.getConvenioAt(modelRow);
 
-        int r = JOptionPane.showConfirmDialog(this,
-                "¿Está seguro de que desea eliminar el convenio con " + convenio.getUniversidad() + "?\n" +
+        int r = JOptionPane.showConfirmDialog(this,"¿Está seguro de que desea eliminar el convenio con " + convenio.getUniversidad() + "?\n" +
                         "Cualquier postulación pendiente asociada será rechazada.",
                 "Confirmar Eliminación", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
@@ -187,7 +184,6 @@ public class GestionConveniosAuditorPanel extends JPanel {
         }
     }
 
-    // --- Modelo de Tabla (sin cambios de lógica) ---
     private static class ConveniosAuditorTableModel extends AbstractTableModel {
         private final String[] cols = {"ID", "Universidad", "País", "Área", "Requisitos Académicos"};
         private List<Convenio> data = new ArrayList<>();

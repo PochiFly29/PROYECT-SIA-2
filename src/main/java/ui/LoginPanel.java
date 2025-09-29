@@ -48,15 +48,11 @@ public class LoginPanel extends JPanel {
         pass = new JPasswordField();
         login = new JButton("Ingresar");
 
-        // --- Panel del Formulario (Contiene todos los campos y el recuadro de estilo) ---
         JPanel formPanel = new JPanel(new GridBagLayout());
 
-        // Estilo del Recuadro Central (FlatLaf)
         formPanel.putClientProperty(FlatClientProperties.STYLE, "arc:20; background:lighten(@background,3%)");
 
-        // Estilos para los componentes internos
         pass.putClientProperty(FlatClientProperties.STYLE, "showRevealButton:true");
-        // Evita claves FlatLaf conflictivas en algunas versiones
         login.putClientProperty(FlatClientProperties.STYLE, "background:lighten(@background,10%)");
         login.setFocusPainted(false);
         login.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
@@ -67,25 +63,21 @@ public class LoginPanel extends JPanel {
         JLabel titulo = new JLabel("¡Bienvenido!");
         JLabel descripcion = new JLabel("Inicie sesión para ingresar a su cuenta");
 
-        // CORRECCIÓN CLAVE: Aplicar el centrado de texto de Swing directamente
         titulo.setHorizontalAlignment(SwingConstants.CENTER);
         descripcion.setHorizontalAlignment(SwingConstants.CENTER);
 
-        // Aplicar estilos FlatLaf restantes (SIN la propiedad horizontalAlignment:center)
         titulo.putClientProperty(FlatClientProperties.STYLE, "font:bold +10");
         descripcion.putClientProperty(FlatClientProperties.STYLE, "foreground:darken(@foreground,30%)");
 
-        // Definición del tamaño de los campos: 300px de ancho y 32px de alto
+        // Para cambiar tamaño de los campos: 300px de ancho y 32px de alto
         Dimension fieldPrefSize = new Dimension(300, 32);
         rut.setPreferredSize(fieldPrefSize);
         pass.setPreferredSize(fieldPrefSize);
         login.setPreferredSize(fieldPrefSize);
 
-        // Aseguramos que los labels de título/descripción ocupen el mismo ancho para centrarse bien.
         titulo.setPreferredSize(fieldPrefSize);
         descripcion.setPreferredSize(fieldPrefSize);
 
-        // --- GridBagLayout para la disposición interna del formulario ---
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(4, 20, 4, 20); // Padding interno del recuadro
         gbc.fill = GridBagConstraints.HORIZONTAL;

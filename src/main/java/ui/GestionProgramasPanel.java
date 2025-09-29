@@ -40,7 +40,7 @@ public class GestionProgramasPanel extends JPanel {
                 p.getId(), p.getNombre(), p.getEstado(), p.getFechaInicio(), p.getFechaFin(), p
         }));
 
-        // Habilita/deshabilita el botón de finalizar según si hay un programa activo
+        // Habilita/deshabilita el boton de finalizar si hay un programa activo
         boolean hayActivo = gestor.getServicioConsulta().getProgramaActivo().isPresent();
         btnFinalizar.setEnabled(hayActivo);
     }
@@ -48,7 +48,7 @@ public class GestionProgramasPanel extends JPanel {
     private void init() {
         setLayout(new BorderLayout());
 
-        // ===== Header (alineado con PostularPanel) =====
+        // header
         JPanel header = new JPanel();
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setBorder(BorderFactory.createEmptyBorder(16, 24, 8, 24));
@@ -56,14 +56,12 @@ public class GestionProgramasPanel extends JPanel {
 
         JLabel title = new JLabel("GESTIÓN DE PROGRAMAS DE INTERCAMBIO", SwingConstants.CENTER);
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
-        // Misma jerarquía visual que PostularPanel
         title.setFont(title.getFont().deriveFont(Font.BOLD, 20f));
         header.add(title);
 
         header.add(Box.createVerticalStrut(10));
         add(header, BorderLayout.NORTH);
 
-        // ===== Tabla (mismo look & feel que PostularPanel) =====
         String[] cols = {"ID", "Nombre", "Estado", "Inicio", "Fin", "_OBJ"};
         model = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int row, int col) { return false; }
@@ -78,19 +76,17 @@ public class GestionProgramasPanel extends JPanel {
         table.setFocusable(false);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
-        // ID angosta (como en PostularPanel)
         TableColumn idCol = table.getColumnModel().getColumn(0);
         idCol.setPreferredWidth(60);
         idCol.setMaxWidth(60);
 
-        // Ocultar columna de objeto
         TableColumn objCol = table.getColumnModel().getColumn(5);
         objCol.setMinWidth(0);
         objCol.setMaxWidth(0);
 
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // ===== Footer (alineado a la derecha como PostularPanel) =====
+        // Footer
         JPanel actionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 10));
         actionsPanel.setOpaque(false);
         btnCrear = new JButton("Crear Nuevo Programa");
@@ -101,14 +97,13 @@ public class GestionProgramasPanel extends JPanel {
         actionsPanel.add(btnEliminar);
         add(actionsPanel, BorderLayout.SOUTH);
 
-        // ===== Listeners existentes (sin cambios de lógica) =====
+        // Listeners
         btnCrear.addActionListener(e -> crearPrograma());
         btnFinalizar.addActionListener(e -> finalizarPrograma());
         btnEliminar.addActionListener(e -> eliminarPrograma());
     }
 
     private void crearPrograma() {
-        // Formulario simple para crear un programa
         JTextField nombreField = new JTextField();
         JTextField inicioField = new JTextField(LocalDate.now().toString());
         JTextField finField = new JTextField(LocalDate.now().plusYears(1).toString());
