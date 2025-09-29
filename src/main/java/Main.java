@@ -5,11 +5,11 @@ import javax.swing.SwingUtilities;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        // Configurar el tema de la interfaz
+        // Configurar el tema inicial de la interfaz
         FlatDarkLaf.setup();
 
         // Crear una única instancia del gestor de intercambio
-        // El constructor de GestorIntercambio ya se encarga de todo.
+        // El constructor de GestorIntercambio ya se encarga de el resto.
         GestorIntercambio gestor = new GestorIntercambio();
 
         // Abrir la ventana principal y pasarle el gestor

@@ -38,6 +38,7 @@ public class AuditorPanel extends JPanel {
     private PerfilPanel perfilPanel;
     private GestionProgramasPanel gestionProgramasPanel;
     private GestionConveniosAuditorPanel gestionConveniosPanel;
+    private AnalisisPanel analisisPanel; // <-- ahora es el panel real
 
     // Botones nav
     private JToggleButton btnPerfil;
@@ -96,8 +97,6 @@ public class AuditorPanel extends JPanel {
         stripe.setOpaque(true);
         stripe.setBackground(new Color(0x4A95FF)); // azul un poco más claro que el fondo seleccionado
         stripe.setVisible(b.isSelected());
-
-        // Guardamos referencia para actualizarla desde wireToggleBehavior
         b.putClientProperty("stripe", stripe);
 
         row.add(b, "cell 0 0, grow");
@@ -219,7 +218,7 @@ public class AuditorPanel extends JPanel {
         grp.add(btnAnalisis);
         btnPerfil.setSelected(true);
 
-        // Separadores suaves
+        // separadores suaves
         JSeparator sep1 = new JSeparator();
         sep1.setForeground(new Color(0x333333));
         sep1.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -227,7 +226,6 @@ public class AuditorPanel extends JPanel {
         sep2.setForeground(new Color(0x333333));
         sep2.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Filas con franja
         navButtonsPanel.add(makeNavItem(btnPerfil));
         navButtonsPanel.add(Box.createVerticalStrut(8));
         navButtonsPanel.add(makeNavItem(btnGestionUsuarios));
@@ -242,7 +240,7 @@ public class AuditorPanel extends JPanel {
         navButtonsPanel.add(Box.createVerticalStrut(12));
         navButtonsPanel.add(makeNavItem(btnAnalisis));
 
-        // Contenido scrolleable del sidebar (para pantallas pequeñas)
+        // Contenido scrolleable del sidebar
         JPanel scrollContent = new JPanel(new BorderLayout());
         scrollContent.setOpaque(false);
         scrollContent.add(topPanel, BorderLayout.NORTH);
@@ -300,8 +298,7 @@ public class AuditorPanel extends JPanel {
         perfilPanel = new PerfilPanel(gestor, auditor);
         gestionProgramasPanel = new GestionProgramasPanel(gestor);
         gestionConveniosPanel = new GestionConveniosAuditorPanel(gestor, auditor);
-        JPanel analisisPanel = new JPanel();
-        analisisPanel.add(new JLabel("Módulo de Análisis y Reportes (en desarrollo)"));
+        analisisPanel = new AnalisisPanel(gestor.getServicioConsulta()); // <-- panel real
 
         centerCards.add(perfilPanel, CARD_PERFIL);
         centerCards.add(gestionProgramasPanel, CARD_GESTION_PROGRAMAS);
@@ -333,6 +330,7 @@ public class AuditorPanel extends JPanel {
             btnGestionConvenios.setSelected(true);
         });
         btnAnalisis.addActionListener(e -> {
+            analisisPanel.refresh();
             centerCardsLayout.show(centerCards, CARD_ANALISIS);
             btnAnalisis.setSelected(true);
         });

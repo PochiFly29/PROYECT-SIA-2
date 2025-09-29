@@ -237,16 +237,15 @@ public class EstudiantePanel extends JPanel {
         grp.add(btnVerPost);
         btnPerfil.setSelected(true);
 
-        // Separador suave entre grupos (opcional)
         JSeparator sep = new JSeparator();
         sep.setForeground(new Color(0x333333));
         sep.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         navButtonsPanel.add(makeNavItem(btnPerfil));
         navButtonsPanel.add(Box.createVerticalStrut(12));
-        navButtonsPanel.add(makeNavItem(btnPostular));
+        navButtonsPanel.add(sep);                       // << aquí movemos el separador
         navButtonsPanel.add(Box.createVerticalStrut(12));
-        navButtonsPanel.add(sep);
+        navButtonsPanel.add(makeNavItem(btnPostular));
         navButtonsPanel.add(Box.createVerticalStrut(12));
         navButtonsPanel.add(makeNavItem(btnVerPost));
 
