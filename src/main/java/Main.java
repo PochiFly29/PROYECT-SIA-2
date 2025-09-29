@@ -9,7 +9,6 @@ public class Main {
         FlatDarkLaf.setup();
 
         // Crear una única instancia del gestor de intercambio
-        // El constructor de GestorIntercambio ya se encarga de el resto.
         GestorIntercambio gestor = new GestorIntercambio();
 
         // Abrir la ventana principal y pasarle el gestor
