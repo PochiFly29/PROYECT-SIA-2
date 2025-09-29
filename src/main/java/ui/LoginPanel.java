@@ -2,189 +2,167 @@ package ui;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import gestores.GestorIntercambio;
-import gestores.ResultadoLogin;
+import modelo.ResultadoLogin;
 import modelo.Usuario;
-import net.miginfocom.swing.MigLayout;
-import servicios.VerificarInput;
+import servicios.ManagerTemas;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.function.Consumer;
 
+/**
+ * **Panel de Interfaz de Usuario para el Inicio de Sesión.**
+ * <p>Recopila las credenciales (RUT y Contraseña) del usuario, valida el acceso
+ * a través del {@link gestores.ServicioAutenticacion} y, en caso de éxito,
+ * notifica al contenedor principal ({@link VentanaPrincipal}) para iniciar el dashboard
+ * correspondiente al {@link Usuario} autenticado.</p>
+ */
 public class LoginPanel extends JPanel {
 
     private final GestorIntercambio gestor;
     private final Consumer<Usuario> onSuccess;
+    private final Runnable onRegisterRequest;
 
     private JTextField rut;
     private JPasswordField pass;
     private JButton login;
 
-    public LoginPanel(GestorIntercambio gestor, Consumer<Usuario> onSuccess) {
+    /**
+     * Crea e inicializa el panel de inicio de sesión.
+     * @param gestor El gestor central de la aplicación.
+     * @param onSuccess La acción a realizar con el usuario autenticado.
+     * @param onRegisterRequest La acción a realizar para cambiar a la vista de registro.
+     */
+    public LoginPanel(GestorIntercambio gestor, Consumer<Usuario> onSuccess, Runnable onRegisterRequest) {
         this.gestor = gestor;
         this.onSuccess = onSuccess;
+        this.onRegisterRequest = onRegisterRequest;
         init();
     }
 
     private void init(){
-        setLayout(new MigLayout("fill,insets 20", "[center]","[center]"));
+        // Contenedor principal para centrar el formulario en la ventana
+        setLayout(new GridBagLayout());
 
         rut = new JTextField();
         pass = new JPasswordField();
         login = new JButton("Ingresar");
 
-        JPanel panel = new JPanel(new MigLayout("wrap,fillx,insets 35 45 30 45", "fill,250::280"));
-        panel.putClientProperty(FlatClientProperties.STYLE, "arc:20; background:lighten(@background,3%)");
+        JPanel formPanel = new JPanel(new GridBagLayout());
+
+        formPanel.putClientProperty(FlatClientProperties.STYLE, "arc:20; background:lighten(@background,3%)");
 
         pass.putClientProperty(FlatClientProperties.STYLE, "showRevealButton:true");
-        login.putClientProperty(FlatClientProperties.STYLE,
-                "background:lighten(@background,10%); borderWidth:0; focusWidth:0; innerFocusWidth:0");
+        login.putClientProperty(FlatClientProperties.STYLE, "background:lighten(@background,10%)");
+        login.setFocusPainted(false);
+        login.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
 
-        rut.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ingrese su RUT");
-        pass.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Ingrese su contraseña");
+        rut.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "(ej: 11111111K)");
+        pass.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "(al menos 3 caracteres)");
 
         JLabel titulo = new JLabel("¡Bienvenido!");
-        JLabel descripcion =  new JLabel("Inicie sesión para ingresar a su cuenta");
+        JLabel descripcion = new JLabel("Inicie sesión para ingresar a su cuenta");
+
+        titulo.setHorizontalAlignment(SwingConstants.CENTER);
+        descripcion.setHorizontalAlignment(SwingConstants.CENTER);
+
         titulo.putClientProperty(FlatClientProperties.STYLE, "font:bold +10");
         descripcion.putClientProperty(FlatClientProperties.STYLE, "foreground:darken(@foreground,30%)");
 
-        panel.add(titulo);
-        panel.add(descripcion);
-        panel.add(new JLabel("RUT"), "gapy 8");
-        panel.add(rut);
-        panel.add(new JLabel("Contraseña"), "gapy 8");
-        panel.add(pass);
-        panel.add(login, "gapy 10");
-        panel.add(crearSeccionRegistro(), "gapy 10");
-        add(panel);
+        // Para cambiar tamaño de los campos: 300px de ancho y 32px de alto
+        Dimension fieldPrefSize = new Dimension(300, 32);
+        rut.setPreferredSize(fieldPrefSize);
+        pass.setPreferredSize(fieldPrefSize);
+        login.setPreferredSize(fieldPrefSize);
 
+        titulo.setPreferredSize(fieldPrefSize);
+        descripcion.setPreferredSize(fieldPrefSize);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(4, 20, 4, 20); // Padding interno del recuadro
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridwidth = GridBagConstraints.REMAINDER; // Cada componente ocupa toda la fila
+
+        // 1. Título y Descripción
+        gbc.insets = new Insets(20, 20, 5, 20);
+        formPanel.add(titulo, gbc);
+        gbc.insets = new Insets(0, 20, 30, 20);
+        formPanel.add(descripcion, gbc);
+
+        // 2. Campo RUT
+        gbc.insets = new Insets(0, 20, 3, 20);
+        gbc.anchor = GridBagConstraints.WEST;
+        formPanel.add(new JLabel("RUT"), gbc);
+        gbc.insets = new Insets(0, 20, 10, 20);
+        gbc.anchor = GridBagConstraints.CENTER;
+        formPanel.add(rut, gbc);
+
+        // 3. Campo Contraseña
+        gbc.insets = new Insets(5, 20, 3, 20);
+        gbc.anchor = GridBagConstraints.WEST;
+        formPanel.add(new JLabel("Contraseña"), gbc);
+        gbc.insets = new Insets(0, 20, 20, 20);
+        gbc.anchor = GridBagConstraints.CENTER;
+        formPanel.add(pass, gbc);
+
+        // 4. Botón Ingresar
+        gbc.insets = new Insets(0, 20, 15, 20);
+        formPanel.add(login, gbc);
+
+        // 5. Sección de Registro
+        gbc.insets = new Insets(0, 20, 20, 20);
+        formPanel.add(crearSeccionRegistro(), gbc);
+
+        boolean darkInitial = UIManager.getLookAndFeel().getName().toLowerCase().contains("dark");
+        JLayeredPane themed = ManagerTemas.wrapWithFloatingThemeButton(formPanel, darkInitial);
+        setLayout(new BorderLayout());
+        add(themed, BorderLayout.CENTER);
+
+        // Agregamos el ActionListener y KeyStroke para el login
         login.addActionListener(e -> doLogin());
-        getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
-                .put(KeyStroke.getKeyStroke("ENTER"), "enterLogin");
+        getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke("ENTER"), "enterLogin");
         getActionMap().put("enterLogin", new AbstractAction() {
             public void actionPerformed(java.awt.event.ActionEvent e) { doLogin(); }
         });
     }
 
-    private static void marcarError(JComponent c, boolean error) {
-        c.putClientProperty(FlatClientProperties.OUTLINE, error ? "error" : null);
-    }
-
-    public void addNotify() {
-        super.addNotify();
-        var rp = SwingUtilities.getRootPane(this);
-        if (rp != null) rp.setDefaultButton(login);
-    }
-
     private Component crearSeccionRegistro(){
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER,0,0));
         panel.putClientProperty(FlatClientProperties.STYLE, "background:null");
+
         JButton registrar = new JButton("<html><a href=\"#\">Registrar</a></html>");
-        registrar.putClientProperty(FlatClientProperties.STYLE, "border:3,3,3,3");
+        // Evita estilos FlatLaf no soportados; dejamos el link-like minimalista
         registrar.setContentAreaFilled(false);
+        registrar.setBorder(BorderFactory.createEmptyBorder(0, 3, 0, 3));
         registrar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        registrar.addActionListener(e -> abrirRegistro());
+        registrar.addActionListener(e -> onRegisterRequest.run());
+
         JLabel label = new JLabel("¿No tienes una cuenta? ");
         label.putClientProperty(FlatClientProperties.STYLE, "foreground:darken(@foreground,30%)");
+
         panel.add(label);
         panel.add(registrar);
         return panel;
     }
 
-    // === Lógica conectada a GestorIntercambio / ResultadoLogin ===
     private void doLogin() {
-        if (gestor == null) {
-            JOptionPane.showMessageDialog(this, "Gestor no inicializado.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        String rutTxt  = rut.getText().trim().toUpperCase();
+        String rutTxt  = rut.getText().trim().replace(".", "").replace("-", "").toUpperCase();
         String passTxt = new String(pass.getPassword());
 
-        ResultadoLogin r = gestor.iniciarSesion(rutTxt, passTxt);
-        if (r.isExito()) onSuccess.accept(r.getUsuario());
-        else {
+        ResultadoLogin r = gestor.getServicioAutenticacion().iniciarSesion(rutTxt, passTxt);
+        if (r.isExito()) {
+            onSuccess.accept(r.getUsuario());
+        } else {
             Toolkit.getDefaultToolkit().beep();
             JOptionPane.showMessageDialog(this, r.getMensaje(), "Inicio de sesión", JOptionPane.ERROR_MESSAGE);
-            pass.setText(""); pass.requestFocusInWindow();
+            pass.setText("");
+            pass.requestFocusInWindow();
         }
     }
 
-    private void abrirRegistro() {
-        if (gestor == null) {
-            JOptionPane.showMessageDialog(this, "Gestor no inicializado.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        JTextField rutF = new JTextField();
-        JTextField nombreF = new JTextField();
-        JTextField emailF = new JTextField();
-        JPasswordField passF = new JPasswordField();
-        JTextField carreraF = new JTextField();
-        JSpinner promedioF = new JSpinner(new SpinnerNumberModel(5.0, 1.0, 7.0, 0.1));
-        JSpinner semestresF = new JSpinner(new SpinnerNumberModel(1, 0, 30, 1));
-
-        rutF.putClientProperty(com.formdev.flatlaf.FlatClientProperties.PLACEHOLDER_TEXT, "11111111K (sin puntos ni guion)");
-        passF.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE, "showRevealButton:true");
-
-        JPanel p = new JPanel(new net.miginfocom.swing.MigLayout("wrap,fillx,insets 15 20 10 20", "fill,280::320"));
-        p.add(new JLabel("RUT")); p.add(rutF);
-        p.add(new JLabel("Nombre completo")); p.add(nombreF);
-        p.add(new JLabel("Email")); p.add(emailF);
-        p.add(new JLabel("Contraseña")); p.add(passF);
-        p.add(new JLabel("Carrera")); p.add(carreraF);
-        p.add(new JLabel("Promedio (1.0 - 7.0)")) ; p.add(promedioF);
-        p.add(new JLabel("Semestres cursados")); p.add(semestresF);
-
-        int opt = JOptionPane.showConfirmDialog(this, p, "Registrar Estudiante",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if (opt != JOptionPane.OK_OPTION) return;
-
-        marcarError(rutF,false); marcarError(passF,false); marcarError(emailF,false);
-
-        String rutN = VerificarInput.normalizarRut(rutF.getText().trim());
-        String nombre = nombreF.getText().trim();
-        String email = emailF.getText().trim();
-        String passTxt  = new String(passF.getPassword());
-        String carrera  = carreraF.getText().trim();
-        double promedio = ((Number) promedioF.getValue()).doubleValue();
-        int semestres   = (int) semestresF.getValue();
-
-        StringBuilder errores = new StringBuilder();
-
-        if (!VerificarInput.rutValido(rutN)) {
-            marcarError(rutF, true);
-            errores.append("• RUT inválido (8 dígitos + DV correcto)\n");
-        } else if (gestor.existeUsuario(rutN)) {
-            marcarError(rutF, true);
-            errores.append("• Ya existe un usuario con este RUT\n");
-        }
-
-        if (passTxt.isEmpty()) {
-            marcarError(passF, true);
-            errores.append("• La contraseña no puede estar vacía\n");
-        }
-
-        if (errores.length()==0 && gestor.existeUsuario(rutN)) {
-            marcarError(rutF, true);
-            errores.append("• Ya existe un usuario con este RUT\n");
-        }
-
-        if (!email.contains("@")) {
-            marcarError(emailF, true);
-            errores.append("• Email inválido\n");
-        }
-
-        if (errores.length() > 0) {
-            Toolkit.getDefaultToolkit().beep();
-            JOptionPane.showMessageDialog(this, errores.toString(), "Registro", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        try {
-            gestor.registrarEstudiante(rutN, nombre, email, passTxt, carrera, semestres, promedio);
-            JOptionPane.showMessageDialog(this, "Estudiante registrado exitosamente.");
-        } catch (Exception ex) {
-            Toolkit.getDefaultToolkit().beep();
-            JOptionPane.showMessageDialog(this, "No se pudo registrar: " + ex.getMessage(),"Error", JOptionPane.ERROR_MESSAGE);
-        }
+    public void limpiarCampos() {
+        rut.setText("");
+        pass.setText("");
+        rut.requestFocusInWindow();
     }
 }

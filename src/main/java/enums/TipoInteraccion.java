@@ -1,5 +1,5 @@
 package enums;
 
 public enum TipoInteraccion {
-    DOCUMENTO, COMENTARIO, NOTIFICACION
+    DOCUMENTO, COMENTARIO
 }

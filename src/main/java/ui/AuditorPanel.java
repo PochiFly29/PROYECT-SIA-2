@@ -1,72 +1,63 @@
 package ui;
 
 import com.formdev.flatlaf.FlatClientProperties;
+import enums.Rol;
 import gestores.GestorIntercambio;
-import modelo.Estudiante;
+import modelo.Usuario;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
 
 /**
- * **Panel de Interfaz de Usuario (Dashboard) para el Rol de Estudiante.**
- * <p>Actúa como el contenedor principal para las funcionalidades de un estudiante
- * (Ver perfil, Postular a convenios, Revisar postulaciones). Utiliza un diseño de
- * {@link CardLayout} para la navegación central y una barra lateral fija.</p>
- * <p>Es capaz de reconfigurarse a sí mismo (y a sus subpaneles) si el objeto
- * {@link Estudiante} cambia (`setEstudiante`).</p>
+ * **Panel de Interfaz de Usuario para el Rol de Auditor.**
+ * <p>Ventana principal que centraliza la navegacion y las funcionalidades
+ * disponibles para el rol {@link Rol#AUDITOR}. Utiliza un diseño de
+ * {@link CardLayout} para cambiar las vistas del contenido principal (centro).</p>
+ * <p>Incluye una barra lateral (`JPanel` en {@link BorderLayout#WEST}) con los botones
+ * de navegación (Perfil, Gestión de Programas, etc.).</p>
  */
-public class EstudiantePanel extends JPanel {
+public class AuditorPanel extends JPanel {
 
     private final GestorIntercambio gestor;
-    private Estudiante estudiante;
+    private final Usuario auditor;
     private final Runnable onLogout;
 
     private JLabel lblSidebarNombre;
 
     private final CardLayout centerCardsLayout = new CardLayout();
     private final JPanel centerCards = new JPanel(centerCardsLayout);
+
+    // Nombres de tarjetas
     private static final String CARD_PERFIL = "perfil";
-    private static final String CARD_POSTULACIONES = "postulaciones";
-    private static final String CARD_POSTULAR = "postular";
+    private static final String CARD_GESTION_PROGRAMAS = "gestionProgramas";
+    private static final String CARD_GESTION_CONVENIOS = "gestionConvenios";
+    private static final String CARD_ANALISIS = "analisis";
 
+    // Paneles centrales con contenido
     private PerfilPanel perfilPanel;
-    private PostularPanel postularPanel;
-    private PostulacionesPanel postulacionesPanel;
+    private GestionProgramasPanel gestionProgramasPanel;
+    private GestionConveniosAuditorPanel gestionConveniosPanel;
+    private AnalisisPanel analisisPanel;
 
+    // Botones izquierdos de navegacion
     private JToggleButton btnPerfil;
-    private JToggleButton btnVerPost;
-    private JToggleButton btnPostular;
+    private JToggleButton btnGestionUsuarios;
+    private JToggleButton btnGestionProgramas;
+    private JToggleButton btnGestionConvenios;
+    private JToggleButton btnAnalisis;
 
     /**
-     * Crea e inicializa el panel principal del Estudiante.
+     * Crea e inicializa el panel principal del Auditor.
      * @param gestor El gestor central de la aplicación.
-     * @param estudiante El usuario Estudiante autenticado.
+     * @param auditor El usuario Auditor autenticado.
      * @param onLogout El {@code Runnable} que maneja la transición a la pantalla de login.
      */
-    public EstudiantePanel(GestorIntercambio gestor, Estudiante estudiante, Runnable onLogout) {
+    public AuditorPanel(GestorIntercambio gestor, Usuario auditor, Runnable onLogout) {
         this.gestor = gestor;
-        this.estudiante = estudiante;
+        this.auditor = auditor;
         this.onLogout = onLogout;
         init();
-        refreshSidebar();
-    }
-
-    public void setEstudiante(Estudiante e) {
-        this.estudiante = e;
-        refreshSidebar();
-
-        if (perfilPanel != null) {
-            perfilPanel.setUsuario(e);
-        }
-
-        PostulacionesPanel nuevoPostulaciones = new PostulacionesPanel(gestor, e);
-        replaceCard(CARD_POSTULACIONES, postulacionesPanel, nuevoPostulaciones);
-        postulacionesPanel = nuevoPostulaciones;
-
-        PostularPanel nuevoPostular = new PostularPanel(gestor, e);
-        replaceCard(CARD_POSTULAR, postularPanel, nuevoPostular);
-        postularPanel = nuevoPostular;
     }
 
     private JToggleButton botonNavegacion(String text) {
@@ -91,7 +82,7 @@ public class EstudiantePanel extends JPanel {
         return b;
     }
 
-    private JPanel BotonesNavegacionPrincipales(JToggleButton b) {
+    private JPanel makeNavItem(JToggleButton b) {
         JPanel row = new JPanel(new MigLayout("insets 0, gap 0, fill", "[grow,fill][6!]", "[fill]"));
         row.setOpaque(false);
         row.setMinimumSize(new Dimension(0, 72));
@@ -103,7 +94,6 @@ public class EstudiantePanel extends JPanel {
         stripe.setOpaque(true);
         stripe.setBackground(new Color(0x4A95FF));
         stripe.setVisible(b.isSelected());
-
         b.putClientProperty("stripe", stripe);
 
         row.add(b, "cell 0 0, grow");
@@ -131,11 +121,13 @@ public class EstudiantePanel extends JPanel {
                 if (stripe != null) stripe.setVisible(false);
             }
             b.revalidate(); b.repaint();
-            if (stripe != null) { stripe.revalidate(); stripe.repaint(); }
+            if (stripe != null) {
+                stripe.revalidate(); stripe.repaint();
+            }
         });
     }
 
-    /** Efecto al pasar el moouse encima*/
+    /** Hover para pasar el mouse */
     private void addHoverEffect(JToggleButton b) {
         final Color hoverBg = new Color(0x2F2F2F);
         b.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -154,7 +146,7 @@ public class EstudiantePanel extends JPanel {
         });
     }
 
-    private static void styleRectButtonPrimary(JButton b, Color bg) {
+    private static void EstiloBotonesInferiores(JButton b, Color bg) {
         b.setFocusPainted(false);
         b.setOpaque(true);
         b.setBackground(bg);
@@ -164,12 +156,7 @@ public class EstudiantePanel extends JPanel {
         b.setBorder(BorderFactory.createLineBorder(bg.darker(), 1, false));
     }
 
-    private void replaceCard(String name, JComponent oldComp, JComponent newComp) {
-        if (oldComp != null) centerCards.remove(oldComp);
-        centerCards.add(newComp, name);
-        centerCards.revalidate();
-        centerCards.repaint();
-    }
+    // ==== init ====
 
     private void init() {
         JPanel panelIzquierdo = new JPanel(new BorderLayout());
@@ -178,7 +165,7 @@ public class EstudiantePanel extends JPanel {
         panelIzquierdo.setPreferredSize(new Dimension(360, 0));
         panelIzquierdo.setMinimumSize(new Dimension(320, 0));
 
-        // Header
+        // Header con logo
         JPanel topPanel = new JPanel(new MigLayout("wrap, fillx, insets 24 24 8 24", "[fill]"));
         topPanel.setOpaque(false);
 
@@ -187,7 +174,7 @@ public class EstudiantePanel extends JPanel {
             ImageIcon icon = new ImageIcon(getClass().getResource("/Logo SGIE.png"));
             Image img = icon.getImage();
 
-            int maxW = 330, maxH = 280;
+            int maxW = 330, maxH = 220;
             int iw = img.getWidth(null), ih = img.getHeight(null);
             double s = Math.min(maxW / (double) iw, maxH / (double) ih);
             int nw = Math.max(1, (int) Math.round(iw * s));
@@ -203,10 +190,10 @@ public class EstudiantePanel extends JPanel {
         }
         topPanel.add(logo, "growx, gaptop 4");
 
-        JPanel separator = new JPanel();
-        separator.setPreferredSize(new Dimension(0, 1));
-        separator.setBackground(new Color(0x333333));
-        topPanel.add(separator, "growx, gaptop 12");
+        JPanel separatorTop = new JPanel();
+        separatorTop.setPreferredSize(new Dimension(0, 1));
+        separatorTop.setBackground(new Color(0x333333));
+        topPanel.add(separatorTop, "growx, gaptop 12");
 
         // Navegacion
         JPanel navButtonsPanel = new JPanel();
@@ -214,27 +201,41 @@ public class EstudiantePanel extends JPanel {
         navButtonsPanel.setLayout(new BoxLayout(navButtonsPanel, BoxLayout.Y_AXIS));
         navButtonsPanel.setBorder(BorderFactory.createEmptyBorder(8, 0, 8, 0));
 
-        btnPerfil   = botonNavegacion("Perfil");
-        btnPostular = botonNavegacion("Postular a un convenio");
-        btnVerPost  = botonNavegacion("Ver postulaciones");
+        btnPerfil = botonNavegacion("Mi Perfil");
+        btnGestionUsuarios = botonNavegacion("Gestionar Usuarios");
+        btnGestionProgramas = botonNavegacion("Gestionar Programas");
+        btnGestionConvenios = botonNavegacion("Gestionar Convenios");
+        btnAnalisis = botonNavegacion("Análisis");
 
         ButtonGroup grp = new ButtonGroup();
         grp.add(btnPerfil);
-        grp.add(btnPostular);
-        grp.add(btnVerPost);
+        grp.add(btnGestionUsuarios);
+        grp.add(btnGestionProgramas);
+        grp.add(btnGestionConvenios);
+        grp.add(btnAnalisis);
         btnPerfil.setSelected(true);
 
-        JSeparator sep = new JSeparator();
-        sep.setForeground(new Color(0x333333));
-        sep.setAlignmentX(Component.CENTER_ALIGNMENT);
+        // separadores
+        JSeparator sep1 = new JSeparator();
+        sep1.setForeground(new Color(0x333333));
+        sep1.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JSeparator sep2 = new JSeparator();
+        sep2.setForeground(new Color(0x333333));
+        sep2.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        navButtonsPanel.add(BotonesNavegacionPrincipales(btnPerfil));
+        navButtonsPanel.add(makeNavItem(btnPerfil));
+        navButtonsPanel.add(Box.createVerticalStrut(8));
+        navButtonsPanel.add(makeNavItem(btnGestionUsuarios));
         navButtonsPanel.add(Box.createVerticalStrut(12));
-        navButtonsPanel.add(sep);                       // << aquí movemos el separador
+        navButtonsPanel.add(sep1);
         navButtonsPanel.add(Box.createVerticalStrut(12));
-        navButtonsPanel.add(BotonesNavegacionPrincipales(btnPostular));
+        navButtonsPanel.add(makeNavItem(btnGestionProgramas));
+        navButtonsPanel.add(Box.createVerticalStrut(8));
+        navButtonsPanel.add(makeNavItem(btnGestionConvenios));
         navButtonsPanel.add(Box.createVerticalStrut(12));
-        navButtonsPanel.add(BotonesNavegacionPrincipales(btnVerPost));
+        navButtonsPanel.add(sep2);
+        navButtonsPanel.add(Box.createVerticalStrut(12));
+        navButtonsPanel.add(makeNavItem(btnAnalisis));
 
         // Barra izquierda con scroll al ajustar ventana
         JPanel scrollContent = new JPanel(new BorderLayout());
@@ -263,7 +264,7 @@ public class EstudiantePanel extends JPanel {
         // Footer
         JPanel bottomPanel = new JPanel(new MigLayout("wrap, fillx, insets 24 24 32 24", "[fill]"));
         bottomPanel.setOpaque(false);
-        lblSidebarNombre = new JLabel();
+        lblSidebarNombre = new JLabel("Hola, Auditor " + safe(auditor.getNombreCompleto()).split(" ")[0] + "!");
         lblSidebarNombre.setHorizontalAlignment(SwingConstants.CENTER);
         lblSidebarNombre.putClientProperty(FlatClientProperties.STYLE, "font:bold +3; foreground:lighten(@foreground,25%)");
 
@@ -271,11 +272,11 @@ public class EstudiantePanel extends JPanel {
         actions.setOpaque(false);
 
         JButton btnCerrar = new JButton("Cerrar Sesión");
-        styleRectButtonPrimary(btnCerrar, new Color(0x2E86FF));
+        EstiloBotonesInferiores(btnCerrar, new Color(0x2E86FF));
         btnCerrar.setPreferredSize(new Dimension(0, 72));
 
         JButton btnSalir = new JButton("Salir");
-        styleRectButtonPrimary(btnSalir, new Color(0xE42828));
+        EstiloBotonesInferiores(btnSalir, new Color(0xE42828));
         btnSalir.setPreferredSize(new Dimension(0, 72));
 
         actions.add(btnCerrar);
@@ -287,44 +288,85 @@ public class EstudiantePanel extends JPanel {
         panelIzquierdo.add(bottomPanel, BorderLayout.SOUTH);
 
         // Centro
-        perfilPanel = new PerfilPanel(gestor, estudiante);
-        postulacionesPanel = new PostulacionesPanel(gestor, estudiante);
-        postularPanel = new PostularPanel(gestor, estudiante);
+        perfilPanel = new PerfilPanel(gestor, auditor);
+        gestionProgramasPanel = new GestionProgramasPanel(gestor);
+        gestionConveniosPanel = new GestionConveniosAuditorPanel(gestor, auditor);
+        analisisPanel = new AnalisisPanel(gestor.getServicioConsulta()); // <-- panel real
 
         centerCards.add(perfilPanel, CARD_PERFIL);
-        centerCards.add(postulacionesPanel, CARD_POSTULACIONES);
-        centerCards.add(postularPanel, CARD_POSTULAR);
-        centerCardsLayout.show(centerCards, CARD_PERFIL);
+        centerCards.add(gestionProgramasPanel, CARD_GESTION_PROGRAMAS);
+        centerCards.add(gestionConveniosPanel, CARD_GESTION_CONVENIOS);
+        centerCards.add(analisisPanel, CARD_ANALISIS);
 
         // Layout principal
         setLayout(new BorderLayout());
         add(panelIzquierdo, BorderLayout.WEST);
         add(centerCards, BorderLayout.CENTER);
 
-        // Accion de navegacion
+        // Listeners
         btnPerfil.addActionListener(e -> {
             centerCardsLayout.show(centerCards, CARD_PERFIL);
             btnPerfil.setSelected(true);
         });
-        btnVerPost.addActionListener(e -> {
-            postulacionesPanel.refresh();
-            centerCardsLayout.show(centerCards, CARD_POSTULACIONES);
-            btnVerPost.setSelected(true);
+        btnGestionUsuarios.addActionListener(e -> {
+            mostrarDialogoCrearUsuario();
+            btnGestionUsuarios.setSelected(true);
         });
-        btnPostular.addActionListener(e -> {
-            postularPanel.refresh();
-            centerCardsLayout.show(centerCards, CARD_POSTULAR);
-            btnPostular.setSelected(true);
+        btnGestionProgramas.addActionListener(e -> {
+            gestionProgramasPanel.refresh();
+            centerCardsLayout.show(centerCards, CARD_GESTION_PROGRAMAS);
+            btnGestionProgramas.setSelected(true);
+        });
+        btnGestionConvenios.addActionListener(e -> {
+            gestionConveniosPanel.refresh();
+            centerCardsLayout.show(centerCards, CARD_GESTION_CONVENIOS);
+            btnGestionConvenios.setSelected(true);
+        });
+        btnAnalisis.addActionListener(e -> {
+            analisisPanel.refresh();
+            centerCardsLayout.show(centerCards, CARD_ANALISIS);
+            btnAnalisis.setSelected(true);
         });
 
         btnCerrar.addActionListener(e -> onLogout.run());
         btnSalir.addActionListener(e -> System.exit(0));
     }
 
-    private void refreshSidebar() {
-        if (estudiante == null) return;
-        String nombre = safe(estudiante.getNombreCompleto());
-        lblSidebarNombre.setText("Hola, " + (nombre.isEmpty() ? "" : nombre.split(" ")[0]) + "!");
+    private void mostrarDialogoCrearUsuario() {
+        JTextField rutField = new JTextField();
+        JTextField nombreField = new JTextField();
+        JTextField emailField = new JTextField();
+        JPasswordField passField = new JPasswordField();
+        JComboBox<Rol> rolComboBox = new JComboBox<>(new Rol[]{Rol.FUNCIONARIO, Rol.AUDITOR});
+
+        JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
+        panel.add(new JLabel("RUT (sin puntos ni guion):"));
+        panel.add(rutField);
+        panel.add(new JLabel("Nombre Completo:"));
+        panel.add(nombreField);
+        panel.add(new JLabel("Email:"));
+        panel.add(emailField);
+        panel.add(new JLabel("Contraseña Temporal:"));
+        panel.add(passField);
+        panel.add(new JLabel("Rol:"));
+        panel.add(rolComboBox);
+
+        int result = JOptionPane.showConfirmDialog(this, panel, "Crear Nuevo Usuario", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                gestor.getServicioAutenticacion().crearUsuarioAdministrativo(
+                        rutField.getText().trim(),
+                        nombreField.getText().trim(),
+                        emailField.getText().trim(),
+                        new String(passField.getPassword()),
+                        (Rol) rolComboBox.getSelectedItem()
+                );
+                JOptionPane.showMessageDialog(this, "Usuario creado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Error al crear usuario: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     private static String safe(String s) {

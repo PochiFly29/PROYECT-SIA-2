@@ -1,337 +1,343 @@
 package ui;
 
 import com.formdev.flatlaf.FlatClientProperties;
+import gestores.GestorIntercambio;
 import modelo.Estudiante;
 import modelo.Usuario;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.InputStream;
 
+/**
+ * **Panel de Interfaz de Usuario Polivalente para la Gestión del Perfil de Usuario.**
+ * <p>Muestra los datos de un {@link Usuario} y permite su edición. Su diseño es
+ * dinámico: los campos específicos de datos académicos (carrera, promedio, semestres)
+ * solo son visibles y editables si el usuario actual es una instancia de {@link Estudiante}.</p>
+ * <p>Delega todas las operaciones de actualización de datos a {@link gestores.ServicioAutenticacion}.</p>
+ */
 public class PerfilPanel extends JPanel {
 
+    private final GestorIntercambio gestor;
     private Usuario usuario;
 
-    private JLabel lblTituloPeq;
-    private JLabel lblNombreValor;
-    private JLabel lblEmailValor;
-    private JLabel lblCarreraValor;
-    private JLabel lblPassValor;
+    // Comunes
     private JLabel lblRol;
-    private JLabel lblSemestres;
-    private JLabel lblPromedio;
+    private JLabel lblRut;
+    private JTextField txtNombre;
+    private JTextField txtEmail;
+    private JPasswordField txtPass;
 
-    public PerfilPanel(Usuario usuarioInicial) {
-        this.usuario = usuarioInicial;
-        initUI();
-        refreshFromUsuario();
+    // Académicos (solo estudiante)
+    private JPanel panelAcademico;
+    private JTextField txtCarrera;
+    private JTextField txtSemestres;
+    private JTextField txtPromedio;
+
+    private JLabel promLbl;
+    private JLabel carreraLbl;
+    private JLabel semLbl;
+
+    private JLabel avatarImage;
+    private JScrollPane sp;
+
+    /**
+     * Crea e inicializa el panel de perfil.
+     * @param gestor El gestor central de la aplicación.
+     * @param usuario El {@link Usuario} (Estudiante, Funcionario o Auditor) cuyos datos se mostrarán.
+     */
+    public PerfilPanel(GestorIntercambio gestor, Usuario usuario) {
+        this.gestor = gestor;
+        this.usuario = usuario;
+        init();
+        refreshData();
     }
 
     public void setUsuario(Usuario u) {
         this.usuario = u;
-        refreshFromUsuario();
+        refreshData();
     }
 
-    private void initUI() {
-        // ===== Banner =====
-        JPanel banner = new JPanel();
-        banner.setLayout(new BoxLayout(banner, BoxLayout.Y_AXIS));
-        banner.setBorder(BorderFactory.createEmptyBorder(16, 24, 16, 24));
-        banner.setOpaque(true);
-
-        lblTituloPeq = new JLabel("Nombre Apellido • Ingeniería", SwingConstants.CENTER);
-        lblTituloPeq.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lblTituloPeq.putClientProperty(FlatClientProperties.STYLE, "font:+0; foreground:lighten(@foreground,10%)");
-
-        JLabel avatar = new JLabel("FOTO", SwingConstants.CENTER);
-        avatar.setPreferredSize(new Dimension(160, 160));
-        avatar.setOpaque(true);
-        avatar.putClientProperty(FlatClientProperties.STYLE, "background:#E6E6E6; arc:16");
-        avatar.setBorder(new javax.swing.border.LineBorder(new Color(0xE6E6E6), 0, true));
-
-        JPanel avatarWrap = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        avatarWrap.setOpaque(false);
-        avatarWrap.add(avatar);
-
-        banner.add(lblTituloPeq);
-        banner.add(Box.createVerticalStrut(10));
-        banner.add(avatarWrap);
-
-        // ===== Detalle (tarjeta) =====
-        JPanel detalle = new JPanel(new GridBagLayout());
-        detalle.setOpaque(false);
-        detalle.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
-
-        GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(8, 100, 8, 16);
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.weightx = 0.5;
-
-        // Izquierda
-        c.gridx = 0; c.gridy = 0; detalle.add(labelTitulo("Nombre"), c);
-        lblNombreValor = new JLabel("Nombre Apellido");
-        c.gridy = 1; detalle.add(rowCampo(lblNombreValor, "[cambiar nombre]", new Runnable() {
-            public void run() { onEditNombre(); }
-        }), c);
-
-        c.gridy = 2; detalle.add(labelTitulo("Email"), c);
-        lblEmailValor = new JLabel("mail@gmail.com");
-        c.gridy = 3; detalle.add(rowCampo(lblEmailValor, "[cambiar email]", new Runnable() {
-            public void run() { onEditEmail(); }
-        }), c);
-
-        // Derecha
-        c.gridx = 1; c.gridy = 0; detalle.add(labelTitulo("Carrera"), c);
-        lblCarreraValor = new JLabel("Ingeniería");
-        c.gridy = 1; detalle.add(rowCampo(lblCarreraValor, "[cambiar carrera]", new Runnable() {
-            public void run() { onEditCarrera(); }
-        }), c);
-
-        c.gridy = 2; detalle.add(labelTitulo("Contraseña"), c);
-        lblPassValor = new JLabel("**********");
-        c.gridy = 3; detalle.add(rowCampo(lblPassValor, "[cambiar contraseña]", new Runnable() {
-            public void run() { onEditPassword(); }
-        }), c);
-
-        JPanel tarjeta = new JPanel(new BorderLayout());
-        tarjeta.putClientProperty(FlatClientProperties.STYLE, "background:#E6E6E6; arc:16");
-        tarjeta.setBorder(BorderFactory.createCompoundBorder(
-                new javax.swing.border.LineBorder(new Color(0xE6E6E6), 3, false),
-                BorderFactory.createEmptyBorder(8, 24, 8, 24)
-        ));
-        tarjeta.add(detalle, BorderLayout.CENTER);
-
-        JPanel footer = new JPanel();
-        footer.setOpaque(false);
-        footer.setLayout(new BoxLayout(footer, BoxLayout.Y_AXIS));
-        lblRol = new JLabel("Estudiante", SwingConstants.CENTER);
-        lblRol.putClientProperty(FlatClientProperties.STYLE, "font:bold +1");
-        lblSemestres = new JLabel("X semestre(s) cursado(s)", SwingConstants.CENTER);
-        lblPromedio  = new JLabel("5.0 Promedio", SwingConstants.CENTER);
-        lblRol.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lblSemestres.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lblPromedio.setAlignmentX(Component.CENTER_ALIGNMENT);
-        tarjeta.add(footer, BorderLayout.SOUTH);
-        footer.add(lblRol);
-        footer.add(Box.createVerticalStrut(3));
-        footer.add(lblSemestres);
-        footer.add(Box.createVerticalStrut(4));
-        footer.add(lblPromedio);
-        footer.add(Box.createVerticalStrut(50));
-
-        // Texto oscuro dentro de la tarjeta
-        Color textoOscuro = new Color(0x222222);
-        tintLabels(detalle, textoOscuro);
-        lblRol.setForeground(textoOscuro);
-        lblSemestres.setForeground(new Color(0x555555));
-        lblPromedio.setForeground(new Color(0x777777));
-
+    private void init() {
+        setBorder(null);
+        putClientProperty(FlatClientProperties.STYLE, "border: null");
+        setOpaque(true);
+        setBackground(UIManager.getColor("Panel.background"));
         setLayout(new BorderLayout());
-        add(banner, BorderLayout.NORTH);
-        add(tarjeta, BorderLayout.CENTER);
+
+        JPanel root = new JPanel(new BorderLayout());
+        root.setBorder(BorderFactory.createEmptyBorder(96, 16, 32, 16));
+
+        // ===== Header =====
+        JPanel header = new JPanel();
+        header.setOpaque(false);
+        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
+
+        JPanel avatar = new JPanel(new GridBagLayout());
+        avatar.setMaximumSize(new Dimension(360, 220));
+        avatar.setPreferredSize(new Dimension(360, 220));
+        avatar.putClientProperty(FlatClientProperties.STYLE, "arc:24; background:#D7D7D7");
+
+        avatarImage = new JLabel();
+        avatarImage.setHorizontalAlignment(SwingConstants.CENTER);
+        avatarImage.setVerticalAlignment(SwingConstants.BOTTOM);
+
+        GridBagConstraints ac = new GridBagConstraints();
+        ac.gridx = 0; ac.gridy = 0;
+        ac.weightx = 1.0; ac.weighty = 1.0;
+        ac.anchor = GridBagConstraints.SOUTH;
+        avatar.add(avatarImage, ac);
+
+        loadAvatar(avatar.getPreferredSize());
+
+        lblRol = new JLabel();
+        lblRol.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblRol.setHorizontalAlignment(SwingConstants.CENTER);
+        lblRol.putClientProperty(FlatClientProperties.STYLE, "font:bold +5; foreground:#FFFFFF"); // +1
+
+        lblRut = new JLabel();
+        lblRut.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblRut.setHorizontalAlignment(SwingConstants.CENTER);
+        lblRut.putClientProperty(FlatClientProperties.STYLE, "font:medium +4; foreground:#FFFFFF"); // +1
+
+        header.add(Box.createVerticalStrut(16));
+        header.add(avatar);
+        header.add(Box.createVerticalStrut(10));
+        header.add(lblRol);
+        header.add(Box.createVerticalStrut(4));
+        header.add(lblRut);
+        header.add(Box.createVerticalStrut(24));
+
+        // ===== Grid 3 columnas =====
+        JPanel grid = new JPanel(new GridBagLayout());
+        grid.setOpaque(false);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // Más grande, pero aún cabe sin barra horizontal
+        Dimension fieldPref = new Dimension(300, 52); // (antes 270×48)
+        Insets labelInsets  = new Insets(6, 12, 2, 12);
+        Insets fieldInsets  = new Insets(2, 12, 12, 12);
+
+        JLabel nombreLbl = new JLabel("Nombre");
+        nombreLbl.putClientProperty(FlatClientProperties.STYLE, "font:bold +4; foreground:#FFFFFF"); // +1
+        txtNombre = new JTextField();
+        txtNombre.setPreferredSize(fieldPref);
+        txtNombre.setMaximumSize(new Dimension(fieldPref.width, Integer.MAX_VALUE));
+        txtNombre.putClientProperty(FlatClientProperties.STYLE, "arc:10; borderWidth:1; focusWidth:1");
+
+        JLabel emailLbl = new JLabel("Email");
+        emailLbl.putClientProperty(FlatClientProperties.STYLE, "font:bold +4; foreground:#FFFFFF");
+        txtEmail = new JTextField();
+        txtEmail.setPreferredSize(fieldPref);
+        txtEmail.setMaximumSize(new Dimension(fieldPref.width, Integer.MAX_VALUE));
+        txtEmail.putClientProperty(FlatClientProperties.STYLE, "arc:10; borderWidth:1; focusWidth:1");
+
+        JLabel passLbl = new JLabel("Contraseña (Nueva)");
+        passLbl.putClientProperty(FlatClientProperties.STYLE, "font:bold +4; foreground:#FFFFFF");
+        txtPass = new JPasswordField();
+        txtPass.setPreferredSize(fieldPref);
+        txtPass.setMaximumSize(new Dimension(fieldPref.width, Integer.MAX_VALUE));
+        txtPass.putClientProperty(FlatClientProperties.STYLE, "showRevealButton:true; arc:10; borderWidth:1; focusWidth:1");
+
+        gbc.insets = labelInsets;
+        gbc.gridx = 0; gbc.gridy = 0; grid.add(nombreLbl, gbc);
+        gbc.gridx = 1; gbc.gridy = 0; grid.add(emailLbl, gbc);
+        gbc.gridx = 2; gbc.gridy = 0; grid.add(passLbl, gbc);
+
+        gbc.insets = fieldInsets;
+        gbc.gridx = 0; gbc.gridy = 1; grid.add(txtNombre, gbc);
+        gbc.gridx = 1; gbc.gridy = 1; grid.add(txtEmail, gbc);
+        gbc.gridx = 2; gbc.gridy = 1; grid.add(txtPass, gbc);
+
+        promLbl = new JLabel("Promedio");
+        promLbl.putClientProperty(FlatClientProperties.STYLE, "font:bold +4; foreground:#FFFFFF");
+        carreraLbl = new JLabel("Carrera");
+        carreraLbl.putClientProperty(FlatClientProperties.STYLE, "font:bold +4; foreground:#FFFFFF");
+        semLbl = new JLabel("Semestres Cursados");
+        semLbl.putClientProperty(FlatClientProperties.STYLE, "font:bold +4; foreground:#FFFFFF");
+
+        gbc.insets = new Insets(16, 12, 2, 12);
+        gbc.gridx = 0; gbc.gridy = 2; grid.add(promLbl, gbc);
+        gbc.gridx = 1; gbc.gridy = 2; grid.add(carreraLbl, gbc);
+        gbc.gridx = 2; gbc.gridy = 2; grid.add(semLbl, gbc);
+
+        gbc.insets = fieldInsets;
+        txtPromedio = new JTextField();
+        txtPromedio.setPreferredSize(fieldPref);
+        txtPromedio.setMaximumSize(new Dimension(fieldPref.width, Integer.MAX_VALUE));
+        txtPromedio.putClientProperty(FlatClientProperties.STYLE, "arc:10; borderWidth:1; focusWidth:1");
+
+        txtCarrera = new JTextField();
+        txtCarrera.setPreferredSize(fieldPref);
+        txtCarrera.setMaximumSize(new Dimension(fieldPref.width, Integer.MAX_VALUE));
+        txtCarrera.putClientProperty(FlatClientProperties.STYLE, "arc:10; borderWidth:1; focusWidth:1");
+
+        txtSemestres = new JTextField();
+        txtSemestres.setPreferredSize(fieldPref);
+        txtSemestres.setMaximumSize(new Dimension(fieldPref.width, Integer.MAX_VALUE));
+        txtSemestres.putClientProperty(FlatClientProperties.STYLE, "arc:10; borderWidth:1; focusWidth:1");
+
+        gbc.gridx = 0; gbc.gridy = 3; grid.add(txtPromedio, gbc);
+        gbc.gridx = 1; gbc.gridy = 3; grid.add(txtCarrera, gbc);
+        gbc.gridx = 2; gbc.gridy = 3; grid.add(txtSemestres, gbc);
+
+        // ===== Botón (centrado, NO full-width, con más margen/padding) =====
+        JButton btnGuardar = new JButton("Guardar Cambios");
+        btnGuardar.putClientProperty(FlatClientProperties.STYLE,
+                "background:#2E86FF; foreground:#FFFFFF; font:bold +3");
+        btnGuardar.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btnGuardar.setBorder(BorderFactory.createEmptyBorder(14, 28, 14, 28)); // más padding
+        btnGuardar.setPreferredSize(new Dimension(440, 50)); // ancho fijo, llamativo
+
+        gbc.gridx = 0; gbc.gridy = 4;
+        gbc.gridwidth = 3;                       // debajo de las 3 columnas
+        gbc.fill = GridBagConstraints.NONE;      // <- que NO se estire
+        gbc.anchor = GridBagConstraints.CENTER;  // <- centrado
+        gbc.insets = new Insets(26, 12, 0, 12);  // margen superior visible
+        grid.add(btnGuardar, gbc);
+
+        // ===== Layout principal =====
+        JPanel centerWrap = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        centerWrap.setOpaque(false);
+        centerWrap.add(grid);
+
+        root.add(header, BorderLayout.NORTH);
+        root.add(centerWrap, BorderLayout.CENTER);
+
+        sp = new JScrollPane(root);
+        sp.setBorder(null);
+        sp.setViewportBorder(null);
+        add(sp, BorderLayout.CENTER);
+
+        setBorder(null);
+        putClientProperty(FlatClientProperties.STYLE, "border: null");
+
+        btnGuardar.addActionListener(e -> guardarCambios());
     }
 
-    private void refreshFromUsuario() {
+    private void stripBorders() {
+        setBorder(null);
+        putClientProperty(FlatClientProperties.STYLE, "border: null");
+        if (sp != null) {
+            sp.setBorder(BorderFactory.createEmptyBorder());
+            sp.setViewportBorder(BorderFactory.createEmptyBorder());
+            sp.putClientProperty(FlatClientProperties.STYLE, "border: null");
+            if (sp.getViewport() != null) sp.getViewport().setOpaque(false);
+        }
+    }
+
+    @Override
+    public void updateUI() {
+        super.updateUI();
+        SwingUtilities.invokeLater(this::stripBorders);
+    }
+
+    public void refreshData() {
         if (usuario == null) return;
 
-        String nombre = safe(usuario.getNombreCompleto());
-        String email  = safe(usuario.getEmail());
-        String rolLegible = (usuario.getRol() != null) ? toTitulo(usuario.getRol().name()) : "Usuario";
+        lblRol.setText(usuario.getRol().name());
+        lblRut.setText("Rut: " + usuario.getRut());
+        txtNombre.setText(usuario.getNombreCompleto());
+        txtEmail.setText(usuario.getEmail());
+        txtPass.setText("");
 
-        String carrera = "-";
-        Integer semestres = null;
-        Double promedio = null;
-        if (usuario instanceof Estudiante) {
-            Estudiante e = (Estudiante) usuario; // Java 11 OK
-            carrera = safe(e.getCarrera());
-            semestres = e.getSemestresCursados();
-            promedio  = e.getPromedio();
-        }
+        boolean esEstudiante = usuario instanceof Estudiante;
 
-        lblTituloPeq.setText(nombre + " • " + (isEmpty(carrera) ? "-" : carrera));
-        lblNombreValor.setText(nombre);
-        lblEmailValor.setText(email);
-        lblCarreraValor.setText(isEmpty(carrera) ? "-" : carrera);
-        lblPassValor.setText(mask(usuario.getPass()));
+        promLbl.setVisible(esEstudiante);
+        carreraLbl.setVisible(esEstudiante);
+        semLbl.setVisible(esEstudiante);
 
-        lblRol.setText(rolLegible);
-        lblSemestres.setText(
-                (semestres == null) ? "—" : (semestres + (semestres == 1 ? " semestre cursado" : " semestres cursados"))
-        );
-        lblPromedio.setText((promedio == null) ? "—" : String.format("%.1f Promedio", promedio));
-
-        revalidate();
-        repaint();
-    }
-
-    private void onEditNombre() {
-        inlineEdit(lblNombreValor, new java.util.function.Function<String, Boolean>() {
-            public Boolean apply(String nuevo) {
-                if (nuevo.trim().isEmpty()) { beepWarn("El nombre no puede estar vacío."); return false; }
-                usuario.setNombreCompleto(nuevo.trim());
-                refreshFromUsuario();
-                info("Nombre actualizado correctamente.");
-                return true;
-            }
-        }, false);
-    }
-
-    private void onEditEmail() {
-        inlineEdit(lblEmailValor, new java.util.function.Function<String, Boolean>() {
-            public Boolean apply(String nuevo) {
-                String n = nuevo.trim();
-                if (!n.contains("@") || n.startsWith("@") || n.endsWith("@")) {
-                    beepWarn("Ingrese un email válido.");
-                    return false;
-                }
-                usuario.setEmail(n);
-                refreshFromUsuario();
-                info("Email actualizado correctamente.");
-                return true;
-            }
-        }, false);
-    }
-
-    private void onEditCarrera() {
-        if (!(usuario instanceof Estudiante)) { beepWarn("Solo los estudiantes tienen carrera."); return; }
-        final Estudiante est = (Estudiante) usuario;
-        inlineEdit(lblCarreraValor, new java.util.function.Function<String, Boolean>() {
-            public Boolean apply(String nuevo) {
-                String n = nuevo.trim();
-                if (n.isEmpty()) { beepWarn("La carrera no puede estar vacía."); return false; }
-                est.setCarrera(n);
-                refreshFromUsuario();
-                info("Carrera actualizada correctamente.");
-                return true;
-            }
-        }, false);
-    }
-
-    private void onEditPassword() {
-        inlineEdit(lblPassValor, new java.util.function.Function<String, Boolean>() {
-            public Boolean apply(String n) {
-                if (n.length() < 6) { beepWarn("Debe tener al menos 6 caracteres."); return false; }
-                usuario.setPass(n);
-                lblPassValor.setText(mask(n));
-                info("Contraseña actualizada correctamente.");
-                return true;
-            }
-        }, true);
-    }
-
-    private void inlineEdit(final JLabel targetLabel, final java.util.function.Function<String, Boolean> validatorCommit, final boolean password) {
-
-        final Container row = targetLabel.getParent();
-        if (row == null) return;
-
-        int idx = -1;
-        for (int i = 0; i < row.getComponentCount(); i++) {
-            if (row.getComponent(i) == targetLabel) { idx = i; break; }
-        }
-        if (idx < 0) return;
-
-        final int index = idx;
-
-        final String current = (password && usuario.getPass() != null) ? usuario.getPass() : targetLabel.getText();
-        final JComponent editor;
-        if (password) {
-            editor = new JPasswordField(current);
+        if (esEstudiante) {
+            Estudiante estudiante = (Estudiante) usuario;
+            txtCarrera.setText(estudiante.getCarrera());
+            txtSemestres.setText(String.valueOf(estudiante.getSemestresCursados()));
+            txtPromedio.setText(String.format("%.2f", estudiante.getPromedio()));
+            txtCarrera.setVisible(true);
+            txtSemestres.setVisible(true);
+            txtPromedio.setVisible(true);
         } else {
-            JTextField tf = new JTextField(current);
-            tf.selectAll();
-            editor = tf;
-        }
-
-        Dimension prefLbl = targetLabel.getPreferredSize();
-        editor.setPreferredSize(new Dimension(Math.max(prefLbl.width, 180), prefLbl.height + 6));
-        editor.setMaximumSize(new Dimension(400, Integer.MAX_VALUE));
-
-        row.remove(index);
-        row.add(editor, index);
-        row.revalidate();
-        row.repaint();
-        editor.requestFocusInWindow();
-
-        final Runnable restoreLabel = new Runnable() {
-            public void run() {
-                row.remove(editor);
-                row.add(targetLabel, index);
-                row.revalidate();
-                row.repaint();
-            }
-        };
-
-        final Runnable tryCommit = new Runnable() {
-            public void run() {
-                String value;
-                if (password) value = new String(((JPasswordField) editor).getPassword());
-                else value = ((JTextField) editor).getText();
-
-                boolean ok = validatorCommit.apply(value);
-                if (ok) restoreLabel.run();
-                else editor.requestFocusInWindow();
-            }
-        };
-
-        editor.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("ENTER"), "commit");
-        editor.getActionMap().put("commit", new AbstractAction() {
-            public void actionPerformed(java.awt.event.ActionEvent e) { tryCommit.run(); }
-        });
-
-        editor.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("ESCAPE"), "cancel");
-        editor.getActionMap().put("cancel", new AbstractAction() {
-            public void actionPerformed(java.awt.event.ActionEvent e) { restoreLabel.run(); }
-        });
-    }
-
-    private static JLabel labelTitulo(String t) {
-        JLabel l = new JLabel(t);
-        l.putClientProperty(FlatClientProperties.STYLE, "font:bold");
-        return l;
-    }
-
-    private JPanel rowCampo(JLabel valorLabel, String linkTexto, Runnable onClick) {
-        JButton link = new JButton(linkTexto);
-        link.setBorderPainted(false);
-        link.setContentAreaFilled(false);
-        link.setFocusPainted(false);
-        link.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        link.setForeground(new Color(0x2E86FF));
-        link.addActionListener(e -> onClick.run());
-
-        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        row.setOpaque(false);
-        row.add(valorLabel);
-        row.add(link);
-        return row;
-    }
-
-    private static void tintLabels(Container parent, Color color) {
-        for (Component comp : parent.getComponents()) {
-            if (comp instanceof JLabel) ((JLabel) comp).setForeground(color);
-            if (comp instanceof Container) tintLabels((Container) comp, color);
+            txtCarrera.setVisible(false);
+            txtSemestres.setVisible(false);
+            txtPromedio.setVisible(false);
         }
     }
 
-    private static String mask(String real) {
-        if (real == null) return "—";
-        int n = real.length();
-        if (n <= 0) return "—";
-        return "*".repeat(n);
+    private void guardarCambios() {
+        try {
+            String rut = usuario.getRut();
+            boolean cambiosRealizados = false;
+
+            String nuevoNombre = txtNombre.getText().trim();
+            String nuevoEmail  = txtEmail.getText().trim();
+            if (!nuevoNombre.equals(usuario.getNombreCompleto()) || !nuevoEmail.equals(usuario.getEmail())) {
+                gestor.getServicioAutenticacion().actualizarPerfilUsuario(rut, nuevoNombre, nuevoEmail);
+                cambiosRealizados = true;
+            }
+
+            String nuevaPass = new String(txtPass.getPassword());
+            if (nuevaPass.length() >= 3) {
+                gestor.getServicioAutenticacion().actualizarPasswordUsuario(rut, nuevaPass);
+                cambiosRealizados = true;
+            }
+            txtPass.setText("");
+
+            if (usuario instanceof Estudiante) {
+                Estudiante est = (Estudiante) usuario;
+                String nuevaCarrera = txtCarrera.getText().trim();
+                int    nuevosSem    = Integer.parseInt(txtSemestres.getText().trim());
+                double nuevoProm    = Double.parseDouble(txtPromedio.getText().trim().replace(',', '.'));
+
+                if (!nuevaCarrera.equals(est.getCarrera())
+                        || nuevosSem != est.getSemestresCursados()
+                        || nuevoProm != est.getPromedio()) {
+                    gestor.getServicioAutenticacion().actualizarDatosAcademicos(rut, nuevaCarrera, nuevosSem, nuevoProm);
+                    cambiosRealizados = true;
+                }
+            }
+
+            if (cambiosRealizados) {
+                JOptionPane.showMessageDialog(this, "Perfil actualizado con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                refreshData();
+            } else {
+                JOptionPane.showMessageDialog(this, "No se detectaron cambios para guardar.", "Información", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Error en el formato de los números (semestres/promedio).", "Error de Formato", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Ocurrió un error al guardar los cambios: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
     }
 
-    private void info(String msg) {
-        JOptionPane.showMessageDialog(this, msg, "Información", JOptionPane.INFORMATION_MESSAGE);
+    private void loadAvatar(Dimension box) {
+        try (InputStream is = getClass().getResourceAsStream("/AvatarOscuro.png")) {
+            if (is == null) return;
+            BufferedImage img = ImageIO.read(is);
+            ImageIcon icon = scaleToFit(img, box.width - 2, box.height - 2);
+            avatarImage.setIcon(icon);
+        } catch (Exception ignore) { }
     }
 
-    private void beepWarn(String msg) {
-        Toolkit.getDefaultToolkit().beep();
-        JOptionPane.showMessageDialog(this, msg, "Atención", JOptionPane.WARNING_MESSAGE);
-    }
-
-    private static String safe(String s) { return (s == null || s.trim().isEmpty()) ? "-" : s.trim(); }
-    private static boolean isEmpty(String s) { return s == null || s.trim().isEmpty(); }
-    private static String toTitulo(String enumName) {
-        String lower = enumName.toLowerCase();
-        return Character.toUpperCase(lower.charAt(0)) + lower.substring(1);
+    private static ImageIcon scaleToFit(BufferedImage img, int maxW, int maxH) {
+        int iw = img.getWidth();
+        int ih = img.getHeight();
+        double sw = maxW / (double) iw;
+        double sh = maxH / (double) ih;
+        double s  = Math.min(sw, sh);
+        int nw = Math.max(1, (int) Math.round(iw * s));
+        int nh = Math.max(1, (int) Math.round(ih * s));
+        BufferedImage out = new BufferedImage(nw, nh, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = out.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.drawImage(img, 0, 0, nw, nh, null);
+        g2.dispose();
+        return new ImageIcon(out);
     }
 }
