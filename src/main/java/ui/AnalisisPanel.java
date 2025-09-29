@@ -93,6 +93,7 @@ public class AnalisisPanel extends JPanel {
         btnExportar.setFocusPainted(false);
         btnExportar.setOpaque(true);
         btnExportar.setBorder(BorderFactory.createLineBorder(excelGreen.darker(), 1));
+        btnExportar.addActionListener(e -> exportarAExcel());
 
         JPanel headerActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         headerActions.setOpaque(false);
