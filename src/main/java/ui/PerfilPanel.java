@@ -76,7 +76,7 @@ public class PerfilPanel extends JPanel {
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
 
         JPanel avatar = new JPanel(new GridBagLayout());
-        avatar.setMaximumSize(new Dimension(360, 220));   // un pelín más grande
+        avatar.setMaximumSize(new Dimension(360, 220));
         avatar.setPreferredSize(new Dimension(360, 220));
         avatar.putClientProperty(FlatClientProperties.STYLE, "arc:24; background:#D7D7D7");
 

@@ -10,8 +10,8 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * **Panel de Interfaz de Usuario (Dashboard) para el Rol de Auditor.**
- * <p>Actúa como la ventana principal que centraliza la navegación y las funcionalidades
+ * **Panel de Interfaz de Usuario para el Rol de Auditor.**
+ * <p>Ventana principal que centraliza la navegacion y las funcionalidades
  * disponibles para el rol {@link Rol#AUDITOR}. Utiliza un diseño de
  * {@link CardLayout} para cambiar las vistas del contenido principal (centro).</p>
  * <p>Incluye una barra lateral (`JPanel` en {@link BorderLayout#WEST}) con los botones
@@ -34,13 +34,13 @@ public class AuditorPanel extends JPanel {
     private static final String CARD_GESTION_CONVENIOS = "gestionConvenios";
     private static final String CARD_ANALISIS = "analisis";
 
-    // Paneles de contenido
+    // Paneles centrales con contenido
     private PerfilPanel perfilPanel;
     private GestionProgramasPanel gestionProgramasPanel;
     private GestionConveniosAuditorPanel gestionConveniosPanel;
-    private AnalisisPanel analisisPanel; // <-- ahora es el panel real
+    private AnalisisPanel analisisPanel;
 
-    // Botones nav
+    // Botones izquierdos de navegacion
     private JToggleButton btnPerfil;
     private JToggleButton btnGestionUsuarios;
     private JToggleButton btnGestionProgramas;
@@ -60,8 +60,6 @@ public class AuditorPanel extends JPanel {
         init();
     }
 
-    // ==== Helpers de UI ====
-
     private JToggleButton botonNavegacion(String text) {
         JToggleButton b = new JToggleButton(text);
         b.setHorizontalAlignment(SwingConstants.CENTER);
@@ -79,12 +77,11 @@ public class AuditorPanel extends JPanel {
         b.setFont(b.getFont().deriveFont(Font.BOLD, b.getFont().getSize2D() + 2f));
         b.setForeground(UIManager.getColor("Label.foreground"));
 
-        wireToggleBehavior(b);
+        BotonToggle(b);
         addHoverEffect(b);
         return b;
     }
 
-    /** Fila con 2 columnas: [botón][franjaDerecha 6px] usando MigLayout para garantizar la franja */
     private JPanel makeNavItem(JToggleButton b) {
         JPanel row = new JPanel(new MigLayout("insets 0, gap 0, fill", "[grow,fill][6!]", "[fill]"));
         row.setOpaque(false);
@@ -95,7 +92,7 @@ public class AuditorPanel extends JPanel {
 
         JPanel stripe = new JPanel();
         stripe.setOpaque(true);
-        stripe.setBackground(new Color(0x4A95FF)); // azul un poco más claro que el fondo seleccionado
+        stripe.setBackground(new Color(0x4A95FF));
         stripe.setVisible(b.isSelected());
         b.putClientProperty("stripe", stripe);
 
@@ -104,8 +101,7 @@ public class AuditorPanel extends JPanel {
         return row;
     }
 
-    /** Selección: fondo azul + controlar visibilidad de la franja */
-    private void wireToggleBehavior(JToggleButton b) {
+    private void BotonToggle(JToggleButton b) {
         final Color selectedBg = new Color(0x2E86FF);
         final Color selectedFg = Color.WHITE;
         final Color unselectedFg = UIManager.getColor("Label.foreground");
@@ -125,11 +121,13 @@ public class AuditorPanel extends JPanel {
                 if (stripe != null) stripe.setVisible(false);
             }
             b.revalidate(); b.repaint();
-            if (stripe != null) { stripe.revalidate(); stripe.repaint(); }
+            if (stripe != null) {
+                stripe.revalidate(); stripe.repaint();
+            }
         });
     }
 
-    /** Hover: sombreado cuando no está seleccionado */
+    /** Hover para pasar el mouse */
     private void addHoverEffect(JToggleButton b) {
         final Color hoverBg = new Color(0x2F2F2F);
         b.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -148,7 +146,7 @@ public class AuditorPanel extends JPanel {
         });
     }
 
-    private static void styleRectButtonPrimary(JButton b, Color bg) {
+    private static void EstiloBotonesInferiores(JButton b, Color bg) {
         b.setFocusPainted(false);
         b.setOpaque(true);
         b.setBackground(bg);
@@ -161,7 +159,6 @@ public class AuditorPanel extends JPanel {
     // ==== init ====
 
     private void init() {
-        // Sidebar fijo
         JPanel panelIzquierdo = new JPanel(new BorderLayout());
         panelIzquierdo.setBackground(new Color(0x262626));
         panelIzquierdo.setOpaque(true);
@@ -195,20 +192,20 @@ public class AuditorPanel extends JPanel {
 
         JPanel separatorTop = new JPanel();
         separatorTop.setPreferredSize(new Dimension(0, 1));
-        separatorTop.setBackground(new Color(0x333333)); // separador suave
+        separatorTop.setBackground(new Color(0x333333));
         topPanel.add(separatorTop, "growx, gaptop 12");
 
-        // Navegación
+        // Navegacion
         JPanel navButtonsPanel = new JPanel();
         navButtonsPanel.setOpaque(false);
         navButtonsPanel.setLayout(new BoxLayout(navButtonsPanel, BoxLayout.Y_AXIS));
         navButtonsPanel.setBorder(BorderFactory.createEmptyBorder(8, 0, 8, 0));
 
-        btnPerfil            = botonNavegacion("Mi Perfil");
-        btnGestionUsuarios   = botonNavegacion("Gestionar Usuarios");
-        btnGestionProgramas  = botonNavegacion("Gestionar Programas");
-        btnGestionConvenios  = botonNavegacion("Gestionar Convenios");
-        btnAnalisis          = botonNavegacion("Análisis");
+        btnPerfil = botonNavegacion("Mi Perfil");
+        btnGestionUsuarios = botonNavegacion("Gestionar Usuarios");
+        btnGestionProgramas = botonNavegacion("Gestionar Programas");
+        btnGestionConvenios = botonNavegacion("Gestionar Convenios");
+        btnAnalisis = botonNavegacion("Análisis");
 
         ButtonGroup grp = new ButtonGroup();
         grp.add(btnPerfil);
@@ -218,7 +215,7 @@ public class AuditorPanel extends JPanel {
         grp.add(btnAnalisis);
         btnPerfil.setSelected(true);
 
-        // separadores suaves
+        // separadores
         JSeparator sep1 = new JSeparator();
         sep1.setForeground(new Color(0x333333));
         sep1.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -240,7 +237,7 @@ public class AuditorPanel extends JPanel {
         navButtonsPanel.add(Box.createVerticalStrut(12));
         navButtonsPanel.add(makeNavItem(btnAnalisis));
 
-        // Contenido scrolleable del sidebar
+        // Barra izquierda con scroll al ajustar ventana
         JPanel scrollContent = new JPanel(new BorderLayout());
         scrollContent.setOpaque(false);
         scrollContent.add(topPanel, BorderLayout.NORTH);
@@ -255,11 +252,7 @@ public class AuditorPanel extends JPanel {
 
         scrollContent.add(navCenter, BorderLayout.CENTER);
 
-        JScrollPane sideScroll = new JScrollPane(
-                scrollContent,
-                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
-        );
+        JScrollPane sideScroll = new JScrollPane(scrollContent,ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         sideScroll.setBorder(null);
         sideScroll.setViewportBorder(null);
         sideScroll.setOpaque(false);
@@ -268,7 +261,7 @@ public class AuditorPanel extends JPanel {
 
         panelIzquierdo.add(sideScroll, BorderLayout.CENTER);
 
-        // Footer (Hola + botones)
+        // Footer
         JPanel bottomPanel = new JPanel(new MigLayout("wrap, fillx, insets 24 24 32 24", "[fill]"));
         bottomPanel.setOpaque(false);
         lblSidebarNombre = new JLabel("Hola, Auditor " + safe(auditor.getNombreCompleto()).split(" ")[0] + "!");
@@ -279,11 +272,11 @@ public class AuditorPanel extends JPanel {
         actions.setOpaque(false);
 
         JButton btnCerrar = new JButton("Cerrar Sesión");
-        styleRectButtonPrimary(btnCerrar, new Color(0x2E86FF));
+        EstiloBotonesInferiores(btnCerrar, new Color(0x2E86FF));
         btnCerrar.setPreferredSize(new Dimension(0, 72));
 
         JButton btnSalir = new JButton("Salir");
-        styleRectButtonPrimary(btnSalir, new Color(0xE42828));
+        EstiloBotonesInferiores(btnSalir, new Color(0xE42828));
         btnSalir.setPreferredSize(new Dimension(0, 72));
 
         actions.add(btnCerrar);
@@ -294,7 +287,7 @@ public class AuditorPanel extends JPanel {
 
         panelIzquierdo.add(bottomPanel, BorderLayout.SOUTH);
 
-        // Centro (cards)
+        // Centro
         perfilPanel = new PerfilPanel(gestor, auditor);
         gestionProgramasPanel = new GestionProgramasPanel(gestor);
         gestionConveniosPanel = new GestionConveniosAuditorPanel(gestor, auditor);
@@ -305,7 +298,7 @@ public class AuditorPanel extends JPanel {
         centerCards.add(gestionConveniosPanel, CARD_GESTION_CONVENIOS);
         centerCards.add(analisisPanel, CARD_ANALISIS);
 
-        // Layout principal (sidebar fijo)
+        // Layout principal
         setLayout(new BorderLayout());
         add(panelIzquierdo, BorderLayout.WEST);
         add(centerCards, BorderLayout.CENTER);

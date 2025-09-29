@@ -39,10 +39,10 @@ public class DetallePostulacionPanel extends JPanel {
         setLayout(new BorderLayout(10, 15));
         setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
-        // 1. Panel de Información (arriba)
+        // Panel de Informacion (arriba)
         add(createInfoPanel(), BorderLayout.CENTER);
 
-        // 2. Panel de Acciones/Botones (abajo)
+        // Panel de Acciones/Botones (abajo)
         add(createActionsPanel(), BorderLayout.SOUTH);
     }
 
@@ -55,20 +55,16 @@ public class DetallePostulacionPanel extends JPanel {
         gbc.insets = new Insets(5, 5, 5, 5);
 
         // Obtenemos los datos necesarios usando el servicio de consulta
-        Estudiante estudiante = gestor.getServicioConsulta()
-                .buscarEstudiantePorRut(postulacion.getRutEstudiante())
-                .orElse(null);
+        Estudiante estudiante = gestor.getServicioConsulta().buscarEstudiantePorRut(postulacion.getRutEstudiante()).orElse(null);
         Convenio convenio = postulacion.getConvenioSeleccionado();
 
-        // Título con el estado actual
         JLabel lblTitulo = new JLabel("Detalle Postulación #" + postulacion.getId() + " - Estado: " + postulacion.getEstado().name());
         lblTitulo.setFont(lblTitulo.getFont().deriveFont(Font.BOLD, 16f));
-        gbc.gridwidth = 2; // Ocupa dos columnas
+        gbc.gridwidth = 2;
         panel.add(lblTitulo, gbc);
         gbc.gridy++;
-        gbc.gridwidth = 1; // Restaura a una columna
+        gbc.gridwidth = 1;
 
-        // Añadimos la información fila por fila
         if (estudiante != null) {
             addInfoRow(panel, gbc, "Estudiante:", estudiante.getNombreCompleto());
             addInfoRow(panel, gbc, "Carrera:", estudiante.getCarrera());
@@ -83,7 +79,7 @@ public class DetallePostulacionPanel extends JPanel {
     private JPanel createActionsPanel() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
 
-        // --- Botones Específicos por Rol ---
+        // Botones segun rol
         if (usuarioActivo.getRol() == Rol.ESTUDIANTE) {
             JButton btnAdjuntar = new JButton("Adjuntar Documento");
             btnAdjuntar.addActionListener(e -> handleAdjuntarDocumento());
@@ -98,7 +94,7 @@ public class DetallePostulacionPanel extends JPanel {
             panel.add(btnCambiarEstado);
         }
 
-        // --- Botones Comunes para Ambos Roles ---
+        // Botones genericos para ambos roles
         JButton btnHistorial = new JButton("Ver Interacciones");
         btnHistorial.addActionListener(e -> verHistorial());
         panel.add(btnHistorial);
@@ -109,8 +105,6 @@ public class DetallePostulacionPanel extends JPanel {
 
         return panel;
     }
-
-    // --- Métodos de Acción (Handlers) ---
 
     private void handleAdjuntarDocumento() {
         String tituloDoc = JOptionPane.showInputDialog(this, "Ingrese el nombre del documento (ej: Pasaporte.pdf):", "Adjuntar Documento", JOptionPane.PLAIN_MESSAGE);
@@ -152,7 +146,7 @@ public class DetallePostulacionPanel extends JPanel {
                     gestor.getServicioPostulacion().actualizarEstadoPostulacion(postulacion, nuevoEstado);
                     info("Estado actualizado a " + nuevoEstado + ".");
                 }
-                parentDialog.dispose(); // Cierra el diálogo si la acción fue exitosa
+                parentDialog.dispose();
             } catch (Exception ex) {
                 error("No se pudo actualizar el estado: " + ex.getMessage());
             }
@@ -174,8 +168,6 @@ public class DetallePostulacionPanel extends JPanel {
         textArea.setEditable(false);
         JOptionPane.showMessageDialog(this, new JScrollPane(textArea), "Historial de Interacciones", JOptionPane.PLAIN_MESSAGE);
     }
-
-    // --- Métodos de Utilidad ---
 
     private void addInfoRow(JPanel panel, GridBagConstraints gbc, String label, String value) {
         JLabel lblLabel = new JLabel(label);

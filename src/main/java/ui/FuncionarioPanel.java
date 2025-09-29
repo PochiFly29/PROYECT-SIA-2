@@ -54,8 +54,6 @@ public class FuncionarioPanel extends JPanel {
         refreshSidebar();
     }
 
-    // ==== helpers ====
-
     private JToggleButton botonNavegacion(String text) {
         JToggleButton b = new JToggleButton(text);
         b.setHorizontalAlignment(SwingConstants.CENTER);
@@ -149,17 +147,14 @@ public class FuncionarioPanel extends JPanel {
         b.setBorder(BorderFactory.createLineBorder(bg.darker(), 1, false));
     }
 
-    // ==== init ====
-
     private void init() {
-        // Sidebar fijo
         JPanel panelIzquierdo = new JPanel(new BorderLayout());
         panelIzquierdo.setBackground(new Color(0x262626));
         panelIzquierdo.setOpaque(true);
         panelIzquierdo.setPreferredSize(new Dimension(360, 0));
         panelIzquierdo.setMinimumSize(new Dimension(320, 0));
 
-        // Top: logo + separador
+        // Logo y separador
         JPanel topPanel = new JPanel(new MigLayout("wrap, fillx, insets 24 24 8 24", "[fill]"));
         topPanel.setOpaque(false);
 
@@ -189,14 +184,14 @@ public class FuncionarioPanel extends JPanel {
         separator.setBackground(new Color(0x333333));
         topPanel.add(separator, "growx, gaptop 12");
 
-        // Centro: botones
+        // Botones centro
         JPanel navButtonsPanel = new JPanel();
         navButtonsPanel.setOpaque(false);
         navButtonsPanel.setLayout(new BoxLayout(navButtonsPanel, BoxLayout.Y_AXIS));
         navButtonsPanel.setBorder(BorderFactory.createEmptyBorder(8, 0, 8, 0));
 
-        btnPerfil       = botonNavegacion("Mi Perfil");
-        btnGestionPost  = botonNavegacion("Gestionar Postulaciones");
+        btnPerfil = botonNavegacion("Mi Perfil");
+        btnGestionPost = botonNavegacion("Gestionar Postulaciones");
         btnVerConvenios = botonNavegacion("Ver Convenios");
 
         ButtonGroup grp = new ButtonGroup();
@@ -205,7 +200,7 @@ public class FuncionarioPanel extends JPanel {
         grp.add(btnVerConvenios);
         btnPerfil.setSelected(true);
 
-        // separador suave entre perfil y el resto
+        // Separador
         JSeparator sep = new JSeparator();
         sep.setForeground(new Color(0x333333));
         sep.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -218,7 +213,6 @@ public class FuncionarioPanel extends JPanel {
         navButtonsPanel.add(Box.createVerticalStrut(12));
         navButtonsPanel.add(makeNavItem(btnVerConvenios));
 
-        // Sidebar scrolleable
         JPanel scrollContent = new JPanel(new BorderLayout());
         scrollContent.setOpaque(false);
         scrollContent.add(topPanel, BorderLayout.NORTH);
@@ -233,11 +227,7 @@ public class FuncionarioPanel extends JPanel {
 
         scrollContent.add(navCenter, BorderLayout.CENTER);
 
-        JScrollPane sideScroll = new JScrollPane(
-                scrollContent,
-                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
-        );
+        JScrollPane sideScroll = new JScrollPane(scrollContent,ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         sideScroll.setBorder(null);
         sideScroll.setViewportBorder(null);
         sideScroll.setOpaque(false);
@@ -246,7 +236,6 @@ public class FuncionarioPanel extends JPanel {
 
         panelIzquierdo.add(sideScroll, BorderLayout.CENTER);
 
-        // Bottom: saludo + dos botones (Cerrar sesión / Salir)
         JPanel bottomPanel = new JPanel(new MigLayout("wrap, fillx, insets 24 24 32 24", "[fill]"));
         bottomPanel.setOpaque(false);
 
@@ -273,7 +262,7 @@ public class FuncionarioPanel extends JPanel {
 
         panelIzquierdo.add(bottomPanel, BorderLayout.SOUTH);
 
-        // ===== Centro (cards) =====
+        // Centro
         perfilPanel = new PerfilPanel(gestor, funcionario);
         conveniosPanel = new ConveniosPanel(gestor, this::onConvenioSeleccionado);
         postulacionesPanel = new PostulacionesFuncionarioPanel(gestor, funcionario);
@@ -283,12 +272,11 @@ public class FuncionarioPanel extends JPanel {
         centerCards.add(conveniosPanel, CARD_VER_CONVENIOS);
         centerCardsLayout.show(centerCards, CARD_PERFIL);
 
-        // ===== Layout exterior =====
         setLayout(new BorderLayout());
         add(panelIzquierdo, BorderLayout.WEST);
         add(centerCards, BorderLayout.CENTER);
 
-        // ===== Listeners =====
+        // Listeners
         btnPerfil.addActionListener(e -> {
             perfilPanel.refreshData();
             centerCardsLayout.show(centerCards, CARD_PERFIL);
@@ -308,7 +296,7 @@ public class FuncionarioPanel extends JPanel {
         btnSalir.addActionListener(e -> System.exit(0));
     }
 
-    /** Callback desde ConveniosPanel para cambiar con filtro aplicado */
+    /** Llamado desde ConveniosPanel para cambiar con filtro aplicado */
     private void onConvenioSeleccionado(String idConvenio) {
         postulacionesPanel.filtrarPorConvenio(idConvenio);
         centerCardsLayout.show(centerCards, CARD_GESTION_POSTULACIONES);

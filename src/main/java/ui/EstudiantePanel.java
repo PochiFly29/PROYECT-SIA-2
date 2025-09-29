@@ -60,7 +60,6 @@ public class EstudiantePanel extends JPanel {
             perfilPanel.setUsuario(e);
         }
 
-        // Re-construir paneles dependientes del estudiante
         PostulacionesPanel nuevoPostulaciones = new PostulacionesPanel(gestor, e);
         replaceCard(CARD_POSTULACIONES, postulacionesPanel, nuevoPostulaciones);
         postulacionesPanel = nuevoPostulaciones;
@@ -69,13 +68,6 @@ public class EstudiantePanel extends JPanel {
         replaceCard(CARD_POSTULAR, postularPanel, nuevoPostular);
         postularPanel = nuevoPostular;
     }
-
-    public void refreshData() {
-        if (perfilPanel != null) perfilPanel.refreshData();
-        if (postulacionesPanel != null) postulacionesPanel.refresh();
-    }
-
-    // ---------- UI helpers ----------
 
     private JToggleButton botonNavegacion(String text) {
         JToggleButton b = new JToggleButton(text);
@@ -94,13 +86,12 @@ public class EstudiantePanel extends JPanel {
         b.setFont(b.getFont().deriveFont(Font.BOLD, b.getFont().getSize2D() + 2f));
         b.setForeground(UIManager.getColor("Label.foreground"));
 
-        wireToggleBehavior(b);
-        addHoverEffect(b);   // hover visual
+        BotonToggle(b);
+        addHoverEffect(b);
         return b;
     }
 
-    /** Fila: [botón][franja derecha 6px] para garantizar la franja de selección */
-    private JPanel makeNavItem(JToggleButton b) {
+    private JPanel BotonesNavegacionPrincipales(JToggleButton b) {
         JPanel row = new JPanel(new MigLayout("insets 0, gap 0, fill", "[grow,fill][6!]", "[fill]"));
         row.setOpaque(false);
         row.setMinimumSize(new Dimension(0, 72));
@@ -110,7 +101,7 @@ public class EstudiantePanel extends JPanel {
 
         JPanel stripe = new JPanel();
         stripe.setOpaque(true);
-        stripe.setBackground(new Color(0x4A95FF)); // azul claro
+        stripe.setBackground(new Color(0x4A95FF));
         stripe.setVisible(b.isSelected());
 
         b.putClientProperty("stripe", stripe);
@@ -120,8 +111,7 @@ public class EstudiantePanel extends JPanel {
         return row;
     }
 
-    /** Selección: fondo azul + controla visibilidad de la franja */
-    private void wireToggleBehavior(JToggleButton b) {
+    private void BotonToggle(JToggleButton b) {
         final Color selectedBg = new Color(0x2E86FF);
         final Color selectedFg = Color.WHITE;
         final Color unselectedFg = UIManager.getColor("Label.foreground");
@@ -145,7 +135,7 @@ public class EstudiantePanel extends JPanel {
         });
     }
 
-    /** Hover: sombrea la opción si NO está seleccionada */
+    /** Efecto al pasar el moouse encima*/
     private void addHoverEffect(JToggleButton b) {
         final Color hoverBg = new Color(0x2F2F2F);
         b.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -181,17 +171,14 @@ public class EstudiantePanel extends JPanel {
         centerCards.repaint();
     }
 
-    // ---------- Init ----------
-
     private void init() {
-        // Sidebar fijo
         JPanel panelIzquierdo = new JPanel(new BorderLayout());
         panelIzquierdo.setBackground(new Color(0x262626));
         panelIzquierdo.setOpaque(true);
         panelIzquierdo.setPreferredSize(new Dimension(360, 0));
         panelIzquierdo.setMinimumSize(new Dimension(320, 0));
 
-        // Header con logo
+        // Header
         JPanel topPanel = new JPanel(new MigLayout("wrap, fillx, insets 24 24 8 24", "[fill]"));
         topPanel.setOpaque(false);
 
@@ -221,7 +208,7 @@ public class EstudiantePanel extends JPanel {
         separator.setBackground(new Color(0x333333));
         topPanel.add(separator, "growx, gaptop 12");
 
-        // Navegación
+        // Navegacion
         JPanel navButtonsPanel = new JPanel();
         navButtonsPanel.setOpaque(false);
         navButtonsPanel.setLayout(new BoxLayout(navButtonsPanel, BoxLayout.Y_AXIS));
@@ -241,15 +228,15 @@ public class EstudiantePanel extends JPanel {
         sep.setForeground(new Color(0x333333));
         sep.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        navButtonsPanel.add(makeNavItem(btnPerfil));
+        navButtonsPanel.add(BotonesNavegacionPrincipales(btnPerfil));
         navButtonsPanel.add(Box.createVerticalStrut(12));
         navButtonsPanel.add(sep);                       // << aquí movemos el separador
         navButtonsPanel.add(Box.createVerticalStrut(12));
-        navButtonsPanel.add(makeNavItem(btnPostular));
+        navButtonsPanel.add(BotonesNavegacionPrincipales(btnPostular));
         navButtonsPanel.add(Box.createVerticalStrut(12));
-        navButtonsPanel.add(makeNavItem(btnVerPost));
+        navButtonsPanel.add(BotonesNavegacionPrincipales(btnVerPost));
 
-        // Contenido scrolleable del sidebar
+        // Barra izquierda con scroll al ajustar ventana
         JPanel scrollContent = new JPanel(new BorderLayout());
         scrollContent.setOpaque(false);
         scrollContent.add(topPanel, BorderLayout.NORTH);
@@ -264,11 +251,7 @@ public class EstudiantePanel extends JPanel {
 
         scrollContent.add(navCenter, BorderLayout.CENTER);
 
-        JScrollPane sideScroll = new JScrollPane(
-                scrollContent,
-                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
-        );
+        JScrollPane sideScroll = new JScrollPane(scrollContent,ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         sideScroll.setBorder(null);
         sideScroll.setViewportBorder(null);
         sideScroll.setOpaque(false);
@@ -303,7 +286,7 @@ public class EstudiantePanel extends JPanel {
 
         panelIzquierdo.add(bottomPanel, BorderLayout.SOUTH);
 
-        // Centro (cards)
+        // Centro
         perfilPanel = new PerfilPanel(gestor, estudiante);
         postulacionesPanel = new PostulacionesPanel(gestor, estudiante);
         postularPanel = new PostularPanel(gestor, estudiante);
@@ -313,12 +296,12 @@ public class EstudiantePanel extends JPanel {
         centerCards.add(postularPanel, CARD_POSTULAR);
         centerCardsLayout.show(centerCards, CARD_PERFIL);
 
-        // Layout principal (sidebar fijo)
+        // Layout principal
         setLayout(new BorderLayout());
         add(panelIzquierdo, BorderLayout.WEST);
         add(centerCards, BorderLayout.CENTER);
 
-        // Navegación (misma lógica)
+        // Accion de navegacion
         btnPerfil.addActionListener(e -> {
             centerCardsLayout.show(centerCards, CARD_PERFIL);
             btnPerfil.setSelected(true);

@@ -62,7 +62,7 @@ public class ConveniosPanel extends JPanel {
     private void init() {
         setLayout(new BorderLayout());
 
-        // Header y Título
+        // Header
         JPanel header = new JPanel();
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setBorder(BorderFactory.createEmptyBorder(16, 24, 8, 24));
@@ -87,7 +87,7 @@ public class ConveniosPanel extends JPanel {
 
         add(header, BorderLayout.NORTH);
 
-        // Configuración de la Tabla
+        // Configuracion de la Tabla
         table = new JTable(model);
         table.setFont(table.getFont().deriveFont(14f));
         table.getTableHeader().setFont(table.getTableHeader().getFont().deriveFont(Font.BOLD, 14f));
@@ -122,7 +122,7 @@ public class ConveniosPanel extends JPanel {
 
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // Footer con el botón de acción
+        // Footer con botones de accion
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 10));
         footer.setOpaque(false);
 
@@ -135,31 +135,19 @@ public class ConveniosPanel extends JPanel {
         add(footer, BorderLayout.SOUTH);
     }
 
-    // Método para mostrar el detalle del convenio
+    // Muestra el detalle de cada convenio
     private JPanel buildDetallePanel(Convenio c) {
         JPanel info = new JPanel(new GridBagLayout());
         info.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // 🚨 CORRECCIÓN: Declaramos GridBagConstraints dentro del método
         final GridBagConstraints gc = new GridBagConstraints();
         gc.gridx = 0; gc.gridy = 0; gc.anchor = GridBagConstraints.WEST; gc.insets = new Insets(4,4,4,4);
-
-        // Función auxiliar para añadir etiquetas
-        // 🚨 CORRECCIÓN: La lambda ya no necesita ser 'final', pero sigue modificando
-        // una variable que no es local a su propio ámbito.
-        // Para ser totalmente compatible y evitar errores de 'effectively final' en todas las versiones de Java,
-        // la implementación más limpia es usar la propia variable gc:
 
         Consumer<String> addLabel = (text) -> {
             JLabel lbl = new JLabel(text);
             lbl.setFont(lbl.getFont().deriveFont(14f));
             info.add(lbl, gc);
-            // El problema está aquí: gc.gridy++ es una modificación a una variable externa.
-            // La solución más simple para un código limpio es eliminar la lambda y usar la variable directamente.
         };
-
-        // 🚨 SOLUCIÓN: Reemplazamos la lambda por el código directo para evitar el error 'effectively final'.
-        // Usamos la variable 'gc' declarada en este método.
 
         // Fila 0
         JLabel lblID = new JLabel("ID: " + c.getId());
@@ -199,7 +187,6 @@ public class ConveniosPanel extends JPanel {
         return info;
     }
 
-    // Método para ejecutar la acción de la selección
     private void executeConvenioAction() {
         int viewRow = table.getSelectedRow();
         if (viewRow < 0) {
@@ -209,15 +196,13 @@ public class ConveniosPanel extends JPanel {
         int modelRow = table.convertRowIndexToModel(viewRow);
         Convenio c = model.getAt(modelRow);
 
-        // 1. Mostrar el detalle
+        // Mostrar el detalle
         Object[] options = (onConvenioSelected != null) ? new Object[]{"Seleccionar", "Cerrar"} : new Object[]{"Cerrar"};
 
         int opt = JOptionPane.showOptionDialog(this, buildDetallePanel(c), "Detalle de convenio",
                 (onConvenioSelected != null) ? JOptionPane.YES_NO_OPTION : JOptionPane.DEFAULT_OPTION,
                 JOptionPane.PLAIN_MESSAGE, null, options, options[0]
         );
-
-        // 2. Ejecutar el callback (Solo si el rol es Funcionario y selecciona "Seleccionar")
         if (onConvenioSelected != null && opt == 0) {
             onConvenioSelected.accept(c.getId());
         }

@@ -52,7 +52,7 @@ public class GestionConveniosAuditorPanel extends JPanel {
     private void init() {
         setLayout(new BorderLayout());
 
-        // ===== Header (alineado con PostularPanel) =====
+        // Header
         JPanel header = new JPanel();
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setBorder(BorderFactory.createEmptyBorder(16, 24, 8, 24));
